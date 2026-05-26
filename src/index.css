@@ -331,3 +331,43 @@ label {
 @media (max-width: 480px) {
   .page-padding { padding: 12px; }
 }
+
+/* ── Responsive helpers ─────────────────────────────────── */
+.mobile-stack { display: flex; flex-direction: column; gap: 16px; }
+.table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+@media (max-width: 768px) {
+  /* Stack any two-column grid on mobile */
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+  /* Tables scroll horizontally */
+  table { min-width: 500px; }
+  .table-scroll { width: 100%; }
+  /* Cards full width */
+  .card { padding: 16px; }
+  /* Modal bottom sheet on mobile */
+  .modal-content { border-radius: 16px 16px 0 0; margin: 0; max-height: 95vh; }
+  .modal-overlay { align-items: flex-end; padding: 0; }
+  /* Reduce font sizes */
+  h2 { font-size: 18px !important; }
+  /* Tabs/mode selectors scroll horizontally */
+  .mode-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; white-space: nowrap; }
+  /* Hide less important columns in tables */
+  .hide-mobile { display: none !important; }
+  /* Notification panel full width on mobile */
+  .notif-panel-mobile {
+    position: fixed !important;
+    top: 64px !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    border-radius: 0 0 16px 16px !important;
+  }
+  /* Fix header on mobile */
+  header { padding: 0 12px !important; }
+  /* Fix pages with flex row that should stack */
+  .mobile-col { flex-direction: column !important; }
+  /* Smaller stat boxes */
+  .stat-card { padding: 16px !important; }
+}

@@ -49,7 +49,7 @@ export default function Perfil() {
   const avatarLetter = (user?.name || 'W').slice(0, 2).toUpperCase();
 
   return (
-    <div style={{ padding: 32, flex: 1, maxWidth: 860, margin: '0 auto', width: '100%' }}>
+    <div className="page-padding" style={{ flex: 1, maxWidth: 860, margin: '0 auto', width: '100%' }}>
       <div style={{ marginBottom: 28 }}>
         <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Meu Perfil</h2>
         <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>Gerencie suas informações e seu link público</p>

@@ -53,7 +53,7 @@ export default function Historico() {
 
       if (!student) { setHistory([]); setLoading(false); return; }
 
-      // Busca appointments concluídos
+      // Busca appointments 
       const { data: appts } = await supabase
         .from('appointments')
         .select('id, date, time, type, notes')
@@ -61,7 +61,7 @@ export default function Historico() {
         .eq('status', 'done')
         .order('date', { ascending: false });
 
-      // Também busca attendances (presença marcada manualmente)
+      //  (presença marcada manualmente)
       const { data: attends } = await supabase
         .from('attendances')
         .select('date')

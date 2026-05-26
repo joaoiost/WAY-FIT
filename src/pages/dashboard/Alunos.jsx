@@ -168,7 +168,7 @@ export default function Alunos() {
   };
 
   return (
-    <div style={{ padding: 32, flex: 1 }}>
+    <div className="page-padding" style={{ flex: 1 }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
@@ -242,6 +242,7 @@ export default function Alunos() {
 
       {/* Table */}
       <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+        <div className="table-scroll">
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
             <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
@@ -306,6 +307,7 @@ export default function Alunos() {
             )}
           </tbody>
         </table>
+        </div>
       </div>
 
       {/* Add/Edit Modal */}

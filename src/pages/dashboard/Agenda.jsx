@@ -237,7 +237,7 @@ export default function Agenda() {
   const hasPhone = !!selectedStudent?.phone;
 
   return (
-    <div style={{ padding: 32, flex: 1 }}>
+    <div className="page-padding" style={{ flex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Agenda</h2>

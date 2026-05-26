@@ -149,7 +149,7 @@ export default function Financeiro() {
   const pending = payments.filter(p => p.status !== 'pago').reduce((sum, p) => sum + Number(p.amount), 0);
 
   return (
-    <div style={{ padding: 32, flex: 1 }}>
+    <div className="page-padding" style={{ flex: 1 }}>
       {/* Confirmation modal */}
       {genModal && (
         <div className="modal-overlay" onClick={() => setGenModal(false)}>
@@ -289,6 +289,7 @@ export default function Financeiro() {
           <div style={{ padding: '20px 20px 0' }}>
             <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#111827' }}>Pagamentos - Maio 2026</h3>
           </div>
+          <div className="table-scroll">
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
               <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
@@ -327,6 +328,7 @@ export default function Financeiro() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 

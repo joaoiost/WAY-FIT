@@ -69,7 +69,7 @@ export default function Dashboard() {
   const pendingToday = todayAppts.filter(a => a.status !== 'done' && a.status !== 'cancelled').length;
 
   return (
-    <div style={{ padding: '32px', flex: 1 }}>
+    <div className="page-padding" style={{ flex: 1 }}>
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 28 }}>
         <StatCard title="Alunos Ativos" value={String(activeStudents.length)} change={null} changeLabel="cadastrados" icon={Users} />

@@ -186,7 +186,7 @@ export default function WhatsApp() {
   };
 
   return (
-    <div style={{ padding: 32, flex: 1 }}>
+    <div className="page-padding" style={{ flex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>WhatsApp</h2>

@@ -1,5 +1,5 @@
 import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { Zap, LayoutDashboard, Users, Calendar, Dumbbell, DollarSign, MessageSquare, LogOut, X, Settings, ClipboardList } from 'lucide-react';
+import { Zap, LayoutDashboard, Users, Calendar, Dumbbell, DollarSign, Bell, LogOut, X, Settings, ClipboardList } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 
@@ -10,7 +10,7 @@ const navItems = [
   { to: '/dashboard/treinos', icon: Dumbbell, label: 'Treinos' },
   { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência' },
   { to: '/dashboard/financeiro', icon: DollarSign, label: 'Financeiro' },
-  { to: '/dashboard/whatsapp', icon: MessageSquare, label: 'WhatsApp' },
+  { to: '/dashboard/whatsapp', icon: Bell, label: 'Notificações' },
 ];
 
 export default function Sidebar() {

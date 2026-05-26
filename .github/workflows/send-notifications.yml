@@ -1,0 +1,19 @@
+name: Scheduled Push Notifications
+
+on:
+  schedule:
+    - cron: '0,30 * * * *'   # every 30 minutes
+  workflow_dispatch:           # allow manual trigger from GitHub UI
+
+jobs:
+  process:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger process-scheduled Edge Function
+        run: |
+          curl -f -s -X POST \
+            "https://mpgfigjvsuddqvfxcmmp.supabase.co/functions/v1/process-scheduled" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}" \
+            -H "Content-Type: application/json" \
+            -d '{}' \
+            | cat

@@ -235,3 +235,25 @@ DROP POLICY IF EXISTS "Personal sends notifications" ON student_notifications;
 CREATE POLICY "Personal sends notifications" ON student_notifications FOR INSERT WITH CHECK (personal_id = auth.uid());
 DROP POLICY IF EXISTS "Personal reads sent notifications" ON student_notifications;
 CREATE POLICY "Personal reads sent notifications" ON student_notifications FOR SELECT USING (personal_id = auth.uid());
+-- ── Scheduled notifications (lembretes automáticos) ──────────────────
+CREATE TABLE IF NOT EXISTS scheduled_notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  student_ids TEXT[] DEFAULT '{}',
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  days_of_week INTEGER[] NOT NULL DEFAULT '{1,2,3,4,5}',
+  send_hour INTEGER NOT NULL DEFAULT 8,
+  send_minute INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_sent_date DATE
+);
+ALTER TABLE scheduled_notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Personal manages own schedules" ON scheduled_notifications;
+CREATE POLICY "Personal manages own schedules" ON scheduled_notifications FOR ALL USING (personal_id = auth.uid());
+
+-- Allow type 'scheduled' in student_notifications
+ALTER TABLE student_notifications DROP CONSTRAINT IF EXISTS student_notifications_type_check;
+ALTER TABLE student_notifications ADD CONSTRAINT student_notifications_type_check
+  CHECK (type IN ('message', 'workout', 'payment', 'appointment', 'custom', 'scheduled'));

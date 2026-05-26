@@ -34,6 +34,7 @@ import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
 import StudentSidebar from './components/Layout/StudentSidebar';
 import StudentBottomNav from './components/Layout/StudentBottomNav';
+import PersonalBottomNav from './components/Layout/PersonalBottomNav';
 import WaterToast from './components/UI/WaterToast';
 
 function PersonalRoute() {
@@ -47,10 +48,11 @@ function PersonalRoute() {
           <Sidebar />
           <div className="layout-content">
             <Header />
-            <main style={{ flex: 1 }}>
+            <main className="personal-main" style={{ flex: 1 }}>
               <Outlet />
             </main>
           </div>
+          <PersonalBottomNav />
         </div>
       </NotificationsProvider>
     </SidebarProvider>

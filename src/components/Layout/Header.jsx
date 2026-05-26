@@ -17,7 +17,7 @@ const PAGE_NAMES = {
   '/dashboard/agenda':     'Agenda',
   '/dashboard/treinos':    'Treinos',
   '/dashboard/financeiro': 'Financeiro',
-  '/dashboard/whatsapp':   'WhatsApp',
+  '/dashboard/whatsapp':   'Notificações',
   '/dashboard/perfil':     'Meu Perfil',
   '/dashboard/frequencia': 'Frequência',
   '/aluno/dashboard':      'Início',

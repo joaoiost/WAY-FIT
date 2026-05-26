@@ -1,4 +1,7 @@
 {
+  "installCommand": "npm install",
+  "buildCommand": "NODE_OPTIONS=--max-old-space-size=4096 ./node_modules/.bin/vite build",
+  "outputDirectory": "dist",
   "rewrites": [
     {
       "source": "/(.*)",

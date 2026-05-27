@@ -44,7 +44,7 @@ function ApptCard({ appt, onClick, isSelected }) {
         boxShadow: isSelected ? `0 2px 8px ${appt.color}40` : 'none',
       }}
     >
-      <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: isSelected ? 'white' : '#374151' }}>{appt.time}</p>
+      <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: isSelected ? 'white' : '#374151' }}>{(appt.time || '').slice(0, 5)}</p>
       <p style={{ margin: '1px 0 0', fontSize: 11, color: isSelected ? 'rgba(255,255,255,0.85)' : '#6B7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
         {(appt.student_name || appt.studentName || '').split(' ')[0]}
       </p>
@@ -345,13 +345,13 @@ export default function Agenda() {
           </div>
         </div>
 
-        {/* Quick action panel */}
+        {/* Quick action panel — desktop: sidebar, mobile: bottom sheet overlay */}
         {selectedAppt && (
-          <div ref={actionRef} style={{ background: 'white', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', overflow: 'hidden', position: 'sticky', top: 20 }}>
+          <div ref={actionRef} className="agenda-action-panel" style={{ background: 'white', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', overflow: 'hidden', position: 'sticky', top: 20 }}>
             <div style={{ padding: '14px 16px', background: selectedAppt.color, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
-                  {new Date(selectedAppt.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })} · {selectedAppt.time}
+                  {new Date(selectedAppt.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })} · {(selectedAppt.time || '').slice(0, 5)}
                 </p>
                 <p style={{ margin: '4px 0 0', fontSize: 16, fontWeight: 800, color: 'white' }}>
                   {selectedAppt.student_name || selectedAppt.studentName}

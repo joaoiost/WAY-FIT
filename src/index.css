@@ -363,6 +363,18 @@ label {
     grid-template-columns: 1fr !important;
   }
 
+  /* Painel de ação da agenda vira bottom sheet no mobile */
+  .agenda-action-panel {
+    position: fixed !important;
+    bottom: 72px !important;
+    left: 0 !important;
+    right: 0 !important;
+    border-radius: 16px 16px 0 0 !important;
+    z-index: 55;
+    max-height: 80vh;
+    overflow-y: auto;
+  }
+
   /* Stack any two-column grid on mobile */
   [style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;

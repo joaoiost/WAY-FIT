@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Check, X, MessageCircle, RefreshCw, Zap } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Check, X, MessageCircle, RefreshCw, Zap, Calendar } from 'lucide-react';
 import Modal from '../../components/UI/Modal';
 import { appointments as mockAppts, students as mockStudents } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
@@ -54,9 +54,46 @@ function ApptCard({ appt, onClick, isSelected }) {
   );
 }
 
+function MobileApptCard({ appt, onClick, isSelected }) {
+  const statusLabel = appt.status === 'done' ? '✓ Realizada' : appt.status === 'cancelled' ? '✗ Cancelada' : '● Pendente';
+  const statusColor = appt.status === 'done' ? '#10B981' : appt.status === 'cancelled' ? '#EF4444' : '#F59E0B';
+  const statusBg = appt.status === 'done' ? '#ECFDF5' : appt.status === 'cancelled' ? '#FEF2F2' : '#FFFBEB';
+
+  return (
+    <div
+      onClick={() => onClick(appt)}
+      style={{
+        background: 'white', borderRadius: 14, padding: '14px 16px',
+        border: isSelected ? `1.5px solid ${appt.color}` : '1.5px solid #F3F4F6',
+        borderLeft: `4px solid ${appt.color}`,
+        boxShadow: isSelected ? `0 4px 16px ${appt.color}25` : '0 1px 4px rgba(0,0,0,0.05)',
+        cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14,
+        transition: 'all 0.15s',
+      }}
+    >
+      <div style={{ textAlign: 'center', minWidth: 46 }}>
+        <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: appt.color, lineHeight: 1 }}>
+          {(appt.time || '').slice(0, 5)}
+        </p>
+      </div>
+      <div style={{ width: 1, height: 36, background: '#F1F5F9', flexShrink: 0 }} />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          {appt.student_name || appt.studentName}
+        </p>
+        <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6B7280' }}>{appt.type}</p>
+      </div>
+      <span style={{ fontSize: 11, fontWeight: 700, color: statusColor, background: statusBg, padding: '4px 10px', borderRadius: 20, flexShrink: 0 }}>
+        {statusLabel}
+      </span>
+    </div>
+  );
+}
+
 export default function Agenda() {
   const { user } = useAuth();
   const [baseDate, setBaseDate] = useState(new Date());
+  const [mobileDay, setMobileDay] = useState(new Date());
   const [appts, setAppts] = useState([]);
   const [students, setStudents] = useState([]);
   const [trainingPlans, setTrainingPlans] = useState([]);
@@ -87,7 +124,6 @@ export default function Agenda() {
     }
   }, [user?.id]);
 
-  // Auto-suggest type from training plan
   useEffect(() => {
     if (!form.studentId || !form.date) { setAutoGroup(''); return; }
     const dayOfWeek = new Date(form.date + 'T12:00:00').getDay();
@@ -102,7 +138,6 @@ export default function Agenda() {
     }
   }, [form.studentId, form.date, trainingPlans]);
 
-  // Close action panel on outside click
   useEffect(() => {
     const handler = (e) => { if (actionRef.current && !actionRef.current.contains(e.target)) setSelectedAppt(null); };
     document.addEventListener('mousedown', handler);
@@ -110,9 +145,27 @@ export default function Agenda() {
   }, []);
 
   const weekDates = getWeekDates(baseDate);
-  const prevWeek = () => { const d = new Date(baseDate); d.setDate(d.getDate() - 7); setBaseDate(d); };
-  const nextWeek = () => { const d = new Date(baseDate); d.setDate(d.getDate() + 7); setBaseDate(d); };
-  const goToday = () => setBaseDate(new Date());
+
+  const prevWeek = () => {
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() - 7);
+    setBaseDate(d);
+    const nd = new Date(mobileDay);
+    nd.setDate(nd.getDate() - 7);
+    setMobileDay(nd);
+  };
+  const nextWeek = () => {
+    const d = new Date(baseDate);
+    d.setDate(d.getDate() + 7);
+    setBaseDate(d);
+    const nd = new Date(mobileDay);
+    nd.setDate(nd.getDate() + 7);
+    setMobileDay(nd);
+  };
+  const goToday = () => {
+    setBaseDate(new Date());
+    setMobileDay(new Date());
+  };
 
   const openModalForDay = (date) => {
     setEditingId(null);
@@ -153,7 +206,6 @@ export default function Agenda() {
     const student = students.find(s => String(s.id) === String(form.studentId));
     if (!student) return;
 
-    // Modo edição
     if (editingId) {
       const updates = {
         student_id: student.id, student_name: student.name,
@@ -236,8 +288,12 @@ export default function Agenda() {
   const selectedStudent = students.find(s => String(s.id) === String(selectedAppt?.student_id));
   const hasPhone = !!selectedStudent?.phone;
 
+  const mobileDayLabel = mobileDay.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  const mobileDayAppts = getApptsForDay(mobileDay);
+
   return (
     <div className="page-padding" style={{ flex: 1 }}>
+      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Agenda</h2>
@@ -257,13 +313,13 @@ export default function Agenda() {
               <ChevronRight size={16} color="#374151" />
             </button>
           </div>
-          <button className="btn-primary" onClick={() => { setEditingId(null); setSelectedAppt(null); setForm({ studentId: '', date: TODAY, time: '08:00', type: 'Musculação', notes: '', repeat: false, repeatWeeks: '4' }); setModal(true); }}>
+          <button className="btn-primary agenda-new-btn" onClick={() => { setEditingId(null); setSelectedAppt(null); setForm({ studentId: '', date: TODAY, time: '08:00', type: 'Musculação', notes: '', repeat: false, repeatWeeks: '4' }); setModal(true); }}>
             <Plus size={16} /> Nova Aula
           </button>
         </div>
       </div>
 
-      {/* Filtro por aluno */}
+      {/* Student filter */}
       {students.length > 1 && (
         <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', marginRight: 2 }}>Filtrar:</span>
@@ -278,183 +334,185 @@ export default function Agenda() {
         </div>
       )}
 
-      <div className="agenda-outer-grid" style={{ display: 'grid', gridTemplateColumns: selectedAppt ? '1fr 300px' : '1fr', gap: 16, alignItems: 'start' }}>
-        {/* Calendar */}
-        <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-          {/* Day headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '2px solid #F3F4F6', minWidth: 560 }}>
-            {weekDates.map((date, i) => {
-              const isToday = formatDate(date) === TODAY;
-              return (
-                <button
-                  key={i}
-                  onClick={() => openModalForDay(date)}
-                  style={{
-                    padding: '14px 8px 12px', textAlign: 'center', cursor: 'pointer', border: 'none',
-                    borderBottom: `3px solid ${isToday ? '#3B82F6' : 'transparent'}`,
-                    background: isToday ? '#EFF6FF' : '#F9FAFB',
-                    transition: 'background 0.15s',
-                  }}
-                  onMouseEnter={e => { if (!isToday) e.currentTarget.style.background = '#F3F4F6'; }}
-                  onMouseLeave={e => { if (!isToday) e.currentTarget.style.background = '#F9FAFB'; }}
-                  title={`Agendar aula em ${date.toLocaleDateString('pt-BR')}`}
-                >
-                  <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: isToday ? '#3B82F6' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                    {DAYS_PT[date.getDay()]}
-                  </p>
-                  <p style={{ margin: '4px 0 0', fontSize: 22, fontWeight: 800, color: isToday ? '#3B82F6' : '#111827' }}>
-                    {date.getDate()}
-                  </p>
-                  <Plus size={12} color={isToday ? '#3B82F6' : '#D1D5DB'} style={{ marginTop: 2 }} />
-                </button>
-              );
-            })}
+      {/* ── DESKTOP: 7-column weekly grid ── */}
+      <div className="agenda-desktop-view">
+        <div className="agenda-outer-grid" style={{ display: 'grid', gridTemplateColumns: selectedAppt ? '1fr 300px' : '1fr', gap: 16, alignItems: 'start' }}>
+          <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+            <div style={{ overflowX: 'auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '2px solid #F3F4F6', minWidth: 560 }}>
+                {weekDates.map((date, i) => {
+                  const isToday = formatDate(date) === TODAY;
+                  return (
+                    <button
+                      key={i}
+                      onClick={() => openModalForDay(date)}
+                      style={{
+                        padding: '14px 8px 12px', textAlign: 'center', cursor: 'pointer', border: 'none',
+                        borderBottom: `3px solid ${isToday ? '#3B82F6' : 'transparent'}`,
+                        background: isToday ? '#EFF6FF' : '#F9FAFB',
+                        transition: 'background 0.15s',
+                      }}
+                      onMouseEnter={e => { if (!isToday) e.currentTarget.style.background = '#F3F4F6'; }}
+                      onMouseLeave={e => { if (!isToday) e.currentTarget.style.background = '#F9FAFB'; }}
+                      title={`Agendar aula em ${date.toLocaleDateString('pt-BR')}`}
+                    >
+                      <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: isToday ? '#3B82F6' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        {DAYS_PT[date.getDay()]}
+                      </p>
+                      <p style={{ margin: '4px 0 0', fontSize: 22, fontWeight: 800, color: isToday ? '#3B82F6' : '#111827' }}>
+                        {date.getDate()}
+                      </p>
+                      <Plus size={12} color={isToday ? '#3B82F6' : '#D1D5DB'} style={{ marginTop: 2 }} />
+                    </button>
+                  );
+                })}
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', minWidth: 560 }}>
+                {weekDates.map((date, i) => {
+                  const dayAppts = getApptsForDay(date);
+                  const isToday = formatDate(date) === TODAY;
+                  return (
+                    <div key={i} style={{
+                      minHeight: 320, padding: '10px 6px',
+                      borderRight: i < 6 ? '1px solid #F3F4F6' : 'none',
+                      background: isToday ? 'rgba(239,246,255,0.35)' : 'white',
+                      display: 'flex', flexDirection: 'column', gap: 5,
+                    }}>
+                      {dayAppts.length === 0 ? (
+                        <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <span style={{ fontSize: 11, color: '#E5E7EB' }}>—</span>
+                        </div>
+                      ) : (
+                        dayAppts.map(appt => (
+                          <ApptCard key={appt.id} appt={appt} onClick={setSelectedAppt} isSelected={selectedAppt?.id === appt.id} />
+                        ))
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
 
-          {/* Day columns */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', minWidth: 560 }}>
-            {weekDates.map((date, i) => {
-              const dayAppts = getApptsForDay(date);
-              const isToday = formatDate(date) === TODAY;
-              return (
-                <div key={i} style={{
-                  minHeight: 320, padding: '10px 6px',
-                  borderRight: i < 6 ? '1px solid #F3F4F6' : 'none',
-                  background: isToday ? 'rgba(239,246,255,0.35)' : 'white',
-                  display: 'flex', flexDirection: 'column', gap: 5,
-                }}>
-                  {dayAppts.length === 0 ? (
-                    <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <span style={{ fontSize: 11, color: '#E5E7EB' }}>—</span>
-                    </div>
-                  ) : (
-                    dayAppts.map(appt => (
-                      <ApptCard
-                        key={appt.id}
-                        appt={appt}
-                        onClick={setSelectedAppt}
-                        isSelected={selectedAppt?.id === appt.id}
-                      />
-                    ))
-                  )}
-                </div>
-              );
-            })}
-          </div>
-          </div>
+          {selectedAppt && (
+            <div ref={actionRef} className="agenda-action-panel" style={{ background: 'white', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', overflow: 'hidden', position: 'sticky', top: 20 }}>
+              <ActionPanelContent
+                appt={selectedAppt}
+                hasPhone={hasPhone}
+                actionLoading={actionLoading}
+                onClose={() => setSelectedAppt(null)}
+                onMarkDone={handleMarkDone}
+                onWhatsApp={handleWhatsApp}
+                onEdit={handleEditAppt}
+                onCancel={handleCancel}
+                onDelete={handleDeleteAppt}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* ── MOBILE: day picker + appointment list ── */}
+      <div className="agenda-mobile-view">
+        {/* Day pill row */}
+        <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 12, WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+          {weekDates.map((date, i) => {
+            const isSelected = formatDate(date) === formatDate(mobileDay);
+            const isToday = formatDate(date) === TODAY;
+            const hasAppts = getApptsForDay(date).length > 0;
+            return (
+              <button
+                key={i}
+                onClick={() => setMobileDay(date)}
+                style={{
+                  flexShrink: 0, display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  width: 46, padding: '8px 4px 6px', borderRadius: 14, border: 'none',
+                  background: isSelected ? '#3B82F6' : isToday ? '#EFF6FF' : 'white',
+                  boxShadow: isSelected ? '0 2px 8px rgba(59,130,246,0.35)' : '0 1px 3px rgba(0,0,0,0.06)',
+                  cursor: 'pointer', transition: 'all 0.15s',
+                  outline: isToday && !isSelected ? '2px solid #93C5FD' : 'none',
+                }}
+              >
+                <span style={{ fontSize: 10, fontWeight: 700, color: isSelected ? 'rgba(255,255,255,0.75)' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                  {DAYS_PT[date.getDay()]}
+                </span>
+                <span style={{ fontSize: 19, fontWeight: 800, color: isSelected ? 'white' : isToday ? '#3B82F6' : '#111827', marginTop: 2, lineHeight: 1 }}>
+                  {date.getDate()}
+                </span>
+                <div style={{ width: 5, height: 5, borderRadius: '50%', marginTop: 4, background: hasAppts ? (isSelected ? 'rgba(255,255,255,0.8)' : '#3B82F6') : 'transparent' }} />
+              </button>
+            );
+          })}
         </div>
 
-        {/* Quick action panel — desktop: sidebar, mobile: bottom sheet overlay */}
-        {selectedAppt && (
-          <div ref={actionRef} className="agenda-action-panel" style={{ background: 'white', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', overflow: 'hidden', position: 'sticky', top: 20 }}>
-            <div style={{ padding: '14px 16px', background: selectedAppt.color, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-              <div>
-                <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
-                  {new Date(selectedAppt.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })} · {(selectedAppt.time || '').slice(0, 5)}
-                </p>
-                <p style={{ margin: '4px 0 0', fontSize: 16, fontWeight: 800, color: 'white' }}>
-                  {selectedAppt.student_name || selectedAppt.studentName}
-                </p>
-                <p style={{ margin: '2px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>{selectedAppt.type}</p>
-              </div>
-              <button onClick={() => setSelectedAppt(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', padding: 2 }}>
-                <X size={18} />
-              </button>
-            </div>
+        {/* Selected day label */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#374151', textTransform: 'capitalize' }}>
+            {mobileDayLabel}
+          </p>
+          {mobileDayAppts.length > 0 && (
+            <span style={{ fontSize: 12, color: '#6B7280' }}>{mobileDayAppts.length} aula{mobileDayAppts.length !== 1 ? 's' : ''}</span>
+          )}
+        </div>
 
-            <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {selectedAppt.status !== 'done' && selectedAppt.status !== 'cancelled' && (
-                <button
-                  onClick={() => handleMarkDone(selectedAppt)}
-                  disabled={actionLoading}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 10, cursor: 'pointer', width: '100%', textAlign: 'left', opacity: actionLoading ? 0.7 : 1 }}
-                >
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Check size={16} color="white" />
-                  </div>
-                  <div>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#065F46' }}>Confirmar presença</p>
-                    <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>Registra frequência automaticamente</p>
-                  </div>
-                </button>
-              )}
-
-              {selectedAppt.status === 'done' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10 }}>
-                  <Check size={18} color="#10B981" />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#15803D' }}>Aula realizada · presença registrada</span>
-                </div>
-              )}
-
-              {selectedAppt.status === 'cancelled' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10 }}>
-                  <X size={18} color="#EF4444" />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#DC2626' }}>Aula cancelada</span>
-                </div>
-              )}
-
-              {hasPhone && (
-                <button
-                  onClick={() => handleWhatsApp(selectedAppt)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, cursor: 'pointer', width: '100%', textAlign: 'left' }}
-                >
-                  <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <MessageCircle size={16} color="white" />
-                  </div>
-                  <div>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#065F46' }}>Enviar WhatsApp</p>
-                    <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>Lembrete de confirmação</p>
-                  </div>
-                </button>
-              )}
-
-              {selectedAppt.status !== 'cancelled' && selectedAppt.status !== 'done' && (
-                <>
-                  <button
-                    onClick={() => handleEditAppt(selectedAppt)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, cursor: 'pointer', width: '100%', textAlign: 'left' }}
-                  >
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    </div>
-                    <div>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1E40AF' }}>Editar aula</p>
-                      <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>Alterar horário, tipo ou data</p>
-                    </div>
-                  </button>
-                  <button
-                    onClick={() => handleCancel(selectedAppt)}
-                    disabled={actionLoading}
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, cursor: 'pointer', width: '100%', textAlign: 'left', opacity: actionLoading ? 0.7 : 1 }}
-                  >
-                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <X size={16} color="#EF4444" />
-                    </div>
-                    <div>
-                      <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#991B1B' }}>Cancelar aula</p>
-                      <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>Marca como cancelada</p>
-                    </div>
-                  </button>
-                </>
-              )}
-
+        {/* Appointment list */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {mobileDayAppts.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '52px 0 40px', color: '#9CA3AF' }}>
+              <Calendar size={36} color="#E5E7EB" style={{ display: 'block', margin: '0 auto 12px' }} />
+              <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 700, color: '#374151' }}>Sem aulas neste dia</p>
+              <p style={{ margin: '0 0 20px', fontSize: 13, color: '#9CA3AF' }}>Toque no botão abaixo para agendar</p>
               <button
-                onClick={() => handleDeleteAppt(selectedAppt)}
-                disabled={actionLoading}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'none', border: '1px solid #F3F4F6', borderRadius: 10, cursor: 'pointer', width: '100%', textAlign: 'left', opacity: actionLoading ? 0.7 : 1 }}
+                onClick={() => openModalForDay(mobileDay)}
+                style={{ padding: '11px 28px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', border: 'none', borderRadius: 12, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
               >
-                <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-                </div>
-                <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#9CA3AF' }}>Excluir da agenda</p>
+                <Plus size={16} /> Agendar aula
               </button>
             </div>
+          ) : (
+            mobileDayAppts.map(appt => (
+              <MobileApptCard
+                key={appt.id}
+                appt={appt}
+                onClick={setSelectedAppt}
+                isSelected={selectedAppt?.id === appt.id}
+              />
+            ))
+          )}
+        </div>
+
+        {/* Mobile action sheet */}
+        {selectedAppt && (
+          <div
+            ref={actionRef}
+            className="agenda-action-panel"
+            style={{ background: 'white', borderRadius: 12, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', overflow: 'hidden' }}
+          >
+            <ActionPanelContent
+              appt={selectedAppt}
+              hasPhone={hasPhone}
+              actionLoading={actionLoading}
+              onClose={() => setSelectedAppt(null)}
+              onMarkDone={handleMarkDone}
+              onWhatsApp={handleWhatsApp}
+              onEdit={handleEditAppt}
+              onCancel={handleCancel}
+              onDelete={handleDeleteAppt}
+            />
           </div>
         )}
       </div>
 
-      {/* Create appointment modal */}
+      {/* FAB — mobile only */}
+      <button
+        className="agenda-fab"
+        onClick={() => { setEditingId(null); setSelectedAppt(null); setForm({ studentId: '', date: formatDate(mobileDay), time: '08:00', type: 'Musculação', notes: '', repeat: false, repeatWeeks: '4' }); setModal(true); }}
+        aria-label="Nova aula"
+      >
+        <Plus size={24} />
+      </button>
+
+      {/* Create/edit appointment modal */}
       <Modal isOpen={modal} onClose={() => { setModal(false); setEditingId(null); setAutoGroup(''); }} title={editingId ? 'Editar Aula' : 'Nova Aula'}>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -489,34 +547,35 @@ export default function Agenda() {
               </select>
             </div>
 
-            {/* Repeat toggle — só na criação */}
-            {!editingId && <div style={{ background: '#F9FAFB', borderRadius: 10, padding: 14 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: form.repeat ? 10 : 0 }}>
-                <input
-                  type="checkbox"
-                  checked={form.repeat}
-                  onChange={e => setForm(f => ({ ...f, repeat: e.target.checked }))}
-                  style={{ width: 16, height: 16, accentColor: '#3B82F6', cursor: 'pointer' }}
-                />
-                <div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <RefreshCw size={13} color="#3B82F6" /> Repetir semanalmente
-                  </span>
-                  <p style={{ margin: '1px 0 0', fontSize: 11, color: '#9CA3AF' }}>Cria a mesma aula nas próximas semanas</p>
-                </div>
-              </label>
-              {form.repeat && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <label style={{ fontSize: 13, color: '#374151', fontWeight: 500, whiteSpace: 'nowrap', marginBottom: 0 }}>Repetir por</label>
-                  <select name="repeatWeeks" value={form.repeatWeeks} onChange={handleChange} style={{ flex: 1 }}>
-                    {[2, 4, 8, 12, 16, 24].map(w => <option key={w} value={w}>{w} semanas</option>)}
-                  </select>
-                  <span style={{ fontSize: 12, color: '#6B7280', whiteSpace: 'nowrap' }}>
-                    = {parseInt(form.repeatWeeks)} aulas
-                  </span>
-                </div>
-              )}
-            </div>}
+            {!editingId && (
+              <div style={{ background: '#F9FAFB', borderRadius: 10, padding: 14 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: form.repeat ? 10 : 0 }}>
+                  <input
+                    type="checkbox"
+                    checked={form.repeat}
+                    onChange={e => setForm(f => ({ ...f, repeat: e.target.checked }))}
+                    style={{ width: 16, height: 16, accentColor: '#3B82F6', cursor: 'pointer' }}
+                  />
+                  <div>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <RefreshCw size={13} color="#3B82F6" /> Repetir semanalmente
+                    </span>
+                    <p style={{ margin: '1px 0 0', fontSize: 11, color: '#9CA3AF' }}>Cria a mesma aula nas próximas semanas</p>
+                  </div>
+                </label>
+                {form.repeat && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <label style={{ fontSize: 13, color: '#374151', fontWeight: 500, whiteSpace: 'nowrap', marginBottom: 0 }}>Repetir por</label>
+                    <select name="repeatWeeks" value={form.repeatWeeks} onChange={handleChange} style={{ flex: 1 }}>
+                      {[2, 4, 8, 12, 16, 24].map(w => <option key={w} value={w}>{w} semanas</option>)}
+                    </select>
+                    <span style={{ fontSize: 12, color: '#6B7280', whiteSpace: 'nowrap' }}>
+                      = {parseInt(form.repeatWeeks)} aulas
+                    </span>
+                  </div>
+                )}
+              </div>
+            )}
 
             <div>
               <label>Observações</label>
@@ -533,5 +592,114 @@ export default function Agenda() {
         </form>
       </Modal>
     </div>
+  );
+}
+
+function ActionPanelContent({ appt, hasPhone, actionLoading, onClose, onMarkDone, onWhatsApp, onEdit, onCancel, onDelete }) {
+  return (
+    <>
+      <div style={{ padding: '14px 16px', background: appt.color, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+        <div>
+          <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.8)', fontWeight: 600 }}>
+            {new Date(appt.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'short' })} · {(appt.time || '').slice(0, 5)}
+          </p>
+          <p style={{ margin: '4px 0 0', fontSize: 16, fontWeight: 800, color: 'white' }}>
+            {appt.student_name || appt.studentName}
+          </p>
+          <p style={{ margin: '2px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>{appt.type}</p>
+        </div>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', padding: 2 }}>
+          <X size={18} />
+        </button>
+      </div>
+
+      <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {appt.status !== 'done' && appt.status !== 'cancelled' && (
+          <button
+            onClick={() => onMarkDone(appt)}
+            disabled={actionLoading}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#ECFDF5', border: '1px solid #A7F3D0', borderRadius: 10, cursor: 'pointer', width: '100%', textAlign: 'left', opacity: actionLoading ? 0.7 : 1 }}
+          >
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Check size={16} color="white" />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#065F46' }}>Confirmar presença</p>
+              <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>Registra frequência automaticamente</p>
+            </div>
+          </button>
+        )}
+
+        {appt.status === 'done' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10 }}>
+            <Check size={18} color="#10B981" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#15803D' }}>Aula realizada · presença registrada</span>
+          </div>
+        )}
+
+        {appt.status === 'cancelled' && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10 }}>
+            <X size={18} color="#EF4444" />
+            <span style={{ fontSize: 13, fontWeight: 600, color: '#DC2626' }}>Aula cancelada</span>
+          </div>
+        )}
+
+        {hasPhone && (
+          <button
+            onClick={() => onWhatsApp(appt)}
+            style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, cursor: 'pointer', width: '100%', textAlign: 'left' }}
+          >
+            <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#25D366', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <MessageCircle size={16} color="white" />
+            </div>
+            <div>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#065F46' }}>Enviar WhatsApp</p>
+              <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>Lembrete de confirmação</p>
+            </div>
+          </button>
+        )}
+
+        {appt.status !== 'cancelled' && appt.status !== 'done' && (
+          <>
+            <button
+              onClick={() => onEdit(appt)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, cursor: 'pointer', width: '100%', textAlign: 'left' }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#DBEAFE', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#3B82F6" strokeWidth="2.5"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1E40AF' }}>Editar aula</p>
+                <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>Alterar horário, tipo ou data</p>
+              </div>
+            </button>
+            <button
+              onClick={() => onCancel(appt)}
+              disabled={actionLoading}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, cursor: 'pointer', width: '100%', textAlign: 'left', opacity: actionLoading ? 0.7 : 1 }}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <X size={16} color="#EF4444" />
+              </div>
+              <div>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#991B1B' }}>Cancelar aula</p>
+                <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>Marca como cancelada</p>
+              </div>
+            </button>
+          </>
+        )}
+
+        <button
+          onClick={() => onDelete(appt)}
+          disabled={actionLoading}
+          style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'none', border: '1px solid #F3F4F6', borderRadius: 10, cursor: 'pointer', width: '100%', textAlign: 'left', opacity: actionLoading ? 0.7 : 1 }}
+        >
+          <div style={{ width: 28, height: 28, borderRadius: '50%', background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+          </div>
+          <p style={{ margin: 0, fontSize: 12, fontWeight: 600, color: '#9CA3AF' }}>Excluir da agenda</p>
+        </button>
+      </div>
+    </>
   );
 }

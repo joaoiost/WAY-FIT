@@ -354,6 +354,11 @@ label {
   .page-padding { padding: 12px; }
 }
 
+/* Agenda desktop/mobile split */
+.agenda-desktop-view { display: block; }
+.agenda-mobile-view  { display: none; }
+.agenda-fab          { display: none; }
+
 /* ── Responsive helpers ─────────────────────────────────── */
 .mobile-stack { display: flex; flex-direction: column; gap: 16px; }
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -373,6 +378,31 @@ label {
     z-index: 55;
     max-height: 80vh;
     overflow-y: auto;
+  }
+
+  /* Agenda: swap views */
+  .agenda-desktop-view { display: none !important; }
+  .agenda-mobile-view  { display: block; }
+  /* Hide "Nova Aula" button in header on mobile (FAB handles it) */
+  .agenda-new-btn { display: none !important; }
+
+  /* Agenda FAB */
+  .agenda-fab {
+    display: flex;
+    position: fixed;
+    bottom: 84px;
+    right: 18px;
+    width: 54px;
+    height: 54px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3B82F6, #8B5CF6);
+    color: white;
+    border: none;
+    box-shadow: 0 4px 16px rgba(59,130,246,0.4);
+    cursor: pointer;
+    z-index: 54;
+    align-items: center;
+    justify-content: center;
   }
 
   /* Stack any two-column grid on mobile */

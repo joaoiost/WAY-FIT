@@ -51,6 +51,7 @@ export default function StudentDashboard() {
   const [videoModal, setVideoModal] = useState(null);
   const [pushState, setPushState] = useState('idle'); // 'idle' | 'subscribed' | 'subscribing' | 'unsupported'
   const [studentId, setStudentId] = useState(null);
+  const [studentGoal, setStudentGoal] = useState('');
 
   const now = new Date();
   const todayDay = now.getDay();
@@ -62,10 +63,11 @@ export default function StudentDashboard() {
     if (hasSupabase) {
       (async () => {
         const { data: student } = await supabase
-          .from('students').select('id, personal_id, plan').eq('user_id', user.id).maybeSingle();
+          .from('students').select('id, personal_id, plan, goal').eq('user_id', user.id).maybeSingle();
 
         if (student) {
           setStudentId(student.id);
+          setStudentGoal(student.goal || '');
           const [{ data: plans }, { data: appts }, { data: profile }, { data: atts }] = await Promise.all([
             supabase.from('training_plans').select('*, exercises(*)').eq('student_id', student.id).order('created_at', { ascending: false }),
             supabase.from('appointments').select('*').eq('student_id', student.id).gte('date', todayStr).order('date').limit(1),
@@ -172,6 +174,17 @@ export default function StudentDashboard() {
           <button onClick={handleDisableNotifications} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex', padding: 4 }}>
             <BellOff size={16} />
           </button>
+        </div>
+      )}
+
+      {/* Objetivo do aluno */}
+      {studentGoal && (
+        <div style={{ background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+          <span style={{ fontSize: 24 }}>🎯</span>
+          <div>
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Seu objetivo</p>
+            <p style={{ margin: '2px 0 0', fontSize: 15, fontWeight: 700, color: 'white' }}>{studentGoal}</p>
+          </div>
         </div>
       )}
 

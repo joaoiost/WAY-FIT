@@ -359,6 +359,10 @@ label {
 .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
 
 @media (max-width: 768px) {
+  .agenda-outer-grid {
+    grid-template-columns: 1fr !important;
+  }
+
   /* Stack any two-column grid on mobile */
   [style*="grid-template-columns"] {
     grid-template-columns: 1fr !important;

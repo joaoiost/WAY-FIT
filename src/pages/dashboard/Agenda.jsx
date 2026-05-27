@@ -278,11 +278,12 @@ export default function Agenda() {
         </div>
       )}
 
-      <div style={{ display: 'grid', gridTemplateColumns: selectedAppt ? '1fr 300px' : '1fr', gap: 16, alignItems: 'start' }}>
+      <div className="agenda-outer-grid" style={{ display: 'grid', gridTemplateColumns: selectedAppt ? '1fr 300px' : '1fr', gap: 16, alignItems: 'start' }}>
         {/* Calendar */}
         <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
           {/* Day headers */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '2px solid #F3F4F6' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '2px solid #F3F4F6', minWidth: 560 }}>
             {weekDates.map((date, i) => {
               const isToday = formatDate(date) === TODAY;
               return (
@@ -312,7 +313,7 @@ export default function Agenda() {
           </div>
 
           {/* Day columns */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', minWidth: 560 }}>
             {weekDates.map((date, i) => {
               const dayAppts = getApptsForDay(date);
               const isToday = formatDate(date) === TODAY;
@@ -340,6 +341,7 @@ export default function Agenda() {
                 </div>
               );
             })}
+          </div>
           </div>
         </div>
 

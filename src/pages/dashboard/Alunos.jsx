@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, Download, Mail, Copy, Check, ExternalLink } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Download, Mail, Copy, Check, ExternalLink, Calendar } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/UI/Avatar';
 import Badge from '../../components/UI/Badge';
 import Modal from '../../components/UI/Modal';
@@ -7,6 +8,11 @@ import { students as mockStudents } from '../../data/mockData';
 import { exportAlunosPDF, exportAlunosExcel } from '../../utils/export';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+
+const TYPE_COLORS = {
+  Musculação: '#3B82F6', Funcional: '#10B981', Hipertrofia: '#8B5CF6',
+  Cardio: '#F59E0B', Yoga: '#EC4899', Pilates: '#06B6D4', Força: '#EF4444',
+};
 
 const colors = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4'];
 
@@ -66,7 +72,10 @@ function StudentForm({ form, onChange, onSubmit, onClose, isEdit }) {
 
 export default function Alunos() {
   const { sendInvite, user } = useAuth();
+  const navigate = useNavigate();
   const [students, setStudents] = useState([]);
+  const [quickSchedule, setQuickSchedule] = useState(null);
+  const [quickForm, setQuickForm] = useState({ date: '', time: '08:00', type: 'Musculação' });
 
   useEffect(() => {
     if (!user) return;
@@ -289,6 +298,13 @@ export default function Alunos() {
                   <td style={{ padding: '14px 16px' }}>
                     <div style={{ display: 'flex', gap: 8 }}>
                       <button
+                        onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time: '08:00', type: 'Musculação' }); }}
+                        title="Agendar aula"
+                        style={{ padding: '6px', background: '#F0FDF4', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#10B981', display: 'flex' }}
+                      >
+                        <Calendar size={15} />
+                      </button>
+                      <button
                         onClick={() => openEdit(s)}
                         style={{ padding: '6px', background: '#EFF6FF', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#3B82F6', display: 'flex' }}
                       >
@@ -341,6 +357,65 @@ export default function Alunos() {
             Excluir
           </button>
         </div>
+      </Modal>
+
+      {/* Quick Schedule Modal */}
+      <Modal
+        isOpen={!!quickSchedule}
+        onClose={() => setQuickSchedule(null)}
+        title={quickSchedule ? `Agendar aula — ${quickSchedule.name}` : 'Agendar aula'}
+        maxWidth="420px"
+      >
+        <form onSubmit={async (e) => {
+          e.preventDefault();
+          if (!quickSchedule || !user) return;
+          const newAppt = {
+            personal_id: user.id,
+            student_id: quickSchedule.id,
+            student_name: quickSchedule.name,
+            date: quickForm.date,
+            time: quickForm.time,
+            type: quickForm.type,
+            status: 'pending',
+            color: TYPE_COLORS[quickForm.type] || '#3B82F6',
+          };
+          if (hasSupabase) {
+            await supabase.from('appointments').insert(newAppt);
+          }
+          setQuickSchedule(null);
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ background: '#F9FAFB', borderRadius: 8, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <Avatar initials={quickSchedule?.initials} color={quickSchedule?.color} />
+              <div>
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>{quickSchedule?.name}</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>{quickSchedule?.goal || quickSchedule?.plan}</p>
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label>Data *</label>
+                <input type="date" value={quickForm.date} onChange={e => setQuickForm(f => ({ ...f, date: e.target.value }))} required />
+              </div>
+              <div>
+                <label>Horário *</label>
+                <input type="time" value={quickForm.time} onChange={e => setQuickForm(f => ({ ...f, time: e.target.value }))} required />
+              </div>
+            </div>
+            <div>
+              <label>Tipo de treino *</label>
+              <select value={quickForm.type} onChange={e => setQuickForm(f => ({ ...f, type: e.target.value }))} required>
+                {['Musculação', 'Funcional', 'Hipertrofia', 'Cardio', 'Yoga', 'Pilates', 'Força'].map(t => (
+                  <option key={t} value={t}>{t}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
+            <button type="button" className="btn-secondary" onClick={() => setQuickSchedule(null)}>Cancelar</button>
+            <button type="submit" className="btn-primary"><Calendar size={15} /> Agendar</button>
+          </div>
+        </form>
       </Modal>
 
       {/* Invite Modal */}

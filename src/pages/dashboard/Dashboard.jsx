@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Users, Calendar, DollarSign, Check, MessageCircle, ChevronRight, Clock, TrendingUp } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import StatCard from '../../components/UI/StatCard';
 import Avatar from '../../components/UI/Avatar';
 import Badge from '../../components/UI/Badge';
@@ -65,6 +66,7 @@ export default function Dashboard() {
     window.open(`https://wa.me/${full}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
+  const navigate = useNavigate();
   const activeStudents = students.filter(s => s.status === 'ativo');
   const pendingToday = todayAppts.filter(a => a.status !== 'done' && a.status !== 'cancelled').length;
 
@@ -72,9 +74,15 @@ export default function Dashboard() {
     <div className="page-padding" style={{ flex: 1 }}>
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 28 }}>
-        <StatCard title="Alunos Ativos" value={String(activeStudents.length)} change={null} changeLabel="cadastrados" icon={Users} />
-        <StatCard title="Aulas Hoje" value={String(todayAppts.length)} change={null} changeLabel={pendingToday > 0 ? `${pendingToday} pendentes` : 'todas confirmadas'} icon={Calendar} />
-        <StatCard title="Receita Total" value={`R$ ${revenue.toLocaleString('pt-BR')}`} change={null} changeLabel="pagamentos recebidos" icon={DollarSign} />
+        <div onClick={() => navigate('/dashboard/alunos')} style={{ cursor: 'pointer' }}>
+          <StatCard title="Alunos Ativos" value={String(activeStudents.length)} change={null} changeLabel="cadastrados" icon={Users} />
+        </div>
+        <div onClick={() => navigate('/dashboard/agenda')} style={{ cursor: 'pointer' }}>
+          <StatCard title="Aulas Hoje" value={String(todayAppts.length)} change={null} changeLabel={pendingToday > 0 ? `${pendingToday} pendentes` : 'todas confirmadas'} icon={Calendar} />
+        </div>
+        <div onClick={() => navigate('/dashboard/financeiro')} style={{ cursor: 'pointer' }}>
+          <StatCard title="Receita Total" value={`R$ ${revenue.toLocaleString('pt-BR')}`} change={null} changeLabel="pagamentos recebidos" icon={DollarSign} />
+        </div>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>

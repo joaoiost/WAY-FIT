@@ -354,6 +354,14 @@ label {
   .page-padding { padding: 12px; }
 }
 
+/* Chat layout */
+.chat-sidebar { display: flex; }
+.chat-conv    { display: flex; }
+.chat-back-btn { display: none !important; }
+
+/* Student Detail page tabs scroll */
+.student-detail-tabs { display: flex; gap: 4; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+
 /* Agenda desktop/mobile split */
 .agenda-desktop-view { display: block; }
 .agenda-mobile-view  { display: none; }
@@ -379,6 +387,12 @@ label {
     max-height: 80vh;
     overflow-y: auto;
   }
+
+  /* Chat: sidebar hides when conversation is open on mobile */
+  .chat-sidebar-hidden { display: none !important; }
+  .chat-conv { display: none; }
+  .chat-conv-open { display: flex !important; position: fixed; inset: 0; top: 64px; bottom: 72px; border-radius: 0 !important; z-index: 50; }
+  .chat-back-btn { display: flex !important; }
 
   /* Agenda: swap views */
   .agenda-desktop-view { display: none !important; }

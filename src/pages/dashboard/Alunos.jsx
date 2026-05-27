@@ -273,7 +273,10 @@ export default function Alunos() {
               filtered.map(s => (
                 <tr key={s.id} className="table-row" style={{ borderBottom: '1px solid #F3F4F6' }}>
                   <td style={{ padding: '14px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div
+                      onClick={() => navigate(`/dashboard/alunos/${s.id}`)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
+                    >
                       <Avatar initials={s.initials} color={s.color} />
                       <div>
                         <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>{s.name}</p>

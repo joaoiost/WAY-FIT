@@ -11,12 +11,14 @@ import InviteAccept from './pages/InviteAccept';
 
 import Dashboard from './pages/dashboard/Dashboard';
 import Alunos from './pages/dashboard/Alunos';
+import AlunoDetalhe from './pages/dashboard/AlunoDetalhe';
 import Agenda from './pages/dashboard/Agenda';
 import Treinos from './pages/dashboard/Treinos';
 import Financeiro from './pages/dashboard/Financeiro';
 import WhatsApp from './pages/dashboard/WhatsApp';
 import Perfil from './pages/dashboard/Perfil';
 import Frequencia from './pages/dashboard/Frequencia';
+import Chat from './pages/dashboard/Chat';
 
 import PublicProfile from './pages/PublicProfile';
 
@@ -105,6 +107,8 @@ export default function App() {
             <Route path="/dashboard/whatsapp" element={<WhatsApp />} />
             <Route path="/dashboard/perfil" element={<Perfil />} />
             <Route path="/dashboard/frequencia" element={<Frequencia />} />
+            <Route path="/dashboard/chat" element={<Chat />} />
+            <Route path="/dashboard/alunos/:id" element={<AlunoDetalhe />} />
           </Route>
 
           <Route element={<StudentRoute />}>

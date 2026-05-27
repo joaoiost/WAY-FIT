@@ -18,6 +18,7 @@ const PAGE_NAMES = {
   '/dashboard/treinos':    'Treinos',
   '/dashboard/financeiro': 'Financeiro',
   '/dashboard/whatsapp':   'Notificações',
+  '/dashboard/chat':       'Chat',
   '/dashboard/perfil':     'Meu Perfil',
   '/dashboard/frequencia': 'Frequência',
   '/aluno/dashboard':      'Início',
@@ -42,7 +43,8 @@ export default function Header() {
   const hour = now.getHours();
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
   const firstName = user?.name?.split(' ')[0] || 'Usuário';
-  const pageName = PAGE_NAMES[pathname] || '';
+  const pageName = PAGE_NAMES[pathname]
+    ?? (pathname.startsWith('/dashboard/alunos/') ? 'Perfil do Aluno' : '');
 
   useEffect(() => {
     if (!showPanel) return;

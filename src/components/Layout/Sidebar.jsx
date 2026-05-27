@@ -1,5 +1,5 @@
 import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { Zap, LayoutDashboard, Users, Calendar, Dumbbell, DollarSign, Bell, LogOut, X, Settings, ClipboardList } from 'lucide-react';
+import { Zap, LayoutDashboard, Users, Calendar, Dumbbell, DollarSign, Bell, LogOut, X, Settings, ClipboardList, MessageCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 
@@ -8,6 +8,7 @@ const navItems = [
   { to: '/dashboard/alunos', icon: Users, label: 'Alunos' },
   { to: '/dashboard/agenda', icon: Calendar, label: 'Agenda' },
   { to: '/dashboard/treinos', icon: Dumbbell, label: 'Treinos' },
+  { to: '/dashboard/chat', icon: MessageCircle, label: 'Chat' },
   { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência' },
   { to: '/dashboard/financeiro', icon: DollarSign, label: 'Financeiro' },
   { to: '/dashboard/whatsapp', icon: Bell, label: 'Notificações' },

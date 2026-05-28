@@ -57,7 +57,6 @@ export default function PublicProfile() {
     const emailConfRequired = !authData.session;
 
     if (userId) {
-      const planPrice = 150;
       const initials = form.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
       const colors = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899'];
       const color = colors[Math.floor(Math.random() * colors.length)];
@@ -69,8 +68,8 @@ export default function PublicProfile() {
         email: form.email,
         phone: form.phone,
         goal: form.goal,
-        plan: 'Start',
-        plan_price: planPrice,
+        plan: 'Mensal',
+        plan_price: null,
         status: 'ativo',
         initials,
         color,
@@ -261,6 +260,13 @@ export default function PublicProfile() {
                     {submitting ? 'Criando conta...' : `Começar com ${firstName}`}
                     {!submitting && <ArrowRight size={16} />}
                   </button>
+
+                  <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF', textAlign: 'center', lineHeight: 1.6 }}>
+                    Ao criar sua conta você concorda com os{' '}
+                    <a href="/termos" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', textDecoration: 'none', fontWeight: 600 }}>Termos de Uso</a>
+                    {' '}e a{' '}
+                    <a href="/privacidade" target="_blank" rel="noreferrer" style={{ color: '#3B82F6', textDecoration: 'none', fontWeight: 600 }}>Política de Privacidade</a>
+                  </p>
                 </form>
               </>
             )}

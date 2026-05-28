@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Dumbbell, Trash2, X, Video, Play, Loader, Save, ChevronDown, Check, Copy, BookOpen } from 'lucide-react';
+import { Plus, Dumbbell, Trash2, X, Video, Play, Loader, Save, ChevronDown, ChevronUp, Check, Copy, BookOpen } from 'lucide-react';
 import Avatar from '../../components/UI/Avatar';
 import { trainingPlans as mockPlans, students as mockStudents } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
@@ -65,62 +65,124 @@ function VideoModal({ videoUrl, title, onClose }) {
   );
 }
 
-function ExerciseRow({ ex, index, onChange, onSuggest, suggestions }) {
-  const [showSug, setShowSug] = useState(false);
-  const ref = useRef(null);
+const REPS_PRESETS = ['6', '8', '10', '12', '15', '20', 'Falha'];
+const REST_PRESETS = ['30s', '45s', '60s', '90s', '2min'];
 
-  useEffect(() => {
-    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setShowSug(false); };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
-  }, []);
+function ExerciseCard({ ex, index, total, onChange, onMove, groupColor }) {
+  const [showExtra, setShowExtra] = useState(false);
+  const sets = parseInt(ex.sets) || 3;
+  const gc = groupColor || '#3B82F6';
 
   return (
-    <div style={{ padding: '10px 0', borderBottom: '1px solid #F3F4F6' }}>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 48px 62px 58px 52px 28px', gap: 5, alignItems: 'center', marginBottom: 6 }}>
-        <div ref={ref} style={{ position: 'relative' }}>
-          <input
-            placeholder="Nome do exercício *"
-            value={ex.name}
-            onChange={e => { onChange(index, 'name', e.target.value); setShowSug(true); }}
-            onFocus={() => setShowSug(true)}
-            style={{ fontSize: 13, width: '100%' }}
-          />
-          {showSug && suggestions.length > 0 && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1px solid #E5E7EB', borderRadius: 8, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 50, maxHeight: 180, overflowY: 'auto' }}>
-              {suggestions
-                .filter(s => !ex.name || s.toLowerCase().includes(ex.name.toLowerCase()))
-                .map(s => (
-                  <button
-                    key={s}
-                    type="button"
-                    onMouseDown={() => { onChange(index, 'name', s); setShowSug(false); }}
-                    style={{ width: '100%', textAlign: 'left', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', fontSize: 13, color: '#374151' }}
-                    onMouseEnter={e => e.target.style.background = '#F9FAFB'}
-                    onMouseLeave={e => e.target.style.background = 'none'}
-                  >
-                    {s}
-                  </button>
-                ))
-              }
-            </div>
-          )}
+    <div style={{
+      background: 'white', borderRadius: 12,
+      border: `1.5px solid ${gc}25`,
+      padding: '14px 16px', marginBottom: 10,
+      boxShadow: '0 1px 4px rgba(0,0,0,0.06)',
+    }}>
+      {/* Header: reorder + name + delete */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 1, flexShrink: 0 }}>
+          <button type="button" onClick={() => onMove(index, -1)} disabled={index === 0}
+            style={{ padding: 2, background: 'none', border: 'none', cursor: index === 0 ? 'default' : 'pointer', color: index === 0 ? '#E5E7EB' : '#9CA3AF', display: 'flex' }}>
+            <ChevronUp size={14} />
+          </button>
+          <button type="button" onClick={() => onMove(index, 1)} disabled={index === total - 1}
+            style={{ padding: 2, background: 'none', border: 'none', cursor: index === total - 1 ? 'default' : 'pointer', color: index === total - 1 ? '#E5E7EB' : '#9CA3AF', display: 'flex' }}>
+            <ChevronDown size={14} />
+          </button>
         </div>
-        <input placeholder="Sér." value={ex.sets} onChange={e => onChange(index, 'sets', e.target.value)} style={{ fontSize: 12, textAlign: 'center' }} />
-        <input placeholder="Reps" value={ex.reps} onChange={e => onChange(index, 'reps', e.target.value)} style={{ fontSize: 12, textAlign: 'center' }} />
-        <input placeholder="Carga" value={ex.load || ''} onChange={e => onChange(index, 'load', e.target.value)} style={{ fontSize: 12, textAlign: 'center' }} title="Ex: 60kg, 20kg, Peso corporal" />
-        <input placeholder="Desc." value={ex.rest} onChange={e => onChange(index, 'rest', e.target.value)} style={{ fontSize: 12, textAlign: 'center' }} />
-        <button type="button" onClick={() => onChange(index, 'delete')} style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#D1D5DB', display: 'flex' }}>
+        <input
+          value={ex.name}
+          onChange={e => onChange(index, 'name', e.target.value)}
+          placeholder="Nome do exercício"
+          style={{ flex: 1, fontSize: 14, fontWeight: 700, color: '#111827', border: 'none', background: 'transparent', padding: 0, outline: 'none', minWidth: 0, boxShadow: 'none' }}
+        />
+        <button type="button" onClick={() => onChange(index, 'delete')}
+          style={{ padding: 4, background: 'none', border: 'none', cursor: 'pointer', color: '#D1D5DB', display: 'flex', flexShrink: 0 }}>
           <X size={15} />
         </button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-        <div style={{ position: 'relative' }}>
-          <Video size={12} color="#EF4444" style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)' }} />
-          <input placeholder="URL YouTube (opcional)" value={ex.videoUrl || ''} onChange={e => onChange(index, 'videoUrl', e.target.value)} style={{ fontSize: 11, paddingLeft: 26 }} />
+
+      {/* Sets + Load */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: 16, marginBottom: 12 }}>
+        <div>
+          <p style={{ margin: '0 0 5px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Séries</p>
+          <div style={{ display: 'flex', alignItems: 'center', background: '#F9FAFB', borderRadius: 8, border: '1px solid #E5E7EB', overflow: 'hidden' }}>
+            <button type="button" onClick={() => onChange(index, 'sets', Math.max(1, sets - 1))}
+              style={{ width: 34, height: 38, background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, fontWeight: 700, color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              −
+            </button>
+            <span style={{ width: 30, fontSize: 20, fontWeight: 800, color: '#111827', textAlign: 'center', lineHeight: 1 }}>{sets}</span>
+            <button type="button" onClick={() => onChange(index, 'sets', sets + 1)}
+              style={{ width: 34, height: 38, background: 'none', border: 'none', cursor: 'pointer', fontSize: 20, fontWeight: 700, color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              +
+            </button>
+          </div>
         </div>
-        <input placeholder="Observação (opcional)" value={ex.obs || ''} onChange={e => onChange(index, 'obs', e.target.value)} style={{ fontSize: 11 }} />
+        <div>
+          <p style={{ margin: '0 0 5px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Carga</p>
+          <div style={{ position: 'relative' }}>
+            <input value={ex.load || ''} onChange={e => onChange(index, 'load', e.target.value)}
+              placeholder="—" style={{ width: '100%', textAlign: 'center', fontWeight: 700, paddingRight: 28 }} />
+            <span style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', fontSize: 11, color: '#9CA3AF', fontWeight: 600, pointerEvents: 'none' }}>kg</span>
+          </div>
+        </div>
       </div>
+
+      {/* Reps */}
+      <div style={{ marginBottom: 10 }}>
+        <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Repetições</p>
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', alignItems: 'center' }}>
+          {REPS_PRESETS.map(r => (
+            <button key={r} type="button" onClick={() => onChange(index, 'reps', r)}
+              style={{
+                padding: '5px 11px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.1s',
+                border: `1.5px solid ${ex.reps === r ? gc : '#E5E7EB'}`,
+                background: ex.reps === r ? gc + '18' : '#F9FAFB',
+                color: ex.reps === r ? gc : '#6B7280',
+              }}>{r}</button>
+          ))}
+          <input
+            value={REPS_PRESETS.includes(ex.reps) ? '' : (ex.reps || '')}
+            onChange={e => onChange(index, 'reps', e.target.value)}
+            placeholder="outro"
+            style={{ width: 62, fontSize: 12, textAlign: 'center', padding: '5px 8px' }}
+          />
+        </div>
+      </div>
+
+      {/* Rest */}
+      <div>
+        <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Descanso</p>
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+          {REST_PRESETS.map(r => (
+            <button key={r} type="button" onClick={() => onChange(index, 'rest', r)}
+              style={{
+                padding: '5px 11px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.1s',
+                border: `1.5px solid ${ex.rest === r ? gc : '#E5E7EB'}`,
+                background: ex.rest === r ? gc + '18' : '#F9FAFB',
+                color: ex.rest === r ? gc : '#6B7280',
+              }}>{r}</button>
+          ))}
+        </div>
+      </div>
+
+      {/* Obs / Video */}
+      <button type="button" onClick={() => setShowExtra(p => !p)}
+        style={{ marginTop: 10, display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', cursor: 'pointer', fontSize: 11, color: (ex.obs || ex.videoUrl) ? gc : '#9CA3AF', fontWeight: 600, padding: 0 }}>
+        <ChevronDown size={12} style={{ transform: showExtra ? 'rotate(180deg)' : 'none', transition: 'transform 0.15s' }} />
+        {(ex.obs || ex.videoUrl) ? 'Obs / vídeo adicionado' : 'Obs / vídeo'}
+      </button>
+      {showExtra && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 8 }}>
+          <input placeholder="Observação..." value={ex.obs || ''} onChange={e => onChange(index, 'obs', e.target.value)} style={{ fontSize: 12 }} />
+          <div style={{ position: 'relative' }}>
+            <Video size={11} color="#EF4444" style={{ position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)' }} />
+            <input placeholder="URL YouTube..." value={ex.videoUrl || ''} onChange={e => onChange(index, 'videoUrl', e.target.value)} style={{ fontSize: 12, paddingLeft: 24 }} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -196,6 +258,25 @@ export default function Treinos() {
   };
 
   const addExercise = () => setForm(f => ({ ...f, exercises: [...f.exercises, { name: '', sets: 3, reps: '10-12', load: '', rest: '60s', videoUrl: '', obs: '' }] }));
+
+  const duplicateExercise = (index) => {
+    setForm(f => {
+      const exs = [...f.exercises];
+      const copy = { ...exs[index] };
+      exs.splice(index + 1, 0, copy);
+      return { ...f, exercises: exs };
+    });
+  };
+
+  const moveExercise = (index, dir) => {
+    setForm(f => {
+      const exs = [...f.exercises];
+      const swap = index + dir;
+      if (swap < 0 || swap >= exs.length) return f;
+      [exs[index], exs[swap]] = [exs[swap], exs[index]];
+      return { ...f, exercises: exs };
+    });
+  };
 
   const handleSave = async () => {
     if (!selectedStudentId || selectedDay === null || !form.name) return;
@@ -493,6 +574,38 @@ export default function Treinos() {
 
                 {form.name && (
                   <>
+                    {/* Quick-add chips */}
+                    {suggestions.length > 0 && (
+                      <div style={{ marginBottom: 16 }}>
+                        <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Adicionar rápido</p>
+                        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                          {suggestions.map(s => {
+                            const already = form.exercises.some(ex => ex.name === s);
+                            return (
+                              <button
+                                key={s}
+                                type="button"
+                                onClick={() => {
+                                  if (already) return;
+                                  setForm(f => ({ ...f, exercises: [...f.exercises, { name: s, sets: 3, reps: '10-12', load: '', rest: '60s', videoUrl: '', obs: '' }] }));
+                                }}
+                                style={{
+                                  display: 'flex', alignItems: 'center', gap: 4, padding: '5px 11px', borderRadius: 20,
+                                  border: `1.5px solid ${already ? groupColor : '#E5E7EB'}`,
+                                  background: already ? (selectedGroup?.bg || '#EFF6FF') : 'white',
+                                  color: already ? groupColor : '#374151',
+                                  fontSize: 12, fontWeight: 600, cursor: already ? 'default' : 'pointer',
+                                  transition: 'all 0.12s', opacity: already ? 0.7 : 1,
+                                }}
+                              >
+                                {already && <Check size={11} />} {s}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Exercise list */}
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                       <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#6B7280' }}>EXERCÍCIOS ({form.exercises.length})</p>
@@ -501,19 +614,14 @@ export default function Treinos() {
                         onClick={addExercise}
                         style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: `1px dashed ${groupColor}`, color: groupColor, borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}
                       >
-                        <Plus size={12} /> Adicionar
+                        <Plus size={12} /> Personalizado
                       </button>
                     </div>
 
                     {form.exercises.length > 0 && (
-                      <div style={{ background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, padding: '4px 12px', marginBottom: 12 }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 48px 62px 58px 52px 28px', gap: 5, padding: '6px 0 4px' }}>
-                          {['Exercício', 'Sér.', 'Reps', 'Carga', 'Desc.', ''].map((h, i) => (
-                            <span key={i} style={{ fontSize: 9, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em', textAlign: i > 0 && i < 5 ? 'center' : 'left' }}>{h}</span>
-                          ))}
-                        </div>
+                      <div style={{ marginBottom: 12 }}>
                         {form.exercises.map((ex, i) => (
-                          <ExerciseRow key={i} ex={ex} index={i} onChange={handleExerciseChange} suggestions={suggestions} />
+                          <ExerciseCard key={i} ex={ex} index={i} total={form.exercises.length} onChange={handleExerciseChange} onMove={moveExercise} groupColor={groupColor} />
                         ))}
                       </div>
                     )}

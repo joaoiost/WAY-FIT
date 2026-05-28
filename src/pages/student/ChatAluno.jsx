@@ -101,7 +101,7 @@ export default function ChatAluno() {
       setMessages(msgs?.length ? msgs : MOCK_MSGS);
       setLoading(false);
 
-      // Assina mensagens novas em tempo real
+      // Realtime
       channel = supabase
         .channel(`chat_${student.id}`)
         .on('postgres_changes', {
@@ -119,6 +119,20 @@ export default function ChatAluno() {
     load();
     return () => { if (channel) supabase.removeChannel(channel); };
   }, [user?.id]);
+
+  // Polling fallback: busca mensagens novas a cada 3s
+  useEffect(() => {
+    if (!studentId || !hasSupabase) return;
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('student_id', studentId)
+        .order('created_at');
+      if (data?.length) setMessages(data);
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [studentId]);
 
   const send = async (e) => {
     e.preventDefault();

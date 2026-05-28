@@ -21,6 +21,8 @@ import Frequencia from './pages/dashboard/Frequencia';
 import Chat from './pages/dashboard/Chat';
 
 import PublicProfile from './pages/PublicProfile';
+import Termos from './pages/Termos';
+import Privacidade from './pages/Privacidade';
 
 import StudentLogin from './pages/student/StudentLogin';
 import StudentDashboard from './pages/student/StudentDashboard';
@@ -97,6 +99,8 @@ export default function App() {
           <Route path="/convite" element={<InviteAccept />} />
           <Route path="/aluno/login" element={<StudentLogin />} />
           <Route path="/p/:slug" element={<PublicProfile />} />
+          <Route path="/termos" element={<Termos />} />
+          <Route path="/privacidade" element={<Privacidade />} />
 
           <Route element={<PersonalRoute />}>
             <Route path="/dashboard" element={<Dashboard />} />

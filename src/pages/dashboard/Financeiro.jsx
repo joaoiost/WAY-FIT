@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Clock, CheckCircle, Download, Zap, X, AlertCircle } from 'lucide-react';
+import { DollarSign, TrendingUp, Clock, CheckCircle, Download, Zap, X, AlertCircle, Plus } from 'lucide-react';
 import { exportFinanceiroPDF, exportFinanceiroExcel } from '../../utils/export';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Badge from '../../components/UI/Badge';
@@ -51,6 +51,10 @@ export default function Financeiro() {
   const [genModal, setGenModal] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [genResult, setGenResult] = useState(null);
+  const [students, setStudents] = useState([]);
+  const [newPayModal, setNewPayModal] = useState(false);
+  const [newPayForm, setNewPayForm] = useState({ student_id: '', amount: '', due_date: new Date().toISOString().slice(0, 10), plan: 'Mensal', status: 'pendente' });
+  const [newPaySaving, setNewPaySaving] = useState(false);
 
   const now = new Date();
   const currentMonthISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -83,7 +87,13 @@ export default function Financeiro() {
     }
   };
 
-  useEffect(() => { loadPayments(); }, [user?.id]);
+  useEffect(() => {
+    loadPayments();
+    if (user && hasSupabase) {
+      supabase.from('students').select('id, name, plan, plan_price').eq('personal_id', user.id).eq('status', 'ativo')
+        .then(({ data }) => setStudents(data || []));
+    }
+  }, [user?.id]);
 
   const markPaid = async (id) => {
     const paidDate = new Date().toISOString().slice(0, 10);
@@ -148,6 +158,31 @@ export default function Financeiro() {
     }
     setGenerating(false);
   };
+  const handleNewPayment = async (e) => {
+    e.preventDefault();
+    setNewPaySaving(true);
+    const student = students.find(s => String(s.id) === String(newPayForm.student_id));
+    const record = {
+      personal_id: user.id,
+      student_id: newPayForm.student_id,
+      student_name: student?.name || '',
+      plan: newPayForm.plan,
+      amount: Number(newPayForm.amount),
+      due_date: newPayForm.due_date,
+      month: new Date(newPayForm.due_date + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+      status: newPayForm.status,
+    };
+    if (hasSupabase) {
+      const { data } = await supabase.from('payments').insert(record).select().single();
+      if (data) setPayments(prev => [data, ...prev]);
+    } else {
+      setPayments(prev => [{ ...record, id: Date.now() }, ...prev]);
+    }
+    setNewPaySaving(false);
+    setNewPayModal(false);
+    setNewPayForm({ student_id: '', amount: '', due_date: new Date().toISOString().slice(0, 10), plan: 'Mensal', status: 'pendente' });
+  };
+
   const mayPayments = payments.filter(p => p.month === currentMonthLabel || !p.month);
   const totalMay = payments.reduce((sum, p) => sum + Number(p.amount), 0);
   const received = payments.filter(p => p.status === 'pago').reduce((sum, p) => sum + Number(p.amount), 0);
@@ -199,12 +234,94 @@ export default function Financeiro() {
         </div>
       )}
 
+      {/* New payment modal */}
+      {newPayModal && (
+        <div className="modal-overlay" onClick={() => setNewPayModal(false)}>
+          <div className="modal-content" style={{ maxWidth: 460, padding: 28 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#111827' }}>Novo Pagamento</h3>
+              <button onClick={() => setNewPayModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', padding: 4 }}><X size={18} /></button>
+            </div>
+            <form onSubmit={handleNewPayment}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                <div>
+                  <label>Aluno *</label>
+                  <select
+                    value={newPayForm.student_id}
+                    onChange={e => {
+                      const s = students.find(st => String(st.id) === e.target.value);
+                      setNewPayForm(f => ({ ...f, student_id: e.target.value, amount: s?.plan_price || f.amount, plan: s?.plan || f.plan }));
+                    }}
+                    required
+                  >
+                    <option value="">Selecionar aluno...</option>
+                    {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                  </select>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label>Valor (R$) *</label>
+                    <input
+                      type="number" min="0" step="0.01"
+                      value={newPayForm.amount}
+                      onChange={e => setNewPayForm(f => ({ ...f, amount: e.target.value }))}
+                      placeholder="0,00" required
+                    />
+                  </div>
+                  <div>
+                    <label>Vencimento *</label>
+                    <input
+                      type="date"
+                      value={newPayForm.due_date}
+                      onChange={e => setNewPayForm(f => ({ ...f, due_date: e.target.value }))}
+                      required
+                    />
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label>Plano</label>
+                    <select value={newPayForm.plan} onChange={e => setNewPayForm(f => ({ ...f, plan: e.target.value }))}>
+                      <option>Mensal</option>
+                      <option>Trimestral</option>
+                      <option>Semestral</option>
+                      <option>Anual</option>
+                      <option>Avulso</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label>Status</label>
+                    <select value={newPayForm.status} onChange={e => setNewPayForm(f => ({ ...f, status: e.target.value }))}>
+                      <option value="pendente">Pendente</option>
+                      <option value="pago">Pago</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
+                <button type="button" className="btn-secondary" onClick={() => setNewPayModal(false)}>Cancelar</button>
+                <button type="submit" className="btn-primary" disabled={newPaySaving}>
+                  <Plus size={15} /> {newPaySaving ? 'Salvando...' : 'Criar Pagamento'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Financeiro</h2>
           <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>Visão geral de receitas e pagamentos</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          <button
+            className="btn-secondary"
+            onClick={() => setNewPayModal(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', fontSize: 13 }}
+          >
+            <Plus size={15} /> Novo Pagamento
+          </button>
           <button
             className="btn-primary"
             onClick={() => setGenModal(true)}

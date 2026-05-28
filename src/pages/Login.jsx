@@ -154,6 +154,12 @@ export default function Login() {
             Acesse a área do aluno
           </Link>
         </p>
+
+        <p style={{ textAlign: 'center', fontSize: 11, color: '#D1D5DB', margin: '24px 0 0', lineHeight: 1.6 }}>
+          <Link to="/termos" style={{ color: '#9CA3AF', textDecoration: 'none' }}>Termos de Uso</Link>
+          {' · '}
+          <Link to="/privacidade" style={{ color: '#9CA3AF', textDecoration: 'none' }}>Política de Privacidade</Link>
+        </p>
       </div>
     </div>
   );

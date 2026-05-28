@@ -112,7 +112,7 @@ export default function Chat() {
     setUnreadCount(unread);
   };
 
-  // Subscribe to new messages realtime
+  // Realtime subscription
   useEffect(() => {
     if (!user || !hasSupabase) return;
 
@@ -136,6 +136,20 @@ export default function Chat() {
     channelRef.current = channel;
     return () => { supabase.removeChannel(channel); };
   }, [user?.id, selectedId]);
+
+  // Polling fallback: busca mensagens novas a cada 3s na conversa aberta
+  useEffect(() => {
+    if (!selectedId || !hasSupabase) return;
+    const interval = setInterval(async () => {
+      const { data } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('student_id', selectedId)
+        .order('created_at');
+      if (data) setMessages(prev => ({ ...prev, [String(selectedId)]: data }));
+    }, 3000);
+    return () => clearInterval(interval);
+  }, [selectedId]);
 
   const selectStudent = async (student) => {
     setSelectedId(student.id);

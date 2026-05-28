@@ -49,6 +49,10 @@ export default function AlunoDetalhe() {
   const [scheduleModal, setScheduleModal] = useState(false);
   const [schedForm, setSchedForm] = useState({ date: new Date().toISOString().slice(0, 10), time: '08:00', type: 'Musculação' });
 
+  const [editModal, setEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({});
+  const [editSaving, setEditSaving] = useState(false);
+
   const today = new Date().toISOString().slice(0, 10);
   const monthStart = `${today.slice(0, 7)}-01`;
 
@@ -89,6 +93,41 @@ export default function AlunoDetalhe() {
     };
     load();
   }, [user?.id, id]);
+
+  const openEdit = () => {
+    setEditForm({
+      name: student.name || '',
+      phone: student.phone || '',
+      email: student.email || '',
+      plan: student.plan || '',
+      plan_price: student.plan_price || '',
+      goal: student.goal || '',
+      notes: student.notes || '',
+      status: student.status || 'ativo',
+    });
+    setEditModal(true);
+  };
+
+  const handleEditSave = async (e) => {
+    e.preventDefault();
+    setEditSaving(true);
+    const updates = {
+      name: editForm.name,
+      phone: editForm.phone,
+      email: editForm.email,
+      plan: editForm.plan,
+      plan_price: editForm.plan_price ? Number(editForm.plan_price) : null,
+      goal: editForm.goal,
+      notes: editForm.notes,
+      status: editForm.status,
+    };
+    if (hasSupabase) {
+      await supabase.from('students').update(updates).eq('id', id);
+    }
+    setStudent(prev => ({ ...prev, ...updates }));
+    setEditSaving(false);
+    setEditModal(false);
+  };
 
   const handleSchedule = async (e) => {
     e.preventDefault();
@@ -161,6 +200,9 @@ export default function AlunoDetalhe() {
         </div>
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <button onClick={openEdit} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#374151' }}>
+            <Edit2 size={15} /> Editar
+          </button>
           {student.phone && (
             <a href={`https://wa.me/55${student.phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer"
               style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, textDecoration: 'none', fontSize: 13, fontWeight: 600, color: '#15803D' }}>
@@ -486,6 +528,64 @@ export default function AlunoDetalhe() {
           })}
         </div>
       )}
+
+      {/* Edit student modal */}
+      <Modal isOpen={editModal} onClose={() => setEditModal(false)} title="Editar Aluno">
+        <form onSubmit={handleEditSave}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div>
+              <label>Nome *</label>
+              <input value={editForm.name || ''} onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))} required />
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label>Telefone</label>
+                <input value={editForm.phone || ''} onChange={e => setEditForm(f => ({ ...f, phone: e.target.value }))} placeholder="(11) 99999-9999" />
+              </div>
+              <div>
+                <label>E-mail</label>
+                <input type="email" value={editForm.email || ''} onChange={e => setEditForm(f => ({ ...f, email: e.target.value }))} />
+              </div>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+              <div>
+                <label>Plano</label>
+                <select value={editForm.plan || ''} onChange={e => setEditForm(f => ({ ...f, plan: e.target.value }))}>
+                  <option value="">Selecionar...</option>
+                  <option>Mensal</option>
+                  <option>Trimestral</option>
+                  <option>Semestral</option>
+                  <option>Anual</option>
+                </select>
+              </div>
+              <div>
+                <label>Valor do Plano (R$)</label>
+                <input type="number" min="0" step="0.01" value={editForm.plan_price || ''} onChange={e => setEditForm(f => ({ ...f, plan_price: e.target.value }))} placeholder="0,00" />
+              </div>
+            </div>
+            <div>
+              <label>Objetivo</label>
+              <input value={editForm.goal || ''} onChange={e => setEditForm(f => ({ ...f, goal: e.target.value }))} placeholder="Ex: Hipertrofia, Emagrecimento..." />
+            </div>
+            <div>
+              <label>Status</label>
+              <select value={editForm.status || 'ativo'} onChange={e => setEditForm(f => ({ ...f, status: e.target.value }))}>
+                <option value="ativo">Ativo</option>
+                <option value="inativo">Inativo</option>
+                <option value="pendente">Pendente</option>
+              </select>
+            </div>
+            <div>
+              <label>Observações</label>
+              <textarea value={editForm.notes || ''} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={3} placeholder="Anotações internas..." style={{ resize: 'vertical' }} />
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
+            <button type="button" className="btn-secondary" onClick={() => setEditModal(false)}>Cancelar</button>
+            <button type="submit" className="btn-primary" disabled={editSaving}>{editSaving ? 'Salvando...' : 'Salvar'}</button>
+          </div>
+        </form>
+      </Modal>
 
       {/* Quick schedule modal */}
       <Modal isOpen={scheduleModal} onClose={() => setScheduleModal(false)} title="Agendar Aula">

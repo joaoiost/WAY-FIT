@@ -98,13 +98,14 @@ export default function Agenda() {
   const [students, setStudents] = useState([]);
   const [trainingPlans, setTrainingPlans] = useState([]);
   const [modal, setModal] = useState(false);
+  const [scheduleMode, setScheduleMode] = useState('single');
   const [editingId, setEditingId] = useState(null);
   const [selectedAppt, setSelectedAppt] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [filterStudentId, setFilterStudentId] = useState('');
   const [form, setForm] = useState({
     studentId: '', date: TODAY, time: '08:00', type: 'Musculação', notes: '',
-    repeat: false, repeatWeeks: '4',
+    repeat: false, repeatWeeks: '4', daysOfWeek: [],
   });
   const [autoGroup, setAutoGroup] = useState('');
   const actionRef = useRef(null);
@@ -168,8 +169,9 @@ export default function Agenda() {
   };
 
   const openModalForDay = (date) => {
-    setEditingId(null);
-    setForm({ studentId: '', date: formatDate(date), time: '08:00', type: 'Musculação', notes: '', repeat: false, repeatWeeks: '4' });
+    resetForm();
+    setScheduleMode('single');
+    setForm(f => ({ ...f, date: formatDate(date) }));
     setSelectedAppt(null);
     setModal(true);
   };
@@ -201,6 +203,12 @@ export default function Agenda() {
 
   const handleChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
 
+  const resetForm = () => {
+    setForm({ studentId: '', date: TODAY, time: '08:00', type: 'Musculação', notes: '', repeat: false, repeatWeeks: '4', daysOfWeek: [] });
+    setAutoGroup('');
+    setEditingId(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const student = students.find(s => String(s.id) === String(form.studentId));
@@ -212,29 +220,42 @@ export default function Agenda() {
         time: form.time, type: form.type, date: form.date, notes: form.notes,
         color: TYPE_COLORS[form.type] || '#3B82F6',
       };
-      if (hasSupabase) {
-        await supabase.from('appointments').update(updates).eq('id', editingId);
-      }
+      if (hasSupabase) await supabase.from('appointments').update(updates).eq('id', editingId);
       setAppts(prev => prev.map(a => a.id === editingId ? { ...a, ...updates } : a));
-      setEditingId(null);
       setModal(false);
-      setForm({ studentId: '', date: TODAY, time: '08:00', type: 'Musculação', notes: '', repeat: false, repeatWeeks: '4' });
-      setAutoGroup('');
+      resetForm();
       return;
     }
 
-    const weeks = form.repeat ? parseInt(form.repeatWeeks) || 1 : 1;
-    const dates = Array.from({ length: weeks }, (_, i) => {
-      const d = new Date(form.date + 'T12:00:00');
-      d.setDate(d.getDate() + i * 7);
-      return d.toISOString().slice(0, 10);
-    });
+    let newAppts = [];
 
-    const newAppts = dates.map(date => ({
-      personal_id: user.id, student_id: student.id, student_name: student.name,
-      time: form.time, type: form.type, date, status: 'pending',
-      color: TYPE_COLORS[form.type] || '#3B82F6', notes: form.notes,
-    }));
+    if (scheduleMode === 'weekly' && form.daysOfWeek.length > 0) {
+      // Generate appointments for each selected day over N weeks
+      const weeks = parseInt(form.repeatWeeks) || 4;
+      const start = new Date(form.date + 'T12:00:00');
+      for (let i = 0; i < weeks * 7; i++) {
+        const d = new Date(start);
+        d.setDate(d.getDate() + i);
+        if (form.daysOfWeek.includes(d.getDay())) {
+          newAppts.push({
+            personal_id: user.id, student_id: student.id, student_name: student.name,
+            date: d.toISOString().slice(0, 10), time: form.time, type: form.type,
+            status: 'pending', color: TYPE_COLORS[form.type] || '#3B82F6', notes: form.notes,
+          });
+        }
+      }
+    } else {
+      const weeks = form.repeat ? parseInt(form.repeatWeeks) || 1 : 1;
+      newAppts = Array.from({ length: weeks }, (_, i) => {
+        const d = new Date(form.date + 'T12:00:00');
+        d.setDate(d.getDate() + i * 7);
+        return {
+          personal_id: user.id, student_id: student.id, student_name: student.name,
+          date: d.toISOString().slice(0, 10), time: form.time, type: form.type,
+          status: 'pending', color: TYPE_COLORS[form.type] || '#3B82F6', notes: form.notes,
+        };
+      });
+    }
 
     if (hasSupabase) {
       const { data } = await supabase.from('appointments').insert(newAppts).select();
@@ -243,8 +264,7 @@ export default function Agenda() {
       setAppts(prev => [...prev, ...newAppts.map((a, i) => ({ ...a, id: Date.now() + i }))]);
     }
     setModal(false);
-    setForm({ studentId: '', date: TODAY, time: '08:00', type: 'Musculação', notes: '', repeat: false, repeatWeeks: '4' });
-    setAutoGroup('');
+    resetForm();
   };
 
   const handleMarkDone = async (appt) => {
@@ -513,8 +533,31 @@ export default function Agenda() {
       </button>
 
       {/* Create/edit appointment modal */}
-      <Modal isOpen={modal} onClose={() => { setModal(false); setEditingId(null); setAutoGroup(''); }} title={editingId ? 'Editar Aula' : 'Nova Aula'}>
+      <Modal isOpen={modal} onClose={() => { setModal(false); resetForm(); }} title={editingId ? 'Editar Aula' : 'Nova Aula'}>
         <form onSubmit={handleSubmit}>
+          {/* Mode toggle — only for new appointments */}
+          {!editingId && (
+            <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 10, padding: 4, gap: 4, marginBottom: 18 }}>
+              {[
+                { key: 'single', label: '📅 Aula avulsa' },
+                { key: 'weekly', label: '🔄 Agenda semanal' },
+              ].map(m => (
+                <button
+                  key={m.key}
+                  type="button"
+                  onClick={() => setScheduleMode(m.key)}
+                  style={{
+                    flex: 1, padding: '8px 0', borderRadius: 7, border: 'none', cursor: 'pointer',
+                    fontSize: 13, fontWeight: 600, transition: 'all 0.15s',
+                    background: scheduleMode === m.key ? 'white' : 'transparent',
+                    color: scheduleMode === m.key ? '#111827' : '#6B7280',
+                    boxShadow: scheduleMode === m.key ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  }}
+                >{m.label}</button>
+              ))}
+            </div>
+          )}
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div>
               <label>Aluno *</label>
@@ -523,16 +566,93 @@ export default function Agenda() {
                 {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
               </select>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-              <div>
-                <label>Data *</label>
-                <input name="date" type="date" value={form.date} onChange={handleChange} required />
-              </div>
-              <div>
-                <label>Horário *</label>
-                <input name="time" type="time" value={form.time} onChange={handleChange} required />
-              </div>
-            </div>
+
+            {scheduleMode === 'weekly' && !editingId ? (
+              <>
+                {/* Weekly mode */}
+                <div>
+                  <label style={{ marginBottom: 8, display: 'block' }}>Dias da semana *</label>
+                  <div style={{ display: 'flex', gap: 6 }}>
+                    {[{v:1,l:'Seg'},{v:2,l:'Ter'},{v:3,l:'Qua'},{v:4,l:'Qui'},{v:5,l:'Sex'},{v:6,l:'Sáb'},{v:0,l:'Dom'}].map(d => {
+                      const on = form.daysOfWeek.includes(d.v);
+                      return (
+                        <button
+                          key={d.v}
+                          type="button"
+                          onClick={() => setForm(f => ({
+                            ...f,
+                            daysOfWeek: on ? f.daysOfWeek.filter(x => x !== d.v) : [...f.daysOfWeek, d.v],
+                          }))}
+                          style={{
+                            flex: 1, padding: '8px 4px', borderRadius: 8, border: `2px solid ${on ? '#3B82F6' : '#E5E7EB'}`,
+                            background: on ? '#EFF6FF' : 'white', color: on ? '#1D4ED8' : '#6B7280',
+                            fontSize: 12, fontWeight: 700, cursor: 'pointer', transition: 'all 0.12s',
+                          }}
+                        >{d.l}</button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label>Horário *</label>
+                    <input name="time" type="time" value={form.time} onChange={handleChange} required />
+                  </div>
+                  <div>
+                    <label>Duração</label>
+                    <select name="repeatWeeks" value={form.repeatWeeks} onChange={handleChange}>
+                      {[2,4,8,12,16,24].map(w => <option key={w} value={w}>{w} semanas</option>)}
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label>Início *</label>
+                  <input name="date" type="date" value={form.date} onChange={handleChange} required />
+                </div>
+                {form.daysOfWeek.length > 0 && (
+                  <div style={{ background: '#EFF6FF', borderRadius: 8, padding: '10px 14px', fontSize: 13, color: '#1D4ED8', fontWeight: 600 }}>
+                    ✓ {form.daysOfWeek.length * parseInt(form.repeatWeeks)} aulas serão criadas
+                  </div>
+                )}
+              </>
+            ) : (
+              <>
+                {/* Single mode */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div>
+                    <label>Data *</label>
+                    <input name="date" type="date" value={form.date} onChange={handleChange} required />
+                  </div>
+                  <div>
+                    <label>Horário *</label>
+                    <input name="time" type="time" value={form.time} onChange={handleChange} required />
+                  </div>
+                </div>
+                {!editingId && (
+                  <div style={{ background: '#F9FAFB', borderRadius: 10, padding: 14 }}>
+                    <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: form.repeat ? 10 : 0 }}>
+                      <input type="checkbox" checked={form.repeat} onChange={e => setForm(f => ({ ...f, repeat: e.target.checked }))} style={{ width: 16, height: 16, accentColor: '#3B82F6', cursor: 'pointer' }} />
+                      <div>
+                        <span style={{ fontSize: 13, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
+                          <RefreshCw size={13} color="#3B82F6" /> Repetir semanalmente
+                        </span>
+                        <p style={{ margin: '1px 0 0', fontSize: 11, color: '#9CA3AF' }}>Cria a mesma aula nas próximas semanas</p>
+                      </div>
+                    </label>
+                    {form.repeat && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <label style={{ fontSize: 13, color: '#374151', fontWeight: 500, whiteSpace: 'nowrap', marginBottom: 0 }}>Repetir por</label>
+                        <select name="repeatWeeks" value={form.repeatWeeks} onChange={handleChange} style={{ flex: 1 }}>
+                          {[2,4,8,12,16,24].map(w => <option key={w} value={w}>{w} semanas</option>)}
+                        </select>
+                        <span style={{ fontSize: 12, color: '#6B7280', whiteSpace: 'nowrap' }}>= {parseInt(form.repeatWeeks)} aulas</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </>
+            )}
+
             <div>
               <label style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 Tipo de treino *
@@ -547,36 +667,6 @@ export default function Agenda() {
               </select>
             </div>
 
-            {!editingId && (
-              <div style={{ background: '#F9FAFB', borderRadius: 10, padding: 14 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: form.repeat ? 10 : 0 }}>
-                  <input
-                    type="checkbox"
-                    checked={form.repeat}
-                    onChange={e => setForm(f => ({ ...f, repeat: e.target.checked }))}
-                    style={{ width: 16, height: 16, accentColor: '#3B82F6', cursor: 'pointer' }}
-                  />
-                  <div>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <RefreshCw size={13} color="#3B82F6" /> Repetir semanalmente
-                    </span>
-                    <p style={{ margin: '1px 0 0', fontSize: 11, color: '#9CA3AF' }}>Cria a mesma aula nas próximas semanas</p>
-                  </div>
-                </label>
-                {form.repeat && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <label style={{ fontSize: 13, color: '#374151', fontWeight: 500, whiteSpace: 'nowrap', marginBottom: 0 }}>Repetir por</label>
-                    <select name="repeatWeeks" value={form.repeatWeeks} onChange={handleChange} style={{ flex: 1 }}>
-                      {[2, 4, 8, 12, 16, 24].map(w => <option key={w} value={w}>{w} semanas</option>)}
-                    </select>
-                    <span style={{ fontSize: 12, color: '#6B7280', whiteSpace: 'nowrap' }}>
-                      = {parseInt(form.repeatWeeks)} aulas
-                    </span>
-                  </div>
-                )}
-              </div>
-            )}
-
             <div>
               <label>Observações</label>
               <textarea name="notes" value={form.notes} onChange={handleChange} placeholder="Notas sobre a aula..." rows={2} style={{ resize: 'vertical' }} />
@@ -584,9 +674,12 @@ export default function Agenda() {
           </div>
 
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
-            <button type="button" className="btn-secondary" onClick={() => { setModal(false); setEditingId(null); setAutoGroup(''); }}>Cancelar</button>
-            <button type="submit" className="btn-primary">
-              {editingId ? 'Salvar alterações' : form.repeat ? `Criar ${form.repeatWeeks} aulas` : 'Agendar Aula'}
+            <button type="button" className="btn-secondary" onClick={() => { setModal(false); resetForm(); }}>Cancelar</button>
+            <button type="submit" className="btn-primary" disabled={scheduleMode === 'weekly' && form.daysOfWeek.length === 0}>
+              {editingId ? 'Salvar alterações'
+                : scheduleMode === 'weekly' ? `Criar ${form.daysOfWeek.length * parseInt(form.repeatWeeks)} aulas`
+                : form.repeat ? `Criar ${form.repeatWeeks} aulas`
+                : 'Agendar Aula'}
             </button>
           </div>
         </form>

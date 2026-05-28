@@ -68,6 +68,19 @@ export function AuthProvider({ children }) {
     }
 
     if (profile) {
+      let studentId = null;
+      let personalId = null;
+      if (profile.role === 'student') {
+        const { data: studentRow } = await supabase
+          .from('students')
+          .select('id, personal_id')
+          .eq('user_id', authUser.id)
+          .maybeSingle();
+        if (studentRow) {
+          studentId = studentRow.id;
+          personalId = studentRow.personal_id;
+        }
+      }
       setUser({
         id: authUser.id,
         name: profile.name,
@@ -78,6 +91,8 @@ export function AuthProvider({ children }) {
         slug: profile.slug,
         bio: profile.bio || '',
         phone: profile.phone || '',
+        studentId,
+        personalId,
       });
     }
     setLoading(false);

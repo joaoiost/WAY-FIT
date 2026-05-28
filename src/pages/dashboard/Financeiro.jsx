@@ -56,6 +56,11 @@ export default function Financeiro() {
   const currentMonthISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   const currentMonth = now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   const currentMonthLabel = currentMonth.charAt(0).toUpperCase() + currentMonth.slice(1);
+  const last3Months = [2, 1, 0].map(offset => {
+    const d = new Date(now.getFullYear(), now.getMonth() - offset, 1);
+    const s = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  });
 
   const loadPayments = () => {
     if (!user) return;
@@ -231,7 +236,7 @@ export default function Financeiro() {
           icon={DollarSign}
           title="Total do Mês"
           value={`R$ ${totalMay.toLocaleString('pt-BR')}`}
-          sub="Maio 2026"
+          sub={currentMonthLabel}
           color="#3B82F6"
           bg="#EFF6FF"
         />
@@ -273,21 +278,34 @@ export default function Financeiro() {
               </defs>
             </BarChart>
           </ResponsiveContainer>
-          <div style={{ marginTop: 16, padding: '12px 0 0', borderTop: '1px solid #F3F4F6' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <span style={{ fontSize: 13, color: '#6B7280' }}>Crescimento (Jan→Mai)</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <TrendingUp size={14} color="#10B981" />
-                <span style={{ fontSize: 14, fontWeight: 700, color: '#10B981' }}>+33.8%</span>
+          {(() => {
+            const first = monthlyRevenue[0]?.value || 0;
+            const last = monthlyRevenue[monthlyRevenue.length - 1]?.value || 0;
+            const growth = first > 0 && monthlyRevenue.length > 1 ? Math.round(((last - first) / first) * 100) : null;
+            if (growth === null) return null;
+            const positive = growth >= 0;
+            return (
+              <div style={{ marginTop: 16, padding: '12px 0 0', borderTop: '1px solid #F3F4F6' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: 13, color: '#6B7280' }}>
+                    Crescimento ({monthlyRevenue[0]?.month?.split(' ')[0]}→{monthlyRevenue[monthlyRevenue.length - 1]?.month?.split(' ')[0]})
+                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <TrendingUp size={14} color={positive ? '#10B981' : '#EF4444'} />
+                    <span style={{ fontSize: 14, fontWeight: 700, color: positive ? '#10B981' : '#EF4444' }}>
+                      {positive ? '+' : ''}{growth}%
+                    </span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
 
         {/* Payment table */}
         <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
           <div style={{ padding: '20px 20px 0' }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#111827' }}>Pagamentos - Maio 2026</h3>
+            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#111827' }}>Pagamentos - {currentMonthLabel}</h3>
           </div>
           <div className="table-scroll">
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -336,7 +354,7 @@ export default function Financeiro() {
       <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginTop: 20 }}>
         <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#111827' }}>Histórico de Pagamentos</h3>
         <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
-          {['Março 2026', 'Abril 2026', 'Maio 2026'].map(month => {
+          {last3Months.map(month => {
             const mPayments = payments.filter(p => p.month === month);
             const mTotal = mPayments.reduce((sum, p) => sum + p.amount, 0);
             const mReceived = mPayments.filter(p => p.status === 'pago').reduce((sum, p) => sum + p.amount, 0);

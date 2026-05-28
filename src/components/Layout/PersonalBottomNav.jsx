@@ -36,7 +36,7 @@ export default function PersonalBottomNav() {
   const handleMoreItem = (to) => { navigate(to); setOpen(false); };
 
   return (
-    <nav className="personal-bottom-nav" style={{ position: 'relative' }}>
+    <nav className="personal-bottom-nav">
       {TABS.map(({ to, icon: Icon, label, end }) => (
         <NavLink
           key={to}

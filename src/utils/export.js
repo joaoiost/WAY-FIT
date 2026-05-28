@@ -131,6 +131,102 @@ export function exportFinanceiroPDF(payments, monthlyRevenue) {
   doc.save('wayfit-financeiro.pdf');
 }
 
+// ── PDF: Relatório do Aluno ───────────────────────────────────────────────────
+
+export function exportStudentReport({ student, measurements, plans, attendances, payments }) {
+  const doc = new jsPDF();
+  const name = student?.name || 'Aluno';
+  let y = addHeader(doc, `Relatório — ${name}`, `Plano: ${student?.plan || '—'} · Objetivo: ${student?.goal || '—'}`);
+
+  // Stats summary
+  const present = (attendances || []).filter(a => a.status === 'present').length;
+  const total = (attendances || []).length;
+  const rate = total > 0 ? Math.round((present / total) * 100) : 0;
+  const lastPay = (payments || []).find(p => p.status === 'pago');
+  const lastMeas = (measurements || []).slice(-1)[0];
+
+  doc.setFontSize(10);
+  doc.setTextColor(30, 30, 30);
+  const boxes = [
+    { label: 'Frequência (mês)', value: `${rate}%` },
+    { label: 'Peso atual', value: lastMeas?.weight ? `${lastMeas.weight}kg` : '—' },
+    { label: 'Últ. pagamento', value: lastPay ? new Date(lastPay.due_date+'T12:00:00').toLocaleDateString('pt-BR') : '—' },
+  ];
+  boxes.forEach((b, i) => {
+    const x = 14 + i * 62;
+    doc.setFillColor(248, 250, 252);
+    doc.roundedRect(x, y, 58, 16, 3, 3, 'F');
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(8); doc.setTextColor(100, 100, 100);
+    doc.text(b.label, x + 4, y + 6);
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(12); doc.setTextColor(30, 30, 30);
+    doc.text(b.value, x + 4, y + 13);
+  });
+  y += 24;
+
+  // Measurements table
+  if (measurements?.length > 0) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(59, 130, 246);
+    doc.text('Evolução de Medidas', 14, y); y += 4;
+    autoTable(doc, {
+      startY: y,
+      head: [['Data', 'Peso (kg)', 'Gordura (%)', 'Cintura (cm)', 'Braço (cm)']],
+      body: measurements.map(m => [
+        new Date((m.date || m.recorded_at)+'T12:00:00').toLocaleDateString('pt-BR'),
+        m.weight || '—', m.body_fat || '—', m.waist || '—', m.arm || '—',
+      ]),
+      headStyles: { fillColor: [59, 130, 246], fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      margin: { left: 14, right: 14 },
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  // Training plans
+  if (plans?.length > 0) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(59, 130, 246);
+    doc.text('Planos de Treino', 14, y); y += 4;
+    const DAYS_SHORT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    autoTable(doc, {
+      startY: y,
+      head: [['Plano', 'Dias', 'Exercícios']],
+      body: plans.map(p => [
+        p.name,
+        (p.days || []).map(d => DAYS_SHORT[d]).join(', '),
+        (p.exercises || []).map(e => `${e.name} ${e.sets}x${e.reps}`).join(' · ').slice(0, 80),
+      ]),
+      headStyles: { fillColor: [139, 92, 246], fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      margin: { left: 14, right: 14 },
+    });
+    y = doc.lastAutoTable.finalY + 10;
+  }
+
+  // Payments
+  if (payments?.length > 0) {
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(10); doc.setTextColor(59, 130, 246);
+    if (y > 240) { doc.addPage(); y = 20; }
+    doc.text('Histórico de Pagamentos', 14, y); y += 4;
+    autoTable(doc, {
+      startY: y,
+      head: [['Mês', 'Valor', 'Vencimento', 'Status']],
+      body: payments.slice(0, 10).map(p => [
+        p.month || '—',
+        `R$ ${Number(p.amount).toLocaleString('pt-BR')}`,
+        new Date((p.due_date)+'T12:00:00').toLocaleDateString('pt-BR'),
+        p.status === 'pago' ? 'Pago' : p.due_date < new Date().toISOString().slice(0,10) ? 'Atrasado' : 'Pendente',
+      ]),
+      headStyles: { fillColor: [16, 185, 129], fontSize: 8 },
+      bodyStyles: { fontSize: 8 },
+      alternateRowStyles: { fillColor: [248, 250, 252] },
+      margin: { left: 14, right: 14 },
+    });
+  }
+
+  doc.save(`relatorio-${name.toLowerCase().replace(/\s+/g, '-')}.pdf`);
+}
+
 // ── Excel: Relatório Financeiro ──────────────────────────────────────────────
 
 export function exportFinanceiroExcel(payments) {

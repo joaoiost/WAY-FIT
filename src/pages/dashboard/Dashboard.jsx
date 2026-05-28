@@ -72,6 +72,35 @@ export default function Dashboard() {
 
   return (
     <div className="page-padding" style={{ flex: 1 }}>
+      {/* Onboarding banner for new personals */}
+      {students.length === 0 && (
+        <div style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', borderRadius: 16, padding: '24px 28px', marginBottom: 24, color: 'white' }}>
+          <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800 }}>Bem-vindo ao WAY FIT! 🎉</h3>
+          <p style={{ margin: '0 0 18px', fontSize: 14, opacity: 0.9 }}>Comece em 3 passos simples para gerenciar seus alunos:</p>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+            {[
+              { step: '1', label: 'Adicionar aluno', to: '/dashboard/alunos', desc: 'Cadastre ou convide' },
+              { step: '2', label: 'Criar treino', to: '/dashboard/treinos', desc: 'Monte a semana' },
+              { step: '3', label: 'Agendar aula', to: '/dashboard/agenda', desc: 'Marque os horários' },
+            ].map(item => (
+              <button
+                key={item.step}
+                onClick={() => navigate(item.to)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 16px', background: 'rgba(255,255,255,0.15)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 10, cursor: 'pointer', color: 'white', backdropFilter: 'blur(4px)', transition: 'background 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.25)'}
+                onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+              >
+                <span style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(255,255,255,0.25)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, flexShrink: 0 }}>{item.step}</span>
+                <div style={{ textAlign: 'left' }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700 }}>{item.label}</p>
+                  <p style={{ margin: 0, fontSize: 11, opacity: 0.8 }}>{item.desc}</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 20, marginBottom: 28 }}>
         <div onClick={() => navigate('/dashboard/alunos')} style={{ cursor: 'pointer' }}>

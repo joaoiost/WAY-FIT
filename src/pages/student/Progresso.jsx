@@ -40,9 +40,10 @@ export default function Progresso() {
         .from('student_measurements')
         .select('*')
         .eq('student_id', student.id)
-        .order('date');
+        .order('recorded_at');
 
-      setMeasurements(data?.length ? data : MOCK);
+      const normalized = (data || []).map(m => ({ ...m, date: m.recorded_at || m.date }));
+      setMeasurements(normalized.length ? normalized : MOCK);
       setLoading(false);
     };
     load();
@@ -56,14 +57,15 @@ export default function Progresso() {
     if (hasSupabase && studentId) {
       const { data } = await supabase
         .from('student_measurements')
-        .insert({ student_id: studentId, ...m })
+        .insert({ student_id: studentId, recorded_at: m.date, weight: m.weight, waist: m.waist, chest: m.chest, arm: m.arm, hip: m.hip, body_fat: m.body_fat })
         .select().single();
       if (data) {
-        setMeasurements(prev => [...prev, data].sort((a, b) => a.date.localeCompare(b.date)));
+        const normalized = { ...data, date: data.recorded_at || data.date };
+        setMeasurements(prev => [...prev, normalized].sort((a, b) => (a.date||'').localeCompare(b.date||'')));
       }
     } else {
       const newM = { ...m, id: Date.now() };
-      setMeasurements(prev => [...prev, newM].sort((a, b) => a.date.localeCompare(b.date)));
+      setMeasurements(prev => [...prev, newM].sort((a, b) => (a.date||'').localeCompare(b.date||'')));
     }
 
     setSaving(false);

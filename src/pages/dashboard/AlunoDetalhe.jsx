@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Dumbbell, DollarSign, TrendingUp, MessageCircle, Check, X, Phone, Mail, Edit2, Clock, BarChart2, Activity } from 'lucide-react';
+import { ArrowLeft, Calendar, Dumbbell, DollarSign, TrendingUp, MessageCircle, Check, X, Phone, Mail, Edit2, Clock, BarChart2, Activity, Star, FileText } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import Modal from '../../components/UI/Modal';
+import { exportStudentReport } from '../../utils/export';
 
 const TYPE_COLORS = {
   Musculação: '#3B82F6', Funcional: '#10B981', Hipertrofia: '#8B5CF6',
@@ -27,7 +28,7 @@ function StatBox({ icon: Icon, label, value, color, bg }) {
   );
 }
 
-const TABS = ['Visão Geral', 'Treinos', 'Agenda', 'Frequência', 'Pagamentos', 'Saúde'];
+const TABS = ['Visão Geral', 'Treinos', 'Agenda', 'Frequência', 'Pagamentos', 'Saúde', 'Feedback'];
 
 export default function AlunoDetalhe() {
   const { id } = useParams();
@@ -42,6 +43,7 @@ export default function AlunoDetalhe() {
   const [payments, setPayments] = useState([]);
   const [measurements, setMeasurements] = useState([]);
   const [anamnese, setAnamnese] = useState(null);
+  const [ratings, setRatings] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [scheduleModal, setScheduleModal] = useState(false);
@@ -63,14 +65,16 @@ export default function AlunoDetalhe() {
         { data: pays },
         { data: meas },
         { data: ana },
+        { data: rat },
       ] = await Promise.all([
         supabase.from('students').select('*').eq('id', id).eq('personal_id', user.id).maybeSingle(),
         supabase.from('training_plans').select('*, exercises(*)').eq('student_id', id).order('created_at', { ascending: false }),
         supabase.from('appointments').select('*').eq('student_id', id).order('date', { ascending: false }).limit(20),
         supabase.from('attendances').select('*').eq('student_id', id).gte('date', monthStart).order('date'),
         supabase.from('payments').select('*').eq('student_id', id).order('due_date', { ascending: false }).limit(10),
-        supabase.from('student_measurements').select('*').eq('student_id', id).order('date').limit(10),
+        supabase.from('student_measurements').select('*').eq('student_id', id).order('recorded_at').limit(10),
         supabase.from('anamneses').select('*').eq('student_id', id).maybeSingle(),
+        supabase.from('session_ratings').select('*').eq('student_id', id).order('date', { ascending: false }).limit(30),
       ]);
 
       setStudent(s);
@@ -78,8 +82,9 @@ export default function AlunoDetalhe() {
       setAppointments(appts || []);
       setAttendances(atts || []);
       setPayments(pays || []);
-      setMeasurements(meas || []);
+      setMeasurements((meas || []).map(m => ({ ...m, date: m.recorded_at || m.date })));
       setAnamnese(ana);
+      setRatings(rat || []);
       setLoading(false);
     };
     load();
@@ -164,6 +169,13 @@ export default function AlunoDetalhe() {
           )}
           <button onClick={() => navigate(`/dashboard/chat`)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#1E40AF' }}>
             <MessageCircle size={15} /> Chat
+          </button>
+          <button
+            onClick={() => exportStudentReport({ student, measurements, plans, attendances, payments })}
+            className="btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: 13 }}
+          >
+            <FileText size={15} /> Relatório PDF
           </button>
           <button onClick={() => setScheduleModal(true)} className="btn-primary">
             <Calendar size={15} /> Agendar Aula
@@ -412,22 +424,66 @@ export default function AlunoDetalhe() {
         </div>
       )}
 
-      {tab === 'Saúde' && (
-        <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
-          {!anamnese ? (
-            <p style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '40px 0' }}>Aluno ainda não preencheu a ficha de saúde</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              {anamnese.objective && <InfoRow label="Objetivo" value={anamnese.objective} />}
-              {anamnese.health_conditions && <InfoRow label="Condições de saúde" value={anamnese.health_conditions} />}
-              {anamnese.medications && <InfoRow label="Medicamentos" value={anamnese.medications} />}
-              {anamnese.injuries && <InfoRow label="Lesões / restrições" value={anamnese.injuries} />}
-              {anamnese.physical_activity && <InfoRow label="Atividade física atual" value={anamnese.physical_activity} />}
-              {anamnese.sleep_hours && <InfoRow label="Horas de sono" value={`${anamnese.sleep_hours}h`} />}
-              {anamnese.water_intake && <InfoRow label="Ingestão de água" value={`${anamnese.water_intake}L/dia`} />}
-              {anamnese.notes && <InfoRow label="Observações" value={anamnese.notes} />}
+      {tab === 'Saúde' && (() => {
+        const d = anamnese?.data || null;
+        return (
+          <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
+            {!d ? (
+              <p style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '40px 0' }}>Aluno ainda não preencheu a ficha de saúde</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                {d.fullName && <InfoRow label="Nome completo" value={d.fullName} />}
+                {d.birthDate && <InfoRow label="Data de nascimento" value={new Date(d.birthDate+'T12:00:00').toLocaleDateString('pt-BR')} />}
+                {(d.height || d.weightInitial) && <InfoRow label="Altura / Peso inicial" value={`${d.height || '—'}cm / ${d.weightInitial || '—'}kg`} />}
+                {d.goal && <InfoRow label="Objetivo" value={d.goal} />}
+                {d.goalDetail && <InfoRow label="Detalhes do objetivo" value={d.goalDetail} />}
+                {d.activityLevel && <InfoRow label="Nível de atividade" value={d.activityLevel} />}
+                {d.diseases?.length > 0 && <InfoRow label="Doenças pré-existentes" value={d.diseases.join(', ')} />}
+                {d.medications && <InfoRow label="Medicamentos" value={d.medications} />}
+                {d.injuries?.length > 0 && <InfoRow label="Lesões / restrições" value={d.injuries.join(', ')} />}
+                {d.injuryDetails && <InfoRow label="Detalhes das lesões" value={d.injuryDetails} />}
+                {d.limitations && <InfoRow label="Limitações físicas" value={d.limitations} />}
+                {d.sleepHours && <InfoRow label="Horas de sono" value={`${d.sleepHours}h`} />}
+                {d.stressLevel && <InfoRow label="Nível de estresse" value={`${d.stressLevel}/10`} />}
+                {d.waterLiters && <InfoRow label="Ingestão de água" value={`${d.waterLiters}L/dia`} />}
+                {d.diet && <InfoRow label="Alimentação atual" value={d.diet} />}
+                {d.phone && <InfoRow label="Telefone" value={d.phone} />}
+                {d.emergency && <InfoRow label="Contato de emergência" value={d.emergency} />}
+              </div>
+            )}
+          </div>
+        );
+      })()}
+
+      {tab === 'Feedback' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {ratings.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '48px 0', background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
+              <Star size={36} color="#E5E7EB" style={{ marginBottom: 12 }} />
+              <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 600, color: '#374151' }}>Nenhum feedback ainda</p>
+              <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF' }}>O aluno avalia os treinos após cada sessão</p>
             </div>
-          )}
+          ) : ratings.map(r => {
+            const FEELINGS = { otimo: '💪 Ótimo', bem: '😊 Bem', regular: '😐 Regular', cansado: '😓 Cansado', mal: '😩 Mal' };
+            return (
+              <div key={r.id} style={{ background: 'white', borderRadius: 12, padding: '14px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                <div style={{ minWidth: 56, textAlign: 'center' }}>
+                  <p style={{ margin: '0 0 2px', fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>
+                    {new Date(r.date+'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                  </p>
+                  <div style={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                    {[1,2,3,4,5].map(n => (
+                      <Star key={n} size={13} fill={r.rating >= n ? '#F59E0B' : 'none'} color={r.rating >= n ? '#F59E0B' : '#E5E7EB'} strokeWidth={1.5} />
+                    ))}
+                  </div>
+                </div>
+                <div style={{ flex: 1 }}>
+                  {r.feeling && <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: '#374151' }}>{FEELINGS[r.feeling] || r.feeling}</p>}
+                  {r.notes && <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>{r.notes}</p>}
+                </div>
+              </div>
+            );
+          })}
         </div>
       )}
 

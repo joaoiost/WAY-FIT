@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Plus, Dumbbell, Trash2, X, Video, Play, Loader, Save, ChevronDown, Check } from 'lucide-react';
+import { Plus, Dumbbell, Trash2, X, Video, Play, Loader, Save, ChevronDown, Check, Copy, BookOpen } from 'lucide-react';
 import Avatar from '../../components/UI/Avatar';
 import { trainingPlans as mockPlans, students as mockStudents } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
@@ -137,6 +137,8 @@ export default function Treinos() {
   const [saved, setSaved] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState(false);
   const [videoModal, setVideoModal] = useState(null);
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [templateSaved, setTemplateSaved] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -156,6 +158,7 @@ export default function Treinos() {
     }
   }, [user?.id]);
 
+  const templates = plans.filter(p => !p.student_id && !p.studentId);
   const studentPlans = plans.filter(p => String(p.student_id || p.studentId) === String(selectedStudentId));
 
   const planForDay = (day) => studentPlans.find(p => (p.days || []).includes(day));
@@ -247,6 +250,44 @@ export default function Treinos() {
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
+  };
+
+  const applyTemplate = (tmpl) => {
+    const group = GROUPS.find(g => g.label === tmpl.name);
+    setForm({
+      name: tmpl.name,
+      type: tmpl.type || group?.type || 'Hipertrofia',
+      exercises: (tmpl.exercises || [])
+        .sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
+        .map(ex => ({ name: ex.name, sets: ex.sets, reps: ex.reps, load: ex.load || '', rest: ex.rest || '60s', videoUrl: ex.video_url || '', obs: ex.obs || '' })),
+    });
+    setShowTemplates(false);
+  };
+
+  const handleSaveTemplate = async () => {
+    if (!form.name) return;
+    const validExercises = form.exercises.filter(ex => ex.name.trim());
+    if (hasSupabase) {
+      const { data: plan } = await supabase.from('training_plans').insert({
+        personal_id: user.id, student_id: null, student_name: null,
+        name: form.name, type: form.type, days: [],
+      }).select().single();
+      if (plan) {
+        if (validExercises.length > 0) {
+          await supabase.from('exercises').insert(validExercises.map((ex, i) => ({
+            plan_id: plan.id, name: ex.name, sets: parseInt(ex.sets) || 3,
+            reps: ex.reps, load: ex.load || '', rest: ex.rest,
+            video_url: ex.videoUrl || '', obs: ex.obs || '', order_index: i,
+          })));
+        }
+        const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', plan.id).single();
+        if (full) setPlans(prev => [...prev, full]);
+      }
+    } else {
+      setPlans(prev => [...prev, { id: Date.now(), student_id: null, name: form.name, type: form.type, days: [], exercises: validExercises }]);
+    }
+    setTemplateSaved(true);
+    setTimeout(() => setTemplateSaved(false), 2500);
   };
 
   const handleDeleteDay = async () => {
@@ -390,6 +431,45 @@ export default function Treinos() {
               </div>
 
               <div style={{ padding: 20, maxHeight: 'calc(100vh - 240px)', overflowY: 'auto' }}>
+                {/* Template picker */}
+                {templates.length > 0 && (
+                  <div style={{ marginBottom: 16, position: 'relative' }}>
+                    <button
+                      type="button"
+                      onClick={() => setShowTemplates(s => !s)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 8, border: '1.5px dashed #8B5CF6', background: '#F5F3FF', color: '#8B5CF6', cursor: 'pointer', fontSize: 12, fontWeight: 700, width: '100%', justifyContent: 'center' }}
+                    >
+                      <BookOpen size={14} /> Usar template ({templates.length}) <ChevronDown size={12} />
+                    </button>
+                    {showTemplates && (
+                      <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 60, overflow: 'hidden', marginTop: 4 }}>
+                        <div style={{ padding: '8px 12px 4px', borderBottom: '1px solid #F3F4F6' }}>
+                          <span style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Seus templates</span>
+                        </div>
+                        {templates.map(tmpl => {
+                          const g = GROUPS.find(g => g.label === tmpl.name);
+                          return (
+                            <button
+                              key={tmpl.id}
+                              type="button"
+                              onClick={() => applyTemplate(tmpl)}
+                              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid #F9FAFB' }}
+                              onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                              onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                            >
+                              <span style={{ fontSize: 18 }}>{g?.emoji || '💪'}</span>
+                              <div>
+                                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#374151' }}>{tmpl.name}</p>
+                                <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>{(tmpl.exercises || []).length} exercícios</p>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                )}
+
                 {/* Group muscle picker */}
                 <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280' }}>GRUPO MUSCULAR</p>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 20 }}>
@@ -483,6 +563,14 @@ export default function Treinos() {
                         )
                       )}
                     </div>
+                    <button
+                      type="button"
+                      onClick={handleSaveTemplate}
+                      disabled={!form.name}
+                      style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px 0', background: templateSaved ? '#ECFDF5' : '#F5F3FF', color: templateSaved ? '#10B981' : '#8B5CF6', border: `1px solid ${templateSaved ? '#6EE7B7' : '#DDD6FE'}`, borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 12, marginTop: 4, transition: 'all 0.2s' }}
+                    >
+                      {templateSaved ? <><Check size={13} /> Template salvo!</> : <><Copy size={13} /> Salvar como template</>}
+                    </button>
                   </>
                 )}
               </div>

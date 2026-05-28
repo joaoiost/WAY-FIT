@@ -111,7 +111,32 @@ async function loadPersonalNotifications(userId) {
     });
   }
 
-  // 4. Recent invite acceptances
+  // 4. Payments due in next 7 days (renewal alerts)
+  const in7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const { data: dueSoon } = await supabase
+    .from('payments')
+    .select('student_name, due_date, amount')
+    .eq('personal_id', userId)
+    .eq('status', 'pendente')
+    .gt('due_date', today)
+    .lte('due_date', in7Days)
+    .order('due_date')
+    .limit(5);
+
+  (dueSoon || []).forEach((p, i) => {
+    const daysUntil = Math.ceil((new Date(p.due_date) - new Date()) / 86400000);
+    notifs.push({
+      id: `renew-${i}`,
+      icon: '🔔',
+      title: 'Pagamento vencendo em breve',
+      message: `${p.student_name} — vence em ${daysUntil}d (R$ ${Number(p.amount).toLocaleString('pt-BR')})`,
+      time: new Date(p.due_date + 'T12:00:00').toLocaleDateString('pt-BR'),
+      read: true,
+      type: 'payment',
+    });
+  });
+
+  // 5. Recent invite acceptances
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const { data: invites } = await supabase
     .from('invites')

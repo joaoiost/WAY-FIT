@@ -47,7 +47,7 @@ export default function Anamnese() {
       if (student) {
         setStudentId(student.id);
         const { data } = await supabase
-          .from('student_anamnese').select('data').eq('student_id', student.id).maybeSingle();
+          .from('anamneses').select('data').eq('student_id', student.id).maybeSingle();
 
         if (data?.data) {
           setForm({ ...EMPTY, ...data.data });
@@ -67,7 +67,7 @@ export default function Anamnese() {
   const save = async () => {
     setSaving(true);
     if (hasSupabase && studentId) {
-      await supabase.from('student_anamnese').upsert(
+      await supabase.from('anamneses').upsert(
         { student_id: studentId, data: form, updated_at: new Date().toISOString() },
         { onConflict: 'student_id' }
       );

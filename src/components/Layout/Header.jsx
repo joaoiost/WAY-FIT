@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Menu, CheckCheck } from 'lucide-react';
+import { Bell, Menu, CheckCheck, Search, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import { useNotifications } from '../../context/NotificationsContext';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+import { supabase, hasSupabase } from '../../lib/supabase';
 
 const TYPE_COLORS = {
   payment: '#EF4444', absence: '#F59E0B', appointment: '#3B82F6',
@@ -36,8 +37,34 @@ export default function Header() {
   const { setOpen } = useSidebar();
   const { notifications, unread, markRead, markAllRead } = useNotifications();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const [showPanel, setShowPanel] = useState(false);
   const panelRef = useRef(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const searchRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  useEffect(() => {
+    if (!showSearch) return;
+    setTimeout(() => searchInputRef.current?.focus(), 50);
+    const handler = (e) => { if (searchRef.current && !searchRef.current.contains(e.target)) setShowSearch(false); };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [showSearch]);
+
+  useEffect(() => {
+    if (!searchQuery.trim() || !user || user.role !== 'personal') { setSearchResults([]); return; }
+    const timeout = setTimeout(() => {
+      if (hasSupabase) {
+        supabase.from('students').select('id, name, goal, plan, status').eq('personal_id', user.id)
+          .ilike('name', `%${searchQuery}%`).limit(6)
+          .then(({ data }) => setSearchResults(data || []));
+      }
+    }, 200);
+    return () => clearTimeout(timeout);
+  }, [searchQuery, user?.id]);
 
   const now = new Date();
   const hour = now.getHours();
@@ -75,6 +102,59 @@ export default function Header() {
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+        {/* Global search — personal only */}
+        {user?.role === 'personal' && (
+          <div ref={searchRef} style={{ position: 'relative' }}>
+            {showSearch ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#F9FAFB', border: '1.5px solid #3B82F6', borderRadius: 10, padding: '6px 10px', width: 220 }}>
+                <Search size={14} color="#9CA3AF" />
+                <input
+                  ref={searchInputRef}
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  placeholder="Buscar aluno..."
+                  style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 13, flex: 1, padding: 0, boxShadow: 'none' }}
+                />
+                <button onClick={() => { setShowSearch(false); setSearchQuery(''); setSearchResults([]); }} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, display: 'flex', color: '#9CA3AF' }}>
+                  <X size={14} />
+                </button>
+              </div>
+            ) : (
+              <button onClick={() => setShowSearch(true)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', color: '#6B7280', transition: 'background 0.15s' }}
+                onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
+                onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                <Search size={18} />
+              </button>
+            )}
+            {showSearch && searchQuery && (
+              <div style={{ position: 'absolute', top: 'calc(100% + 6px)', right: 0, width: 260, background: 'white', borderRadius: 12, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', border: '1px solid #F1F5F9', zIndex: 200, overflow: 'hidden' }}>
+                {searchResults.length === 0 ? (
+                  <div style={{ padding: '16px', textAlign: 'center', fontSize: 13, color: '#9CA3AF' }}>Nenhum aluno encontrado</div>
+                ) : searchResults.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => { navigate(`/dashboard/alunos/${s.id}`); setShowSearch(false); setSearchQuery(''); setSearchResults([]); }}
+                    style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid #F9FAFB' }}
+                    onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                    onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                  >
+                    <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: 'white', flexShrink: 0 }}>
+                      {s.name.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase()}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.name}</p>
+                      <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>{s.plan}{s.goal ? ` · ${s.goal}` : ''}</p>
+                    </div>
+                    <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: s.status === 'ativo' ? '#D1FAE5' : '#FEF3C7', color: s.status === 'ativo' ? '#065F46' : '#92400E', flexShrink: 0 }}>
+                      {s.status === 'ativo' ? 'Ativo' : 'Pendente'}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Bell */}
         <div ref={panelRef} style={{ position: 'relative' }}>
           <button

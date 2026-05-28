@@ -354,6 +354,11 @@ label {
   .page-padding { padding: 12px; }
 }
 
+/* Alunos desktop/mobile split */
+.alunos-desktop-table { display: block; }
+.alunos-mobile-cards  { display: none; }
+.show-mobile-flex     { display: none !important; }
+
 /* Chat layout */
 .chat-sidebar { display: flex; }
 .chat-conv    { display: flex; }
@@ -387,6 +392,11 @@ label {
     max-height: 80vh;
     overflow-y: auto;
   }
+
+  /* Alunos: swap table for cards */
+  .alunos-desktop-table { display: none !important; }
+  .alunos-mobile-cards  { display: block; }
+  .show-mobile-flex     { display: flex !important; }
 
   /* Chat: sidebar hides when conversation is open on mobile */
   .chat-sidebar-hidden { display: none !important; }

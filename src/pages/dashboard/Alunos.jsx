@@ -179,68 +179,56 @@ export default function Alunos() {
   return (
     <div className="page-padding" style={{ flex: 1 }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-        <div>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12 }}>
+        <div style={{ minWidth: 0 }}>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Alunos</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>{students.length} alunos cadastrados</p>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>{students.length} cadastrados</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            className="btn-secondary"
-            onClick={() => exportAlunosPDF(filtered)}
-            title="Exportar PDF"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', fontSize: 13 }}
-          >
+        {/* Desktop: full buttons */}
+        <div className="hide-mobile" style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button className="btn-secondary" onClick={() => exportAlunosPDF(filtered)} title="PDF" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', fontSize: 13 }}>
             <Download size={15} /> PDF
           </button>
-          <button
-            className="btn-secondary"
-            onClick={() => exportAlunosExcel(filtered)}
-            title="Exportar Excel"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', fontSize: 13 }}
-          >
+          <button className="btn-secondary" onClick={() => exportAlunosExcel(filtered)} title="Excel" style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', fontSize: 13 }}>
             <Download size={15} /> Excel
           </button>
-          <button
-            className="btn-secondary"
-            onClick={() => setInviteModal(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', fontSize: 13, color: '#8B5CF6', borderColor: '#DDD6FE', background: '#F5F3FF' }}
-          >
-            <Mail size={15} /> Convidar Aluno
+          <button className="btn-secondary" onClick={() => setInviteModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', fontSize: 13, color: '#8B5CF6', borderColor: '#DDD6FE', background: '#F5F3FF' }}>
+            <Mail size={15} /> Convidar
           </button>
-          <button className="btn-primary" onClick={openAdd}>
-            <Plus size={16} />
-            Novo Aluno
+          <button className="btn-primary" onClick={openAdd}><Plus size={16} /> Novo Aluno</button>
+        </div>
+        {/* Mobile: icon-only buttons */}
+        <div className="show-mobile-flex" style={{ display: 'none', gap: 8, flexShrink: 0 }}>
+          <button onClick={() => setInviteModal(true)} style={{ width: 38, height: 38, borderRadius: 10, background: '#F5F3FF', border: '1px solid #DDD6FE', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Mail size={17} color="#8B5CF6" />
           </button>
+          <button className="btn-primary" onClick={openAdd} style={{ padding: '8px 14px' }}><Plus size={17} /> Novo</button>
         </div>
       </div>
 
       {/* Search and Filters */}
-      <div style={{ display: 'flex', gap: 12, marginBottom: 20, flexWrap: 'wrap', alignItems: 'center' }}>
-        <div style={{ position: 'relative', flex: 1, minWidth: 200, maxWidth: 320 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
+        <div style={{ position: 'relative' }}>
           <Search size={16} color="#9CA3AF" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', zIndex: 1 }} />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar aluno..."
-            style={{ paddingLeft: 36 }}
+            style={{ paddingLeft: 36, width: '100%' }}
           />
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none', paddingBottom: 2 }}>
           {['todos', 'ativo', 'pendente', 'Start', 'Pro', 'Premium'].map(f => (
             <button
               key={f}
               onClick={() => setFilter(f)}
               style={{
-                padding: '8px 14px',
-                borderRadius: 8,
-                border: `1px solid ${filter === f ? '#3B82F6' : '#E5E7EB'}`,
+                padding: '7px 14px', borderRadius: 20, flexShrink: 0,
+                border: `1.5px solid ${filter === f ? '#3B82F6' : '#E5E7EB'}`,
                 background: filter === f ? '#EFF6FF' : 'white',
                 color: filter === f ? '#3B82F6' : '#6B7280',
-                fontSize: 13,
-                fontWeight: 500,
-                cursor: 'pointer',
-                textTransform: 'capitalize',
+                fontSize: 13, fontWeight: filter === f ? 700 : 500,
+                cursor: 'pointer', textTransform: 'capitalize',
               }}
             >
               {f === 'todos' ? 'Todos' : f}
@@ -249,34 +237,24 @@ export default function Alunos() {
         </div>
       </div>
 
-      {/* Table */}
-      <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+      {/* Desktop: Table */}
+      <div className="alunos-desktop-table" style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
         <div className="table-scroll">
-        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-          <thead>
-            <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
-              {['Aluno', 'Contato', 'Plano', 'Status', 'Último treino', 'Ações'].map(h => (
-                <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                  {h}
-                </th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>
-                  Nenhum aluno encontrado
-                </td>
+          <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+            <thead>
+              <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #E5E7EB' }}>
+                {['Aluno', 'Contato', 'Plano', 'Status', 'Último treino', 'Ações'].map(h => (
+                  <th key={h} style={{ padding: '12px 16px', textAlign: 'left', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{h}</th>
+                ))}
               </tr>
-            ) : (
-              filtered.map(s => (
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr><td colSpan={6} style={{ padding: 40, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>Nenhum aluno encontrado</td></tr>
+              ) : filtered.map(s => (
                 <tr key={s.id} className="table-row" style={{ borderBottom: '1px solid #F3F4F6' }}>
                   <td style={{ padding: '14px 16px' }}>
-                    <div
-                      onClick={() => navigate(`/dashboard/alunos/${s.id}`)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}
-                    >
+                    <div onClick={() => navigate(`/dashboard/alunos/${s.id}`)} style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
                       <Avatar initials={s.initials} color={s.color} />
                       <div>
                         <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>{s.name}</p>
@@ -292,41 +270,66 @@ export default function Alunos() {
                     <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{s.plan}</span>
                     <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>R${s.plan_price ?? s.planPrice}/mês</p>
                   </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <Badge status={s.status} />
-                  </td>
-                  <td style={{ padding: '14px 16px' }}>
-                    <span style={{ fontSize: 13, color: '#6B7280' }}>{s.last_training ?? s.lastTraining}</span>
-                  </td>
+                  <td style={{ padding: '14px 16px' }}><Badge status={s.status} /></td>
+                  <td style={{ padding: '14px 16px' }}><span style={{ fontSize: 13, color: '#6B7280' }}>{s.last_training ?? s.lastTraining}</span></td>
                   <td style={{ padding: '14px 16px' }}>
                     <div style={{ display: 'flex', gap: 8 }}>
-                      <button
-                        onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time: '08:00', type: 'Musculação' }); }}
-                        title="Agendar aula"
-                        style={{ padding: '6px', background: '#F0FDF4', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#10B981', display: 'flex' }}
-                      >
-                        <Calendar size={15} />
-                      </button>
-                      <button
-                        onClick={() => openEdit(s)}
-                        style={{ padding: '6px', background: '#EFF6FF', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#3B82F6', display: 'flex' }}
-                      >
-                        <Edit2 size={15} />
-                      </button>
-                      <button
-                        onClick={() => setDeleteModal(s)}
-                        style={{ padding: '6px', background: '#FEF2F2', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#EF4444', display: 'flex' }}
-                      >
-                        <Trash2 size={15} />
-                      </button>
+                      <button onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time: '08:00', type: 'Musculação' }); }} title="Agendar aula" style={{ padding: '6px', background: '#F0FDF4', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#10B981', display: 'flex' }}><Calendar size={15} /></button>
+                      <button onClick={() => openEdit(s)} style={{ padding: '6px', background: '#EFF6FF', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#3B82F6', display: 'flex' }}><Edit2 size={15} /></button>
+                      <button onClick={() => setDeleteModal(s)} style={{ padding: '6px', background: '#FEF2F2', border: 'none', borderRadius: 6, cursor: 'pointer', color: '#EF4444', display: 'flex' }}><Trash2 size={15} /></button>
                     </div>
                   </td>
                 </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+              ))}
+            </tbody>
+          </table>
         </div>
+      </div>
+
+      {/* Mobile: Card list */}
+      <div className="alunos-mobile-cards">
+        {filtered.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CA3AF', fontSize: 14 }}>Nenhum aluno encontrado</div>
+        ) : filtered.map(s => (
+          <div
+            key={s.id}
+            style={{ background: 'white', borderRadius: 14, padding: '14px 16px', marginBottom: 10, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: 14 }}
+          >
+            {/* Avatar — tap to open detail */}
+            <div onClick={() => navigate(`/dashboard/alunos/${s.id}`)} style={{ flexShrink: 0, cursor: 'pointer' }}>
+              <Avatar initials={s.initials} color={s.color} size={44} />
+            </div>
+
+            {/* Info */}
+            <div onClick={() => navigate(`/dashboard/alunos/${s.id}`)} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>{s.name.split(' ')[0]} {s.name.split(' ').slice(-1)[0]}</span>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: s.status === 'ativo' ? '#D1FAE5' : '#FEF3C7', color: s.status === 'ativo' ? '#065F46' : '#92400E' }}>
+                  {s.status === 'ativo' ? 'Ativo' : 'Pendente'}
+                </span>
+              </div>
+              <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                {s.goal ? `${s.goal} · ` : ''}{s.plan}
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+              <button
+                onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time: '08:00', type: 'Musculação' }); }}
+                style={{ width: 34, height: 34, borderRadius: 10, background: '#ECFDF5', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Calendar size={16} color="#10B981" />
+              </button>
+              <button
+                onClick={() => openEdit(s)}
+                style={{ width: 34, height: 34, borderRadius: 10, background: '#EFF6FF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              >
+                <Edit2 size={16} color="#3B82F6" />
+              </button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Add/Edit Modal */}

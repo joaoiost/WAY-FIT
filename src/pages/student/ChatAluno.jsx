@@ -7,12 +7,25 @@ function getInitials(name = '') {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || '??';
 }
 
-function MessageBubble({ msg, isMe, personalInitials }) {
+function PersonalAvatar({ avatar, initials, size = 30 }) {
+  if (avatar) {
+    return (
+      <img src={avatar} alt="personal" style={{ width: size, height: size, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
+    );
+  }
+  return (
+    <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.37, fontWeight: 700, color: 'white', flexShrink: 0 }}>
+      {initials}
+    </div>
+  );
+}
+
+function MessageBubble({ msg, isMe, personalInitials, personalAvatar }) {
   return (
     <div style={{ display: 'flex', justifyContent: isMe ? 'flex-end' : 'flex-start', marginBottom: 8 }}>
       {!isMe && (
-        <div style={{ width: 30, height: 30, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: 'white', flexShrink: 0, marginRight: 8, alignSelf: 'flex-end' }}>
-          {personalInitials}
+        <div style={{ marginRight: 8, alignSelf: 'flex-end' }}>
+          <PersonalAvatar avatar={personalAvatar} initials={personalInitials} size={30} />
         </div>
       )}
       <div style={{ maxWidth: '72%' }}>
@@ -49,6 +62,7 @@ export default function ChatAluno() {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [personalName, setPersonalName] = useState('Personal');
+  const [personalAvatar, setPersonalAvatar] = useState(null);
   const [studentId, setStudentId] = useState(null);
   const [personalId, setPersonalId] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -83,13 +97,14 @@ export default function ChatAluno() {
       setStudentId(student.id);
       setPersonalId(student.personal_id);
 
-      // Busca nome do personal
+      // Busca nome e foto do personal
       const { data: profile } = await supabase
         .from('profiles')
-        .select('name')
+        .select('name, avatar_url')
         .eq('id', student.personal_id)
         .maybeSingle();
       if (profile?.name) setPersonalName(profile.name);
+      if (profile?.avatar_url) setPersonalAvatar(profile.avatar_url);
 
       // Carrega mensagens
       const { data: msgs } = await supabase
@@ -178,9 +193,7 @@ export default function ChatAluno() {
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', maxHeight: 'calc(100vh - 64px)' }}>
       {/* Header */}
       <div style={{ background: 'white', borderBottom: '1px solid #F1F5F9', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div style={{ width: 42, height: 42, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: 'white', flexShrink: 0 }}>
-          {personalInitials}
-        </div>
+        <PersonalAvatar avatar={personalAvatar} initials={personalInitials} size={42} />
         <div style={{ flex: 1 }}>
           <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>{personalName}</p>
           <p style={{ margin: 0, fontSize: 12, color: '#10B981', fontWeight: 600 }}>Personal Trainer</p>
@@ -198,7 +211,7 @@ export default function ChatAluno() {
             <div key={group.date}>
               <DateDivider dateStr={group.date} />
               {group.msgs.map(msg => (
-                <MessageBubble key={msg.id} msg={msg} isMe={msg.from_role === 'student'} personalInitials={personalInitials} />
+                <MessageBubble key={msg.id} msg={msg} isMe={msg.from_role === 'student'} personalInitials={personalInitials} personalAvatar={personalAvatar} />
               ))}
             </div>
           ))

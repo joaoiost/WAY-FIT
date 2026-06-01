@@ -462,4 +462,50 @@ label {
   .mobile-col { flex-direction: column !important; }
   /* Smaller stat boxes */
   .stat-card { padding: 16px !important; }
+
+  /* Treinos: grade de 7 dias vira scroll horizontal */
+  .treinos-week-grid {
+    display: flex !important;
+    overflow-x: auto !important;
+    gap: 8px !important;
+    padding-bottom: 6px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .treinos-week-grid::-webkit-scrollbar { display: none; }
+  .treinos-week-grid > button {
+    flex: 0 0 72px !important;
+    min-width: 72px !important;
+  }
+
+  /* Treinos: painel do editor vira overlay fullscreen */
+  .treinos-day-panel {
+    position: fixed !important;
+    top: 64px !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 72px !important;
+    z-index: 50 !important;
+    border-radius: 0 !important;
+    max-height: none !important;
+    overflow-y: auto !important;
+  }
+  .treinos-day-panel > div:last-child {
+    max-height: none !important;
+  }
+
+  /* AlunoDetalhe: stats 4-col → 2-col */
+  .student-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+
+  /* Perfil: avatar centralizado no mobile */
+  .perfil-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Financeiro: stats 3-col → 1-col já coberto, lista fixa → stack */
+  .financeiro-main-grid {
+    grid-template-columns: 1fr !important;
+  }
 }

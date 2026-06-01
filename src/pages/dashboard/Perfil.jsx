@@ -55,7 +55,7 @@ export default function Perfil() {
         <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>Gerencie suas informações e seu link público</p>
       </div>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 24, alignItems: 'start' }}>
+      <div className="perfil-grid" style={{ display: 'grid', gridTemplateColumns: '240px 1fr', gap: 24, alignItems: 'start' }}>
         {/* Left: photo card */}
         <div style={{ background: 'white', borderRadius: 16, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
           <div style={{ position: 'relative' }}>

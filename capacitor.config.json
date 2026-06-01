@@ -1,0 +1,11 @@
+{
+  "appId": "com.wayfit.app",
+  "appName": "WAY FIT",
+  "webDir": "dist",
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": true
+  }
+}

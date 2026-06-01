@@ -226,7 +226,7 @@ export default function AlunoDetalhe() {
       </div>
 
       {/* Stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 24 }}>
+      <div className="student-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 24 }}>
         <StatBox icon={Calendar} label="Próxima aula" value={nextAppt ? new Date(nextAppt.date+'T12:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'short'}) : '—'} color="#3B82F6" bg="#EFF6FF" />
         <StatBox icon={Activity} label="Frequência" value={attendRate !== null ? `${attendRate}%` : '—'} color="#10B981" bg="#ECFDF5" />
         <StatBox icon={DollarSign} label="Pagamentos OK" value={latePay.length === 0 ? '✓' : `${latePay.length} atraso`} color={latePay.length ? '#EF4444' : '#10B981'} bg={latePay.length ? '#FEE2E2' : '#ECFDF5'} />

@@ -438,7 +438,7 @@ export default function Treinos() {
             <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
               Semana de treinos
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
+            <div className="treinos-week-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 10 }}>
               {DAYS.map(day => {
                 const plan = planForDay(day.value);
                 const group = plan ? GROUPS.find(g => g.label === plan.name) : null;
@@ -497,7 +497,7 @@ export default function Treinos() {
 
           {/* Day editor panel */}
           {selectedDay !== null && (
-            <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden', position: 'sticky', top: 20 }}>
+            <div className="treinos-day-panel" style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden', position: 'sticky', top: 20 }}>
               {/* Panel header */}
               <div style={{ padding: '16px 20px', borderBottom: '1px solid #F3F4F6', background: selectedGroup ? selectedGroup.bg : '#F9FAFB', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div>

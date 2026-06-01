@@ -376,7 +376,7 @@ export default function Financeiro() {
       </div>
 
       {/* Chart + Table */}
-      <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: 20 }}>
+      <div className="financeiro-main-grid" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: 20 }}>
         {/* Bar chart */}
         <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           <h3 style={{ margin: '0 0 20px', fontSize: 16, fontWeight: 700, color: '#111827' }}>Receita Mensal</h3>

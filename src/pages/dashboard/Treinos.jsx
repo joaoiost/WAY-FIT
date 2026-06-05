@@ -31,9 +31,9 @@ const FREQ_PRESETS = {
   6: { days: [1,2,3,4,5,6], groups: ['Peito','Costas','Pernas','Ombro','Braços','Full Body'] },
 };
 
-/* ─── Componente de exercício ─────────────────────────────────────── */
-function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColor }) {
-  const nameRef = useRef(null);
+/* ─── Componente de exercício com acordeão ──────────────────────── */
+function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColor, autoOpen }) {
+  const [open, setOpen] = useState(autoOpen || !ex.name);
   const sets = parseInt(ex.sets) || 3;
   const ac = accentColor || '#3B82F6';
   const isCustomReps = ex.reps && !REPS_QUICK.includes(ex.reps);
@@ -41,148 +41,138 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
   return (
     <div style={{
       background: 'white', borderRadius: 16,
-      border: '1.5px solid #E5E7EB',
-      marginBottom: 14, overflow: 'hidden',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
-      transition: 'border-color 0.2s',
+      border: `1.5px solid ${open ? ac + '40' : '#E5E7EB'}`,
+      marginBottom: 10, overflow: 'hidden',
+      boxShadow: open ? `0 4px 16px ${ac}15` : '0 1px 4px rgba(0,0,0,0.05)',
+      transition: 'all 0.2s',
     }}>
-      {/* Cabeçalho do exercício */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 18px', borderBottom: '1px solid #F3F4F6' }}>
-        {/* Reordenar */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 2, flexShrink: 0 }}>
-          <button onClick={() => onMove(index, -1)} disabled={index === 0}
-            style={{ padding: 4, background: 'none', border: 'none', cursor: index === 0 ? 'not-allowed' : 'pointer', color: index === 0 ? '#E5E7EB' : '#9CA3AF', display: 'flex', borderRadius: 4, transition: 'color 0.15s' }}>
-            <ArrowUp size={14} />
-          </button>
-          <button onClick={() => onMove(index, 1)} disabled={index === total - 1}
-            style={{ padding: 4, background: 'none', border: 'none', cursor: index === total - 1 ? 'not-allowed' : 'pointer', color: index === total - 1 ? '#E5E7EB' : '#9CA3AF', display: 'flex', borderRadius: 4, transition: 'color 0.15s' }}>
-            <ArrowDown size={14} />
-          </button>
-        </div>
 
+      {/* ── Linha compacta (sempre visível) ── */}
+      <div onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', cursor: 'pointer', userSelect: 'none' }}>
         {/* Número */}
-        <div style={{ width: 28, height: 28, borderRadius: '50%', background: ac + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: ac, flexShrink: 0 }}>
+        <div style={{ width: 26, height: 26, borderRadius: '50%', background: ac + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: ac, flexShrink: 0 }}>
           {index + 1}
         </div>
-
-        {/* Nome do exercício */}
-        <input
-          ref={index === 0 ? nameRef : null}
-          value={ex.name}
-          onChange={e => onUpdate('name', e.target.value)}
-          placeholder="Nome do exercício..."
-          style={{
-            flex: 1, fontSize: 16, fontWeight: 700, color: '#111827',
-            border: 'none', background: 'transparent', padding: 0,
-            outline: 'none', boxShadow: 'none', minWidth: 0,
-          }}
-        />
-
-        {/* Excluir */}
-        <button onClick={onDelete}
-          style={{ width: 32, height: 32, borderRadius: 8, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}
-          onMouseEnter={e => e.currentTarget.style.background = '#FECACA'}
-          onMouseLeave={e => e.currentTarget.style.background = '#FEF2F2'}>
-          <Trash2 size={14} color="#EF4444" />
-        </button>
+        {/* Nome */}
+        <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: ex.name ? '#111827' : '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
+          {ex.name || 'Nome do exercício...'}
+        </span>
+        {/* Resumo quando fechado */}
+        {!open && ex.name && (
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: ac, background: ac + '12', padding: '3px 10px', borderRadius: 20 }}>{sets}×{ex.reps || '—'}</span>
+            {ex.load && <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 600 }}>{ex.load} kg</span>}
+            {ex.rest && <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 600 }}>{ex.rest}</span>}
+            {ex.videoUrl && <Play size={13} color="#D97706" fill="#D97706" />}
+          </div>
+        )}
+        {/* Seta */}
+        <ChevronDown size={16} color="#9CA3AF" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
       </div>
 
-      {/* Campos: Séries, Reps, Carga, Descanso */}
-      <div style={{ padding: '16px 18px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px 20px' }}>
+      {/* ── Formulário expandido ── */}
+      {open && (
+        <>
+          <div style={{ borderTop: '1px solid #F3F4F6', padding: '16px 16px 0' }}>
+            {/* Nome editável */}
+            <div style={{ marginBottom: 14 }}>
+              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nome do exercício</p>
+              <input
+                value={ex.name}
+                onChange={e => onUpdate('name', e.target.value)}
+                placeholder="Ex: Supino Reto com Barra"
+                autoFocus={!ex.name}
+                style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
+              />
+            </div>
 
-        {/* Séries */}
-        <div>
-          <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Séries</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 0, background: '#F9FAFB', borderRadius: 12, border: '1.5px solid #E5E7EB', overflow: 'hidden', height: 48 }}>
-            <button onClick={() => onUpdate('sets', Math.max(1, sets - 1))}
-              style={{ width: 44, height: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-            <span style={{ flex: 1, fontSize: 22, fontWeight: 900, color: '#111827', textAlign: 'center', lineHeight: 1 }}>{sets}</span>
-            <button onClick={() => onUpdate('sets', sets + 1)}
-              style={{ width: 44, height: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 22, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+            {/* Séries + Carga lado a lado */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
+              <div>
+                <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Séries</p>
+                <div style={{ display: 'flex', alignItems: 'center', background: '#F9FAFB', borderRadius: 12, border: '1.5px solid #E5E7EB', overflow: 'hidden', height: 52 }}>
+                  <button onClick={() => onUpdate('sets', Math.max(1, sets - 1))}
+                    style={{ width: 48, height: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                  <span style={{ flex: 1, fontSize: 24, fontWeight: 900, color: '#111827', textAlign: 'center' }}>{sets}</span>
+                  <button onClick={() => onUpdate('sets', sets + 1)}
+                    style={{ width: 48, height: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                </div>
+              </div>
+              <div>
+                <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Carga (kg)</p>
+                <input value={ex.load || ''} onChange={e => onUpdate('load', e.target.value)}
+                  placeholder="0" type="number" min="0"
+                  style={{ height: 52, fontSize: 24, fontWeight: 900, textAlign: 'center', background: '#F9FAFB', borderRadius: 12 }} />
+              </div>
+            </div>
+
+            {/* Repetições */}
+            <div style={{ marginBottom: 14 }}>
+              <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Repetições</p>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
+                {REPS_QUICK.map(r => (
+                  <button key={r} onClick={() => onUpdate('reps', r)}
+                    style={{ padding: '8px 13px', borderRadius: 22, fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 40, border: `2px solid ${ex.reps === r ? ac : '#E5E7EB'}`, background: ex.reps === r ? ac : '#F9FAFB', color: ex.reps === r ? 'white' : '#6B7280', transition: 'all 0.1s' }}>
+                    {r}
+                  </button>
+                ))}
+                <input value={isCustomReps ? ex.reps : ''} onChange={e => onUpdate('reps', e.target.value)}
+                  placeholder="outro..." style={{ width: 76, fontSize: 13, height: 40, textAlign: 'center', borderRadius: 22, border: `2px solid ${isCustomReps ? ac : '#E5E7EB'}`, background: isCustomReps ? ac + '10' : '#F9FAFB', color: isCustomReps ? ac : '#6B7280', fontWeight: 700 }} />
+              </div>
+            </div>
+
+            {/* Descanso */}
+            <div style={{ marginBottom: 14 }}>
+              <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Descanso</p>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {REST_QUICK.map(r => (
+                  <button key={r} onClick={() => onUpdate('rest', r)}
+                    style={{ padding: '8px 13px', borderRadius: 22, fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 40, border: `2px solid ${ex.rest === r ? ac : '#E5E7EB'}`, background: ex.rest === r ? ac : '#F9FAFB', color: ex.rest === r ? 'white' : '#6B7280', transition: 'all 0.1s' }}>
+                    {r}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* URL do vídeo */}
+            <div style={{ marginBottom: 14 }}>
+              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>URL do Vídeo (YouTube)</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input value={ex.videoUrl || ''} onChange={e => onUpdate('videoUrl', e.target.value)}
+                  placeholder="https://youtube.com/watch?v=..." style={{ flex: 1, fontSize: 13 }} />
+                {ex.videoUrl && (
+                  <a href={ex.videoUrl} target="_blank" rel="noopener noreferrer"
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0 14px', borderRadius: 10, background: '#FEF3C7', color: '#D97706', textDecoration: 'none', fontSize: 13, fontWeight: 700, flexShrink: 0, minHeight: 44 }}>
+                    <Play size={13} fill="#D97706" /> Ver
+                  </a>
+                )}
+              </div>
+            </div>
+
+            {/* Observações */}
+            <div style={{ marginBottom: 14 }}>
+              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Observações</p>
+              <input value={ex.obs || ''} onChange={e => onUpdate('obs', e.target.value)}
+                placeholder="Dica de execução, equipamento, etc." style={{ fontSize: 13 }} />
+            </div>
           </div>
-        </div>
 
-        {/* Carga */}
-        <div>
-          <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Carga</p>
-          <div style={{ position: 'relative', height: 48 }}>
-            <input value={ex.load || ''}
-              onChange={e => onUpdate('load', e.target.value)}
-              placeholder="0"
-              type="number"
-              min="0"
-              style={{ width: '100%', height: '100%', fontSize: 22, fontWeight: 900, textAlign: 'center', paddingRight: 36, background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: 12 }} />
-            <span style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', fontSize: 13, fontWeight: 700, color: '#9CA3AF', pointerEvents: 'none' }}>kg</span>
+          {/* Ações */}
+          <div style={{ padding: '8px 16px 14px', display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              <button onClick={() => onMove(index, -1)} disabled={index === 0}
+                style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === 0 ? 'not-allowed' : 'pointer', color: index === 0 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↑ Subir</button>
+              <button onClick={() => onMove(index, 1)} disabled={index === total - 1}
+                style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === total - 1 ? 'not-allowed' : 'pointer', color: index === total - 1 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↓ Descer</button>
+            </div>
+            <button onClick={onDelete}
+              style={{ padding: '7px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, cursor: 'pointer', color: '#EF4444', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+              <Trash2 size={13} /> Remover
+            </button>
           </div>
-        </div>
-
-        {/* Repetições */}
-        <div style={{ gridColumn: '1 / -1' }}>
-          <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Repetições</p>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-            {REPS_QUICK.map(r => (
-              <button key={r} onClick={() => onUpdate('reps', r)}
-                style={{
-                  padding: '8px 14px', borderRadius: 24, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  border: `2px solid ${ex.reps === r ? ac : '#E5E7EB'}`,
-                  background: ex.reps === r ? ac : '#F9FAFB',
-                  color: ex.reps === r ? 'white' : '#6B7280',
-                  transition: 'all 0.12s', minHeight: 38,
-                }}>{r}</button>
-            ))}
-            <input
-              value={isCustomReps ? ex.reps : ''}
-              onChange={e => onUpdate('reps', e.target.value)}
-              placeholder="outro..."
-              style={{ width: 80, fontSize: 13, height: 38, textAlign: 'center', background: isCustomReps ? ac + '10' : '#F9FAFB', border: `2px solid ${isCustomReps ? ac : '#E5E7EB'}`, borderRadius: 24, color: isCustomReps ? ac : '#6B7280', fontWeight: 700 }}
-            />
-          </div>
-        </div>
-
-        {/* Descanso */}
-        <div style={{ gridColumn: '1 / -1' }}>
-          <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Descanso</p>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {REST_QUICK.map(r => (
-              <button key={r} onClick={() => onUpdate('rest', r)}
-                style={{
-                  padding: '8px 14px', borderRadius: 24, fontSize: 13, fontWeight: 700, cursor: 'pointer',
-                  border: `2px solid ${ex.rest === r ? ac : '#E5E7EB'}`,
-                  background: ex.rest === r ? ac : '#F9FAFB',
-                  color: ex.rest === r ? 'white' : '#6B7280',
-                  transition: 'all 0.12s', minHeight: 38,
-                }}>{r}</button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* URL do vídeo */}
-      <div style={{ padding: '0 18px 16px', borderTop: '1px solid #F9FAFB', paddingTop: 14 }}>
-        <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>URL do Vídeo (YouTube)</p>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <input
-            value={ex.videoUrl || ''}
-            onChange={e => onUpdate('videoUrl', e.target.value)}
-            placeholder="https://youtube.com/watch?v=..."
-            style={{ flex: 1, fontSize: 13, color: '#374151' }}
-          />
-          {ex.videoUrl && (
-            <a href={ex.videoUrl} target="_blank" rel="noopener noreferrer"
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 16px', borderRadius: 10, background: '#FEF3C7', color: '#D97706', textDecoration: 'none', fontSize: 13, fontWeight: 700, flexShrink: 0, minHeight: 44 }}>
-              <Play size={14} fill="#D97706" /> Ver
-            </a>
-          )}
-        </div>
-        <div style={{ marginTop: 8 }}>
-          <input
-            value={ex.obs || ''}
-            onChange={e => onUpdate('obs', e.target.value)}
-            placeholder="Observações / dica de execução (opcional)"
-            style={{ fontSize: 13, color: '#6B7280' }}
-          />
-        </div>
-      </div>
+        </>
+      )}
     </div>
   );
 }
@@ -551,6 +541,7 @@ export default function Treinos() {
                       onDelete={() => deleteEx(i)}
                       onMove={moveEx}
                       accentColor={gc}
+                      autoOpen={!ex.name}
                     />
                   ))
                 )}

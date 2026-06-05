@@ -61,20 +61,24 @@ export default function PublicProfile() {
       const colors = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899'];
       const color = colors[Math.floor(Math.random() * colors.length)];
 
-      await supabase.from('students').insert({
-        personal_id: profile.id,
-        user_id: userId,
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        goal: form.goal,
-        plan: 'Mensal',
-        plan_price: null,
-        status: 'ativo',
-        initials,
-        color,
-        join_date: new Date().toISOString().slice(0, 10),
-      });
+      // Se já existe um registro deste aluno (adicionado manualmente pelo personal), só linka o user_id
+      const { data: existing } = await supabase.from('students')
+        .select('id').eq('email', form.email).eq('personal_id', profile.id).maybeSingle();
+
+      if (existing) {
+        await supabase.from('students').update({
+          user_id: userId, status: 'ativo',
+          name: form.name, phone: form.phone || undefined, goal: form.goal || undefined,
+        }).eq('id', existing.id);
+      } else {
+        await supabase.from('students').insert({
+          personal_id: profile.id, user_id: userId,
+          name: form.name, email: form.email, phone: form.phone,
+          goal: form.goal, plan: 'Mensal', plan_price: null,
+          status: 'ativo', initials, color,
+          join_date: new Date().toISOString().slice(0, 10),
+        });
+      }
     }
 
     setNeedsEmailConf(emailConfRequired);

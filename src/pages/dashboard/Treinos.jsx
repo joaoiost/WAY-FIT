@@ -103,6 +103,117 @@ const EXERCISE_DB = {
   Descanso:[],
 };
 
+const FREQ_PRESETS = {
+  3: { days: [1, 3, 5], groups: ['Peito', 'Costas', 'Pernas'],           label: '3x — Seg / Qua / Sex' },
+  4: { days: [1, 2, 4, 5], groups: ['Peito', 'Costas', 'Pernas', 'Ombro'], label: '4x — Seg / Ter / Qui / Sex' },
+  5: { days: [1, 2, 3, 4, 5], groups: ['Peito', 'Costas', 'Pernas', 'Ombro', 'Braços'], label: '5x — Seg a Sex' },
+  6: { days: [1, 2, 3, 4, 5, 6], groups: ['Peito', 'Costas', 'Pernas', 'Ombro', 'Braços', 'Full Body'], label: '6x — Seg a Sáb' },
+};
+
+function ConfigWeekModal({ onConfirm, onClose }) {
+  const [freq, setFreq] = useState(3);
+  const [dayGroups, setDayGroups] = useState(() => {
+    const p = FREQ_PRESETS[3];
+    return Object.fromEntries(p.days.map((d, i) => [d, p.groups[i]]));
+  });
+  const [saving, setSaving] = useState(false);
+
+  const applyFreq = (f) => {
+    setFreq(f);
+    const p = FREQ_PRESETS[f];
+    setDayGroups(Object.fromEntries(p.days.map((d, i) => [d, p.groups[i]])));
+  };
+
+  const toggleDay = (dv) => {
+    if (dayGroups[dv] !== undefined) {
+      const next = { ...dayGroups };
+      delete next[dv];
+      setDayGroups(next);
+    } else {
+      setDayGroups(prev => ({ ...prev, [dv]: 'Peito' }));
+    }
+  };
+
+  const handleConfirm = async () => {
+    setSaving(true);
+    await onConfirm(dayGroups);
+    setSaving(false);
+    onClose();
+  };
+
+  const days = DAYS;
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', padding: 0 }}
+      onClick={onClose}>
+      <div onClick={e => e.stopPropagation()}
+        style={{ background: 'white', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 600, margin: '0 auto', padding: '24px 20px 36px', maxHeight: '90vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#111827' }}>Configurar Semana</h3>
+            <p style={{ margin: '3px 0 0', fontSize: 13, color: '#9CA3AF' }}>Monte a divisão semanal em segundos</p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={17} color="#6B7280" />
+          </button>
+        </div>
+
+        {/* Frequência */}
+        <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Frequência semanal</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, marginBottom: 24 }}>
+          {[3, 4, 5, 6].map(f => (
+            <button key={f} onClick={() => applyFreq(f)}
+              style={{ padding: '14px 8px', borderRadius: 14, border: `2.5px solid ${freq === f ? '#3B82F6' : '#E5E7EB'}`, background: freq === f ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'center', transition: 'all 0.12s' }}>
+              <p style={{ margin: 0, fontSize: 24, fontWeight: 900, color: freq === f ? '#3B82F6' : '#374151' }}>{f}x</p>
+              <p style={{ margin: '2px 0 0', fontSize: 11, color: freq === f ? '#3B82F6' : '#9CA3AF', fontWeight: 600 }}>por semana</p>
+            </button>
+          ))}
+        </div>
+
+        {/* Dias + grupos */}
+        <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Dias e grupos musculares</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 28 }}>
+          {days.map(d => {
+            const selected = dayGroups[d.value] !== undefined;
+            const grp = dayGroups[d.value];
+            const gc = grp ? (GROUP_COLORS[grp] || '#3B82F6') : '#E5E7EB';
+            return (
+              <div key={d.value} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 14, border: `2px solid ${selected ? gc + '60' : '#F1F5F9'}`, background: selected ? gc + '08' : '#F9FAFB', transition: 'all 0.12s' }}>
+                <button onClick={() => toggleDay(d.value)}
+                  style={{ width: 28, height: 28, borderRadius: 8, border: `2px solid ${selected ? gc : '#D1D5DB'}`, background: selected ? gc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, transition: 'all 0.12s' }}>
+                  {selected && <Check size={15} color="white" strokeWidth={3} />}
+                </button>
+                <span style={{ width: 44, fontSize: 14, fontWeight: 700, color: selected ? '#111827' : '#9CA3AF' }}>{d.full.slice(0, 6)}.</span>
+                {selected ? (
+                  <select value={grp} onChange={e => setDayGroups(prev => ({ ...prev, [d.value]: e.target.value }))}
+                    style={{ flex: 1, fontSize: 14, fontWeight: 700, color: gc, border: 'none', background: 'transparent', outline: 'none', cursor: 'pointer', boxShadow: 'none' }}>
+                    {GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
+                  </select>
+                ) : (
+                  <span style={{ flex: 1, fontSize: 13, color: '#C4C4C4' }}>Descanso</span>
+                )}
+              </div>
+            );
+          })}
+        </div>
+
+        <div style={{ background: '#F0FDF4', borderRadius: 12, padding: '12px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <Check size={16} color="#10B981" style={{ flexShrink: 0, marginTop: 2 }} />
+          <p style={{ margin: 0, fontSize: 13, color: '#065F46', lineHeight: 1.5 }}>
+            <strong>{Object.keys(dayGroups).length} dias de treino</strong> serão configurados com os exercícios padrão de cada grupo. Você pode editar depois.
+          </p>
+        </div>
+
+        <button onClick={handleConfirm} disabled={saving || Object.keys(dayGroups).length === 0}
+          style={{ width: '100%', padding: '16px', background: saving ? '#9CA3AF' : 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 14, cursor: 'pointer', fontSize: 16, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          {saving ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={18} />}
+          {saving ? 'Configurando...' : `Configurar ${Object.keys(dayGroups).length} dias`}
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Treinos() {
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
@@ -114,6 +225,7 @@ export default function Treinos() {
   const [exercises, setExercises] = useState([]); // exercícios do treino desse dia
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [configModal, setConfigModal] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -195,6 +307,54 @@ export default function Treinos() {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  // Configura a semana inteira de uma vez
+  const handleConfigWeek = async (dayGroups) => {
+    const student = students.find(s => String(s.id) === String(studentId));
+    if (!student) return;
+
+    const newPlans = [];
+    for (const [dayVal, grpName] of Object.entries(dayGroups)) {
+      const dv = parseInt(dayVal);
+      const defaultExercises = (EXERCISE_DB[grpName] || []).map((e, i) => ({
+        name: e.name, sets: e.sets, reps: e.reps, rest: e.rest, load: '', video_url: e.video || '', obs: '', order_index: i,
+      }));
+
+      const existing = myPlans.find(p => (p.days || []).includes(dv));
+
+      if (hasSupabase) {
+        if (existing) {
+          await supabase.from('training_plans').update({ name: grpName, type: 'Hipertrofia' }).eq('id', existing.id);
+          await supabase.from('exercises').delete().eq('plan_id', existing.id);
+          if (defaultExercises.length) await supabase.from('exercises').insert(defaultExercises.map(e => ({ ...e, plan_id: existing.id })));
+          const { data: updated } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', existing.id).single();
+          if (updated) newPlans.push({ type: 'update', plan: updated });
+        } else {
+          const { data: plan } = await supabase.from('training_plans').insert({
+            personal_id: user.id, student_id: student.id, student_name: student.name,
+            name: grpName, type: 'Hipertrofia', days: [dv],
+          }).select().single();
+          if (plan) {
+            if (defaultExercises.length) await supabase.from('exercises').insert(defaultExercises.map(e => ({ ...e, plan_id: plan.id })));
+            const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', plan.id).single();
+            if (full) newPlans.push({ type: 'insert', plan: full });
+          }
+        }
+      } else {
+        const mockPlan = { id: Date.now() + dv, student_id: studentId, student_name: student.name, name: grpName, type: 'Hipertrofia', days: [dv], exercises: defaultExercises, created_at: new Date().toISOString() };
+        newPlans.push({ type: 'insert', plan: mockPlan });
+      }
+    }
+
+    setPlans(prev => {
+      let updated = [...prev];
+      for (const { type, plan } of newPlans) {
+        if (type === 'update') updated = updated.map(p => p.id === plan.id ? plan : p);
+        else updated = [...updated, plan];
+      }
+      return updated;
+    });
+  };
+
   const handleDeleteDay = async () => {
     const existing = planForDay(day);
     if (!existing) return;
@@ -249,7 +409,13 @@ export default function Treinos() {
         <>
           {/* PASSO 2: Selecionar dia */}
           <div style={{ background: 'white', borderRadius: 16, padding: '18px 20px', marginBottom: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>2. Selecione o dia</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>2. Selecione o dia</p>
+              <button onClick={() => setConfigModal(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 20, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700 }}>
+                Configurar semana
+              </button>
+            </div>
             <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
               {DAYS.map(d => {
                 const plan = planForDay(d.value);
@@ -415,6 +581,10 @@ export default function Treinos() {
             </div>
           )}
         </>
+      )}
+
+      {configModal && studentId && (
+        <ConfigWeekModal onConfirm={handleConfigWeek} onClose={() => setConfigModal(false)} />
       )}
       <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
     </div>

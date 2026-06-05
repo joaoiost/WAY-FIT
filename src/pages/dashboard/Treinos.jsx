@@ -219,25 +219,25 @@ export default function Treinos() {
   return (
     <div className="page-padding" style={{ flex: 1 }}>
       <h2 style={{ margin: '0 0 4px', fontSize: 22, fontWeight: 800, color: '#111827' }}>Treinos</h2>
-      <p style={{ margin: '0 0 20px', fontSize: 13, color: '#9CA3AF' }}>Monte o treino de cada aluno por dia da semana</p>
+      <p style={{ margin: '0 0 20px', fontSize: 14, color: '#9CA3AF' }}>Monte o treino de cada aluno por dia da semana</p>
 
       {/* PASSO 1: Selecionar aluno */}
-      <div style={{ background: 'white', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-        <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>1. Selecione o aluno</p>
+      <div style={{ background: 'white', borderRadius: 16, padding: '18px 20px', marginBottom: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+        <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>1. Selecione o aluno</p>
         {students.length === 0 ? (
-          <p style={{ fontSize: 13, color: '#9CA3AF', margin: 0 }}>Nenhum aluno ativo cadastrado.</p>
+          <p style={{ fontSize: 14, color: '#9CA3AF', margin: 0 }}>Nenhum aluno ativo cadastrado.</p>
         ) : (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
             {students.map(s => {
               const active = String(s.id) === studentId;
               return (
                 <button key={s.id} onClick={() => { setStudentId(String(s.id)); setDay(null); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px', borderRadius: 30, border: `2px solid ${active ? '#3B82F6' : '#E5E7EB'}`, background: active ? '#EFF6FF' : 'white', cursor: 'pointer', transition: 'all 0.12s' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: s.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: 'white', flexShrink: 0 }}>
+                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 18px', borderRadius: 40, border: `2px solid ${active ? '#3B82F6' : '#E5E7EB'}`, background: active ? '#EFF6FF' : 'white', cursor: 'pointer', transition: 'all 0.12s', minHeight: 48 }}>
+                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: s.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'white', flexShrink: 0 }}>
                     {s.initials || s.name?.slice(0,2).toUpperCase()}
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 600, color: active ? '#1D4ED8' : '#374151' }}>{s.name.split(' ')[0]}</span>
-                  {active && <Check size={13} color="#3B82F6" />}
+                  <span style={{ fontSize: 15, fontWeight: 700, color: active ? '#1D4ED8' : '#374151' }}>{s.name.split(' ')[0]}</span>
+                  {active && <Check size={16} color="#3B82F6" />}
                 </button>
               );
             })}
@@ -248,24 +248,24 @@ export default function Treinos() {
       {studentId && (
         <>
           {/* PASSO 2: Selecionar dia */}
-          <div style={{ background: 'white', borderRadius: 14, padding: 16, marginBottom: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
-            <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>2. Selecione o dia</p>
-            <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 2 }}>
+          <div style={{ background: 'white', borderRadius: 16, padding: '18px 20px', marginBottom: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+            <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>2. Selecione o dia</p>
+            <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
               {DAYS.map(d => {
                 const plan = planForDay(d.value);
                 const isActive = day === d.value;
                 const gc2 = plan ? (GROUP_COLORS[plan.name] || '#6B7280') : null;
                 return (
                   <button key={d.value} onClick={() => openDay(d.value)}
-                    style={{ flex: '0 0 auto', minWidth: 70, padding: '10px 6px', borderRadius: 12, border: `2px solid ${isActive ? '#3B82F6' : plan ? gc2 + '50' : '#E5E7EB'}`, background: isActive ? '#EFF6FF' : plan ? gc2 + '10' : '#F9FAFB', cursor: 'pointer', textAlign: 'center', transition: 'all 0.12s' }}>
-                    <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, color: isActive ? '#3B82F6' : '#9CA3AF', textTransform: 'uppercase' }}>{d.label}</p>
+                    style={{ flex: '0 0 auto', minWidth: 80, padding: '14px 8px', borderRadius: 14, border: `2.5px solid ${isActive ? '#3B82F6' : plan ? gc2 + '60' : '#E5E7EB'}`, background: isActive ? '#EFF6FF' : plan ? gc2 + '12' : '#F9FAFB', cursor: 'pointer', textAlign: 'center', transition: 'all 0.12s', boxShadow: isActive ? '0 0 0 3px rgba(59,130,246,0.15)' : 'none' }}>
+                    <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 800, color: isActive ? '#3B82F6' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{d.label}</p>
                     {plan ? (
                       <>
-                        <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: gc2 }}>{plan.name}</p>
-                        <p style={{ margin: '2px 0 0', fontSize: 10, color: '#9CA3AF' }}>{(plan.exercises||[]).length} ex.</p>
+                        <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: gc2, lineHeight: 1.3 }}>{plan.name}</p>
+                        <p style={{ margin: '3px 0 0', fontSize: 11, color: '#9CA3AF' }}>{(plan.exercises||[]).length} ex.</p>
                       </>
                     ) : (
-                      <p style={{ margin: 0, fontSize: 10, color: '#C4C4C4' }}>Vazio</p>
+                      <p style={{ margin: 0, fontSize: 11, color: '#C4C4C4' }}>Livre</p>
                     )}
                   </button>
                 );
@@ -275,64 +275,64 @@ export default function Treinos() {
 
           {/* PASSO 3: Montar treino */}
           {day !== null && (
-            <div style={{ background: 'white', borderRadius: 14, border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
-              {/* Header do editor */}
-              <div style={{ padding: '14px 16px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 10, background: gc + '08' }}>
-                <button onClick={() => setDay(null)} style={{ width: 30, height: 30, borderRadius: '50%', background: 'white', border: '1px solid #E5E7EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <X size={14} color="#6B7280" />
+            <div style={{ background: 'white', borderRadius: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', overflow: 'hidden' }}>
+              {/* Header */}
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12, background: gc + '08' }}>
+                <button onClick={() => setDay(null)} style={{ width: 36, height: 36, borderRadius: '50%', background: 'white', border: '1px solid #E5E7EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <X size={16} color="#6B7280" />
                 </button>
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{dayInfo?.full}</p>
-                  <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: gc }}>{group}</p>
+                  <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF', fontWeight: 600 }}>{dayInfo?.full}</p>
+                  <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: gc }}>{group}</p>
                 </div>
                 {planForDay(day) && (
-                  <button onClick={handleDeleteDay} style={{ padding: '5px 10px', background: '#FEF2F2', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#EF4444', fontSize: 12, fontWeight: 700 }}>
-                    <Trash2 size={13} />
+                  <button onClick={handleDeleteDay} style={{ width: 36, height: 36, borderRadius: '50%', background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Trash2 size={16} color="#EF4444" />
                   </button>
                 )}
                 <button onClick={handleSave} disabled={saving}
-                  style={{ padding: '8px 16px', background: saved ? '#10B981' : gc, color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 13, display: 'flex', alignItems: 'center', gap: 5, opacity: saving ? 0.7 : 1 }}>
-                  {saving ? <Loader size={13} style={{ animation: 'spin 1s linear infinite' }} /> : saved ? <Check size={13} /> : <Save size={13} />}
+                  style={{ padding: '10px 20px', background: saved ? '#10B981' : gc, color: 'white', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 6, opacity: saving ? 0.7 : 1, minHeight: 44 }}>
+                  {saving ? <Loader size={15} style={{ animation: 'spin 1s linear infinite' }} /> : saved ? <Check size={15} /> : <Save size={15} />}
                   {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar'}
                 </button>
               </div>
 
-              <div style={{ padding: 16 }}>
+              <div style={{ padding: '18px 20px' }}>
                 {/* Grupo muscular */}
-                <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Grupo muscular</p>
-                <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 18, paddingBottom: 2 }}>
+                <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Grupo muscular</p>
+                <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 22, paddingBottom: 4 }}>
                   {GROUPS.map(g => (
                     <button key={g} onClick={() => setGroup(g)}
-                      style={{ flex: '0 0 auto', padding: '7px 14px', borderRadius: 20, border: `2px solid ${group === g ? (GROUP_COLORS[g]||'#3B82F6') : '#E5E7EB'}`, background: group === g ? (GROUP_COLORS[g]||'#3B82F6') : 'white', color: group === g ? 'white' : '#6B7280', fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.12s' }}>
+                      style={{ flex: '0 0 auto', padding: '10px 18px', borderRadius: 24, border: `2px solid ${group === g ? (GROUP_COLORS[g]||'#3B82F6') : '#E5E7EB'}`, background: group === g ? (GROUP_COLORS[g]||'#3B82F6') : 'white', color: group === g ? 'white' : '#6B7280', fontSize: 14, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.12s', minHeight: 44 }}>
                       {g}
                     </button>
                   ))}
                 </div>
 
-                {/* Lista de exercícios da biblioteca */}
+                {/* Lista de exercícios */}
                 {libEx.length > 0 && (
                   <>
-                    <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-                      Exercícios — clique para adicionar
+                    <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                      Exercícios — toque para adicionar
                     </p>
-                    <div style={{ borderRadius: 10, border: '1px solid #F1F5F9', overflow: 'hidden', marginBottom: 16 }}>
+                    <div style={{ borderRadius: 12, border: '1px solid #F1F5F9', overflow: 'hidden', marginBottom: 20 }}>
                       {libEx.map((libE, i) => {
                         const added = exercises.some(e => e.name === libE.name);
                         return (
                           <div key={libE.name}
                             onClick={() => toggleExercise(libE)}
-                            style={{ display: 'flex', alignItems: 'center', padding: '11px 14px', borderBottom: i < libEx.length - 1 ? '1px solid #F9FAFB' : 'none', background: added ? gc + '10' : 'white', cursor: 'pointer', gap: 10, transition: 'background 0.1s' }}>
-                            <div style={{ width: 24, height: 24, borderRadius: 7, border: `2px solid ${added ? gc : '#D1D5DB'}`, background: added ? gc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                              {added && <Check size={13} color="white" strokeWidth={3} />}
+                            style={{ display: 'flex', alignItems: 'center', padding: '15px 16px', borderBottom: i < libEx.length - 1 ? '1px solid #F3F4F6' : 'none', background: added ? gc + '10' : 'white', cursor: 'pointer', gap: 14, transition: 'background 0.1s', minHeight: 64 }}>
+                            <div style={{ width: 30, height: 30, borderRadius: 8, border: `2.5px solid ${added ? gc : '#D1D5DB'}`, background: added ? gc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.12s' }}>
+                              {added && <Check size={16} color="white" strokeWidth={3} />}
                             </div>
-                            <div style={{ flex: 1 }}>
-                              <p style={{ margin: 0, fontSize: 13, fontWeight: added ? 700 : 500, color: '#111827' }}>{libE.name}</p>
-                              <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>{libE.sets} séries · {libE.reps} · descanso {libE.rest}</p>
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <p style={{ margin: 0, fontSize: 15, fontWeight: added ? 700 : 500, color: '#111827' }}>{libE.name}</p>
+                              <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9CA3AF' }}>{libE.sets} séries · {libE.reps} · descanso {libE.rest}</p>
                             </div>
                             <a href={libE.video} target="_blank" rel="noopener noreferrer"
                               onClick={e => e.stopPropagation()}
-                              style={{ padding: '4px 10px', borderRadius: 6, background: '#FEF3C7', color: '#D97706', textDecoration: 'none', fontSize: 11, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
-                              <Play size={10} fill="#D97706" /> Ver
+                              style={{ padding: '8px 14px', borderRadius: 8, background: '#FEF3C7', color: '#D97706', textDecoration: 'none', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0, minHeight: 38 }}>
+                              <Play size={12} fill="#D97706" /> Ver
                             </a>
                           </div>
                         );
@@ -341,41 +341,57 @@ export default function Treinos() {
                   </>
                 )}
 
-                {/* Exercícios adicionados com edição */}
+                {/* Exercícios adicionados */}
                 {exercises.length > 0 && (
                   <>
-                    <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: gc, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                    <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: gc, textTransform: 'uppercase', letterSpacing: '0.07em' }}>
                       Treino montado — {exercises.length} exercício{exercises.length !== 1 ? 's' : ''}
                     </p>
-                    <div style={{ borderRadius: 10, border: `1px solid ${gc}25`, overflow: 'hidden', marginBottom: 8 }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 8 }}>
                       {exercises.map((ex, i) => (
-                        <div key={i} style={{ padding: '11px 14px', borderBottom: i < exercises.length - 1 ? '1px solid #F9FAFB' : 'none', background: 'white' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-                            <span style={{ width: 20, height: 20, borderRadius: '50%', background: gc + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: gc, flexShrink: 0 }}>{i + 1}</span>
-                            <span style={{ flex: 1, fontSize: 13, fontWeight: 700, color: '#111827' }}>{ex.name}</span>
+                        <div key={i} style={{ background: '#F9FAFB', borderRadius: 14, border: `1.5px solid ${gc}25`, padding: '14px 16px' }}>
+                          {/* Nome + remover */}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                            <div style={{ width: 28, height: 28, borderRadius: '50%', background: gc + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: gc, flexShrink: 0 }}>{i + 1}</div>
+                            <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: '#111827' }}>{ex.name}</span>
                             <button onClick={() => setExercises(prev => prev.filter((_, j) => j !== i))}
-                              style={{ padding: 3, background: 'none', border: 'none', cursor: 'pointer', color: '#EF4444', display: 'flex' }}>
-                              <X size={14} />
+                              style={{ width: 34, height: 34, borderRadius: '50%', background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                              <X size={15} color="#EF4444" />
                             </button>
                           </div>
-                          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', paddingLeft: 28 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: '#F9FAFB', borderRadius: 8, padding: '4px 8px', border: '1px solid #E5E7EB' }}>
-                              <button onClick={() => updateEx(i, 'sets', Math.max(1, (parseInt(ex.sets)||3) - 1))} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, color: '#6B7280', padding: 0, lineHeight: 1 }}>−</button>
-                              <span style={{ fontSize: 13, fontWeight: 700, minWidth: 14, textAlign: 'center' }}>{ex.sets}</span>
-                              <button onClick={() => updateEx(i, 'sets', (parseInt(ex.sets)||3) + 1)} style={{ background: 'none', border: 'none', cursor: 'pointer', fontSize: 15, color: '#6B7280', padding: 0, lineHeight: 1 }}>+</button>
-                              <span style={{ fontSize: 11, color: '#9CA3AF', marginLeft: 2 }}>séries</span>
+                          {/* Controles em grid 2x2 */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                            {/* Séries */}
+                            <div style={{ background: 'white', borderRadius: 10, border: '1px solid #E5E7EB', padding: '10px 12px' }}>
+                              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Séries</p>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: 0 }}>
+                                <button onClick={() => updateEx(i, 'sets', Math.max(1, (parseInt(ex.sets)||3) - 1))}
+                                  style={{ width: 36, height: 36, background: '#F3F4F6', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 20, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>−</button>
+                                <span style={{ flex: 1, fontSize: 20, fontWeight: 800, color: '#111827', textAlign: 'center' }}>{ex.sets}</span>
+                                <button onClick={() => updateEx(i, 'sets', (parseInt(ex.sets)||3) + 1)}
+                                  style={{ width: 36, height: 36, background: '#F3F4F6', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 20, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>+</button>
+                              </div>
                             </div>
-                            <input value={ex.reps} onChange={e => updateEx(i, 'reps', e.target.value)}
-                              style={{ width: 70, fontSize: 12, padding: '4px 8px', textAlign: 'center' }} placeholder="Reps" />
-                            <div style={{ position: 'relative', width: 80 }}>
+                            {/* Reps */}
+                            <div style={{ background: 'white', borderRadius: 10, border: '1px solid #E5E7EB', padding: '10px 12px' }}>
+                              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Repetições</p>
+                              <input value={ex.reps} onChange={e => updateEx(i, 'reps', e.target.value)}
+                                style={{ width: '100%', fontSize: 18, fontWeight: 700, textAlign: 'center', border: 'none', background: 'transparent', padding: 0, outline: 'none', boxShadow: 'none', height: 36 }} placeholder="10-12" />
+                            </div>
+                            {/* Carga */}
+                            <div style={{ background: 'white', borderRadius: 10, border: '1px solid #E5E7EB', padding: '10px 12px' }}>
+                              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Carga (kg)</p>
                               <input value={ex.load} onChange={e => updateEx(i, 'load', e.target.value)}
-                                style={{ width: '100%', fontSize: 12, padding: '4px 22px 4px 8px', textAlign: 'center' }} placeholder="Carga" />
-                              <span style={{ position: 'absolute', right: 6, top: '50%', transform: 'translateY(-50%)', fontSize: 10, color: '#9CA3AF', pointerEvents: 'none' }}>kg</span>
+                                style={{ width: '100%', fontSize: 18, fontWeight: 700, textAlign: 'center', border: 'none', background: 'transparent', padding: 0, outline: 'none', boxShadow: 'none', height: 36 }} placeholder="—" />
                             </div>
-                            <select value={ex.rest} onChange={e => updateEx(i, 'rest', e.target.value)}
-                              style={{ fontSize: 12, padding: '4px 8px', width: 80 }}>
-                              {['30s','45s','60s','75s','90s','2min'].map(r => <option key={r}>{r}</option>)}
-                            </select>
+                            {/* Descanso */}
+                            <div style={{ background: 'white', borderRadius: 10, border: '1px solid #E5E7EB', padding: '10px 12px' }}>
+                              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>Descanso</p>
+                              <select value={ex.rest} onChange={e => updateEx(i, 'rest', e.target.value)}
+                                style={{ width: '100%', fontSize: 16, fontWeight: 700, textAlign: 'center', border: 'none', background: 'transparent', padding: 0, outline: 'none', boxShadow: 'none', height: 36, appearance: 'none', cursor: 'pointer' }}>
+                                {['30s','45s','60s','75s','90s','2min'].map(r => <option key={r}>{r}</option>)}
+                              </select>
+                            </div>
                           </div>
                         </div>
                       ))}
@@ -384,14 +400,15 @@ export default function Treinos() {
                 )}
 
                 {exercises.length === 0 && group !== 'Descanso' && (
-                  <div style={{ textAlign: 'center', padding: '16px 0', color: '#9CA3AF', fontSize: 13 }}>
-                    Clique nos exercícios acima para adicionar ao treino
+                  <div style={{ textAlign: 'center', padding: '20px 0', color: '#9CA3AF', fontSize: 14 }}>
+                    Toque nos exercícios acima para adicionar ao treino
                   </div>
                 )}
 
                 {group === 'Descanso' && (
-                  <div style={{ textAlign: 'center', padding: '20px 0' }}>
-                    <p style={{ margin: 0, fontSize: 14, color: '#6B7280', fontWeight: 600 }}>Dia de descanso — sem exercícios</p>
+                  <div style={{ textAlign: 'center', padding: '24px 0' }}>
+                    <p style={{ margin: 0, fontSize: 16, color: '#6B7280', fontWeight: 600 }}>Dia de descanso</p>
+                    <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>Nenhum exercício para este dia</p>
                   </div>
                 )}
               </div>

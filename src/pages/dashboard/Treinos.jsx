@@ -4,6 +4,7 @@ import { trainingPlans as mockPlans, students as mockStudents } from '../../data
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { searchExercises } from '../../data/exerciseLibrary';
+import { fetchExerciseImage } from '../../lib/exerciseImages';
 
 const DAYS = [
   { value: 1, label: 'Seg', full: 'Segunda-feira' },
@@ -45,6 +46,17 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
   const [open, setOpen] = useState(autoOpen || !ex.name);
   const [suggestions, setSuggestions] = useState([]);
   const [showSugg, setShowSugg] = useState(false);
+  const [exerciseImg, setExerciseImg] = useState(null);
+  const [imgLoading, setImgLoading] = useState(false);
+
+  // Auto-busca imagem quando nome do exercício muda
+  useEffect(() => {
+    if (!ex.name || ex.name.length < 3) { setExerciseImg(null); return; }
+    setImgLoading(true);
+    fetchExerciseImage(ex.name)
+      .then(url => { setExerciseImg(url); setImgLoading(false); })
+      .catch(() => setImgLoading(false));
+  }, [ex.name]);
   const sets = parseInt(ex.sets) || 3;
   const ac = accentColor || '#3B82F6';
   const isCustomReps = ex.reps && !REPS_QUICK.includes(ex.reps);
@@ -116,6 +128,17 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
       {open && (
         <>
           <div style={{ borderTop: '1px solid #F3F4F6', padding: '16px 16px 0' }}>
+            {/* Imagem automática do exercício */}
+            {(exerciseImg || imgLoading) && (
+              <div style={{ marginBottom: 14, borderRadius: 12, overflow: 'hidden', background: '#F9FAFB', height: imgLoading ? 120 : 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {imgLoading && !exerciseImg
+                  ? <span style={{ fontSize: 12, color: '#9CA3AF' }}>Buscando demonstração...</span>
+                  : exerciseImg
+                    ? <img src={exerciseImg} alt={ex.name} style={{ width: '100%', maxHeight: 200, objectFit: 'contain', display: 'block' }} />
+                    : null
+                }
+              </div>
+            )}
             {/* Nome com autocomplete */}
             <div style={{ marginBottom: 14, position: 'relative' }}>
               <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nome do exercício</p>

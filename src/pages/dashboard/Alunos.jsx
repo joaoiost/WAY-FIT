@@ -124,27 +124,45 @@ function InviteSheet({ student, inviteUrl, onClose }) {
   );
 }
 
-// Dias da semana — Seg a Dom — como dots visuais por aluno
+// Semana de treinos — dots com labels e contagem
+const DAY_LABELS = ['S','T','Q','Q','S','S','D'];
+
 function WeekDots({ sessionDates }) {
   const today = new Date();
   const todayStr = today.toISOString().slice(0, 10);
-  const dayOfWeek = (today.getDay() + 6) % 7; // 0=Seg
+  const dayOfWeek = (today.getDay() + 6) % 7;
+  const count = sessionDates.size;
+
   return (
-    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
-      {Array.from({ length: 7 }, (_, i) => {
-        const d = new Date(today);
-        d.setDate(today.getDate() - dayOfWeek + i);
-        const dateStr = d.toISOString().slice(0, 10);
-        const trained = sessionDates.has(dateStr);
-        const isFuture = dateStr > todayStr;
-        return (
-          <div key={i} style={{
-            width: 7, height: 7, borderRadius: '50%',
-            background: trained ? '#10B981' : isFuture ? '#F3F4F6' : '#E5E7EB',
-            flexShrink: 0,
-          }} />
-        );
-      })}
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+      <div style={{ display: 'flex', gap: 3 }}>
+        {Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(today);
+          d.setDate(today.getDate() - dayOfWeek + i);
+          const dateStr = d.toISOString().slice(0, 10);
+          const trained = sessionDates.has(dateStr);
+          const isFuture = dateStr > todayStr;
+          const isToday = dateStr === todayStr;
+          return (
+            <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+              <div style={{
+                width: 10, height: 10, borderRadius: 3,
+                background: trained ? '#10B981' : isFuture ? '#F3F4F6' : '#E5E7EB',
+                outline: isToday ? '2px solid #3B82F6' : 'none',
+                outlineOffset: 1,
+              }} />
+              <span style={{ fontSize: 8, fontWeight: 700, color: isToday ? '#3B82F6' : '#C4C9D4' }}>
+                {DAY_LABELS[i]}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+      {count > 0 && (
+        <span style={{ fontSize: 11, fontWeight: 800, color: '#10B981', background: '#ECFDF5', padding: '1px 7px', borderRadius: 20, whiteSpace: 'nowrap' }}>
+          {count}×
+        </span>
+      )}
     </div>
   );
 }

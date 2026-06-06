@@ -9,10 +9,13 @@ const TABS = [
   { to: '/aluno/progresso', icon: TrendingUp,        label: 'Progresso' },
 ];
 
+const TAB_PATHS = new Set(TABS.map(t => t.to));
+
 export default function StudentBottomNav() {
   const { setOpen } = useSidebar();
   const { pathname } = useLocation();
-  const isMoreActive = ['/aluno/historico', '/aluno/chat', '/aluno/fotos', '/aluno/saude'].includes(pathname);
+  // "Mais" fica ativo em qualquer rota /aluno/ que não seja uma das abas principais
+  const isMoreActive = pathname.startsWith('/aluno/') && !TAB_PATHS.has(pathname);
 
   return (
     <nav className="student-bottom-nav" style={{ gap: 0 }}>

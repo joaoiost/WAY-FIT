@@ -35,14 +35,15 @@ export default function StudentDashboard() {
     if (hasSupabase) {
       (async () => {
         const { data: student } = await supabase
-          .from('students').select('id, personal_id, plan, goal').eq('user_id', user.id).maybeSingle();
+          .from('students').select('id, personal_id, plan, goal, onboarded_at').eq('user_id', user.id).maybeSingle();
 
         if (student) {
           setStudentId(student.id);
           setStudentGoal(student.goal || '');
 
-          // Redirect to onboarding if never done
-          if (!localStorage.getItem(`aluno_onboarded_${user.id}`)) {
+          // Redirect to onboarding if never done — checa DB primeiro, localStorage como fallback
+          const neverOnboarded = !student.onboarded_at && !localStorage.getItem(`aluno_onboarded_${user.id}`);
+          if (neverOnboarded) {
             navigate('/aluno/onboarding', { replace: true });
             return;
           }
@@ -203,7 +204,7 @@ export default function StudentDashboard() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h3 style={{ margin: '0 0 2px', fontSize: 17, fontWeight: 900, color: '#111827', lineHeight: 1.2 }}>{todayPlan.name}</h3>
                     <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>
-                      {totalCount} exercícios · <span style={{ color: TYPE_COLORS[todayPlan.type] || '#6B7280', fontWeight: 700 }}>{todayPlan.type}</span>
+                      {exercises.length} exercício{exercises.length !== 1 ? 's' : ''} · <span style={{ color: TYPE_COLORS[todayPlan.type] || '#6B7280', fontWeight: 700 }}>{todayPlan.type}</span>
                     </p>
                   </div>
                 </div>

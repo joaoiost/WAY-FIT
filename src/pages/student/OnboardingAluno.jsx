@@ -85,14 +85,19 @@ export default function OnboardingAluno() {
         goal: goal || null,
         weight: weight ? parseFloat(weight) : null,
         height: height ? parseInt(height) : null,
+        onboarded_at: new Date().toISOString(),
       }).eq('id', studentRecord.id);
     }
+    // Fallback local para quando Supabase não está configurado
     localStorage.setItem(`aluno_onboarded_${user?.id}`, '1');
     setSaving(false);
     navigate('/aluno/dashboard');
   };
 
   const skip = () => {
+    if (hasSupabase && studentRecord) {
+      supabase.from('students').update({ onboarded_at: new Date().toISOString() }).eq('id', studentRecord.id);
+    }
     localStorage.setItem(`aluno_onboarded_${user?.id}`, '1');
     navigate('/aluno/dashboard');
   };

@@ -4,12 +4,6 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
-const MOCK = [
-  { id: 1, date: '2026-03-01', weight: 82, waist: 88, chest: 102, arm: 38, hip: 96, body_fat: 18 },
-  { id: 2, date: '2026-04-01', weight: 79, waist: 84, chest: 104, arm: 39, hip: 94, body_fat: 16 },
-  { id: 3, date: '2026-05-01', weight: 77, waist: 81, chest: 105, arm: 40, hip: 92, body_fat: 15 },
-  { id: 4, date: '2026-05-15', weight: 76.5, waist: 80, chest: 105, arm: 40.5, hip: 91, body_fat: 14.5 },
-];
 
 const EMPTY_FORM = { date: new Date().toISOString().slice(0, 10), weight: '', waist: '', chest: '', arm: '', hip: '', body_fat: '' };
 
@@ -26,14 +20,14 @@ export default function Progresso() {
   useEffect(() => {
     if (!user) return;
     if (!hasSupabase) {
-      setMeasurements(MOCK);
+      setMeasurements([]);
       setLoading(false);
       return;
     }
     const load = async () => {
       const { data: student } = await supabase
         .from('students').select('id').eq('user_id', user.id).maybeSingle();
-      if (!student) { setMeasurements(MOCK); setLoading(false); return; }
+      if (!student) { setMeasurements([]); setLoading(false); return; }
       setStudentId(student.id);
 
       const { data } = await supabase

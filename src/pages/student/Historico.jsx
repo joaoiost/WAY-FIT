@@ -1,15 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Dumbbell, CheckCircle, Clock, Calendar, ChevronDown, ChevronUp, Loader } from 'lucide-react';
+import { Dumbbell, CheckCircle, Clock, Calendar, ChevronDown, ChevronUp, Loader, BarChart2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
-const MOCK_HISTORY = [
-  { id: 'mock-1', date: '2026-05-22', plan_name: 'Treino A - Peito', plan_type: 'Hipertrofia', exercises_done: 6, exercises_total: 6 },
-  { id: 'mock-2', date: '2026-05-20', plan_name: 'Treino B - Costas', plan_type: 'Hipertrofia', exercises_done: 5, exercises_total: 6 },
-  { id: 'mock-3', date: '2026-05-18', plan_name: 'Treino A - Peito', plan_type: 'Hipertrofia', exercises_done: 6, exercises_total: 6 },
-  { id: 'mock-4', date: '2026-05-15', plan_name: 'Treino B - Costas', plan_type: 'Hipertrofia', exercises_done: 4, exercises_total: 6 },
-  { id: 'mock-5', date: '2026-05-13', plan_name: 'Treino Funcional', plan_type: 'Funcional', exercises_done: 8, exercises_total: 8 },
-];
 
 const TYPE_COLORS = {
   Hipertrofia: '#8B5CF6', Funcional: '#10B981', Força: '#EF4444',
@@ -142,7 +135,7 @@ export default function Historico() {
   useEffect(() => {
     if (!user) return;
     if (!hasSupabase) {
-      setSessions(MOCK_HISTORY.map(m => ({ ...m, _mock: true })));
+      setSessions([]);
       setLoading(false);
       return;
     }
@@ -182,7 +175,7 @@ export default function Historico() {
         .map(a => ({ id: `att-${a.date}`, date: a.date, plan_name: 'Treino', plan_type: 'Musculação', exercises_done: 0, exercises_total: 0 }));
 
       const all = [...apptItems, ...attendItems].sort((a, b) => b.date.localeCompare(a.date));
-      setSessions(all.length ? all : MOCK_HISTORY.map(m => ({ ...m, _mock: true })));
+      setSessions(all);
       setLoading(false);
     };
 
@@ -216,15 +209,17 @@ export default function Historico() {
 
       <div className="grid-3" style={{ marginBottom: 20 }}>
         {[
-          { label: 'Treinos este mês', value: totalThisMonth, icon: '📅', color: '#3B82F6' },
-          { label: 'Total de treinos', value: totalAll, icon: '🏋️', color: '#8B5CF6' },
-          { label: 'Completos', value: completedAll || totalAll, icon: '✅', color: '#10B981' },
-        ].map(s => (
-          <div key={s.label} style={{ background: 'white', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 28 }}>{s.icon}</span>
+          { label: 'Treinos este mês', value: totalThisMonth, Icon: Calendar,   color: '#3B82F6', bg: '#EFF6FF' },
+          { label: 'Total de treinos', value: totalAll,        Icon: Dumbbell,   color: '#8B5CF6', bg: '#F5F3FF' },
+          { label: 'Completos',        value: completedAll || totalAll, Icon: CheckCircle, color: '#10B981', bg: '#ECFDF5' },
+        ].map(({ label, value, Icon, color, bg }) => (
+          <div key={label} style={{ background: 'white', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Icon size={20} color={color} />
+            </div>
             <div>
-              <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: s.color }}>{s.value}</p>
-              <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>{s.label}</p>
+              <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color }}>{value}</p>
+              <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>{label}</p>
             </div>
           </div>
         ))}

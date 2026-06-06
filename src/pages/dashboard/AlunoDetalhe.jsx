@@ -28,7 +28,7 @@ function StatBox({ icon: Icon, label, value, color, bg }) {
   );
 }
 
-const TABS = ['Visão Geral', 'Evolução', 'Treinos', 'Agenda', 'Frequência', 'Pagamentos', 'Saúde', 'Feedback'];
+const BASE_TABS = ['Visão Geral', 'Evolução', 'Treinos', 'Agenda', 'Frequência', 'Pagamentos'];
 
 export default function AlunoDetalhe() {
   const { id } = useParams();
@@ -84,7 +84,7 @@ export default function AlunoDetalhe() {
         supabase.from('anamneses').select('*').eq('student_id', id).maybeSingle(),
         supabase.from('session_ratings').select('*').eq('student_id', id).order('date', { ascending: false }).limit(30),
         supabase.from('workout_sessions').select('id, date, plan_name, plan_type, exercises_done, exercises_total, finished_at').eq('student_id', id).order('date', { ascending: false }).limit(30),
-        supabase.from('exercise_logs').select('exercise_name, load_actual, done, created_at, session_id').eq('student_id', id).not('load_actual', 'is', null).order('created_at', { ascending: true }).limit(500),
+        supabase.from('exercise_logs').select('exercise_name, load_actual, done, created_at, session_id').eq('student_id', id).not('load_actual', 'is', null).order('created_at', { ascending: true }).limit(100),
       ]);
 
       setStudent(s);
@@ -171,9 +171,11 @@ export default function AlunoDetalhe() {
   const color = student.color || avatarColor(student.id);
   const initials = student.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
 
+  // attendances já vem filtrado por monthStart na query — contar só 'present'
   const presentThisMonth = attendances.filter(a => a.status === 'present').length;
-  const totalAppts = appointments.filter(a => a.date >= monthStart).length;
-  const attendRate = totalAppts > 0 ? Math.round((presentThisMonth / totalAppts) * 100) : null;
+  // só contar agendamentos que já aconteceram este mês (não futuros)
+  const totalAppts = appointments.filter(a => a.date >= monthStart && a.date <= today).length;
+  const attendRate = totalAppts > 0 ? Math.round(Math.min((presentThisMonth / totalAppts) * 100, 100)) : null;
 
   const nextAppt = appointments.find(a => a.date >= today && a.status !== 'cancelled');
   const lastMeasure = measurements.slice(-1)[0];
@@ -255,9 +257,9 @@ export default function AlunoDetalhe() {
         )}
       </div>
 
-      {/* Tabs */}
+      {/* Tabs — Saúde e Feedback só aparecem quando têm dados */}
       <div className="student-detail-tabs" style={{ marginBottom: 20, borderBottom: '2px solid #F3F4F6', paddingBottom: 0 }}>
-        {TABS.map(t => (
+        {[...BASE_TABS, ...(anamnese ? ['Saúde'] : []), ...(ratings.length > 0 ? ['Feedback'] : [])].map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}

@@ -220,10 +220,10 @@ export default function Financeiro() {
     setNewPayForm({ student_id: '', amount: '', due_date: new Date().toISOString().slice(0, 10), plan: 'Mensal', status: 'pendente' });
   };
 
-  const mayPayments = payments.filter(p => p.month === currentMonthLabel || !p.month);
-  const totalMay = payments.reduce((sum, p) => sum + Number(p.amount), 0);
-  const received = payments.filter(p => p.status === 'pago').reduce((sum, p) => sum + Number(p.amount), 0);
-  const pending = payments.filter(p => p.status !== 'pago').reduce((sum, p) => sum + Number(p.amount), 0);
+  const currentPayments = payments.filter(p => p.month === currentMonthLabel);
+  const totalCurrent = currentPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+  const received = currentPayments.filter(p => p.status === 'pago').reduce((sum, p) => sum + Number(p.amount), 0);
+  const pending = currentPayments.filter(p => p.status !== 'pago').reduce((sum, p) => sum + Number(p.amount), 0);
 
   return (
     <div className="page-padding" style={{ flex: 1 }}>
@@ -420,7 +420,7 @@ export default function Financeiro() {
         <StatBox
           icon={DollarSign}
           title="Total do Mês"
-          value={`R$ ${totalMay.toLocaleString('pt-BR')}`}
+          value={`R$ ${totalCurrent.toLocaleString('pt-BR')}`}
           sub={currentMonthLabel}
           color="#3B82F6"
           bg="#EFF6FF"
@@ -429,7 +429,7 @@ export default function Financeiro() {
           icon={CheckCircle}
           title="Recebido"
           value={`R$ ${received.toLocaleString('pt-BR')}`}
-          sub={`${mayPayments.filter(p => p.status === 'pago').length} pagamentos`}
+          sub={`${currentPayments.filter(p => p.status === 'pago').length} pagamentos`}
           color="#10B981"
           bg="#D1FAE5"
         />
@@ -437,7 +437,7 @@ export default function Financeiro() {
           icon={Clock}
           title="Pendente / Atrasado"
           value={`R$ ${pending.toLocaleString('pt-BR')}`}
-          sub={`${mayPayments.filter(p => p.status !== 'pago').length} pagamentos`}
+          sub={`${currentPayments.filter(p => p.status !== 'pago').length} pagamentos`}
           color="#F59E0B"
           bg="#FEF3C7"
         />

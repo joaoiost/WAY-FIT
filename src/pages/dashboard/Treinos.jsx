@@ -521,9 +521,13 @@ export default function Treinos() {
 
   const savePlan = async () => {
     if (!studentId || day === null) return;
+    const validEx = exercises.filter(e => e.name?.trim());
+    if (validEx.length === 0) {
+      alert('Adicione pelo menos 1 exercício antes de salvar o treino.');
+      return;
+    }
     setSaving(true);
     const student = students.find(s => String(s.id) === String(studentId));
-    const validEx = exercises.filter(e => e.name?.trim());
     const existing = planForDay(day);
     const finalName = planName.trim() || group;
     const exRows = (id) => validEx.map((e, i) => ({ plan_id: id, name: e.name, sets: parseInt(e.sets)||4, reps: e.reps, load: e.load||'', rest: e.rest, video_url: e.videoUrl||'', obs: e.obs||'', order_index: i }));

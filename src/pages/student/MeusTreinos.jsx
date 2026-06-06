@@ -223,7 +223,7 @@ export default function MeusTreinos() {
     const color = TYPE_COLORS[plan.type] || '#6B7280';
     const planDays = getPlanDays(plan);
 
-    const ctaLabel = allDone ? null : hasSession && doneCount > 0 ? '▶ Continuar Treino' : '▶ Iniciar Treino';
+    const ctaLabel = allDone ? null : hasSession && doneCount > 0 ? 'Continuar Treino' : 'Iniciar Treino';
 
     return (
       <div
@@ -299,7 +299,7 @@ export default function MeusTreinos() {
                   onClick={() => navigate(`/aluno/treinos/${plan.id}/executar`)}
                   style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 >
-                  <Play size={14} fill="white" /> {ctaLabel || '▶ Iniciar Treino'}
+                  <Play size={14} fill="white" /> {ctaLabel || 'Iniciar Treino'}
                 </button>
               </div>
             )}

@@ -395,8 +395,102 @@ export default function AlunoDetalhe() {
         );
       })()}
 
-      {tab === 'Visão Geral' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
+      {tab === 'Visão Geral' && (() => {
+        // ── Semana atual ────────────────────────────────
+        const todayDt = new Date();
+        const todayStr = todayDt.toISOString().slice(0, 10);
+        const dayOfWeek = (todayDt.getDay() + 6) % 7; // 0 = Seg
+        const DAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+        const weekDays = Array.from({ length: 7 }, (_, i) => {
+          const d = new Date(todayDt);
+          d.setDate(todayDt.getDate() - dayOfWeek + i);
+          const dateStr = d.toISOString().slice(0, 10);
+          const jsDay = d.getDay();
+          const matchedPlan = plans.find(p => (p.days || []).includes(jsDay));
+          const session = workoutSessions.find(ws => ws.date === dateStr);
+          const completed = session && session.exercises_total > 0 && session.exercises_done >= session.exercises_total;
+          const partial = session && !completed && session.exercises_done > 0;
+          const isPast = dateStr <= todayStr;
+          const isToday = dateStr === todayStr;
+          return { dateStr, jsDay, label: DAY_LABELS[i], matchedPlan, session, completed, partial, isPast, isToday };
+        });
+        const plannedCount = weekDays.filter(d => d.matchedPlan).length;
+        const completedCount = weekDays.filter(d => d.completed).length;
+        const pct = plannedCount > 0 ? Math.round((completedCount / plannedCount) * 100) : null;
+        const pctColor = pct === null ? '#9CA3AF' : pct >= 80 ? '#10B981' : pct >= 50 ? '#F59E0B' : '#EF4444';
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+            {/* ── Semana Atual card ── */}
+            <div style={{ background: 'white', borderRadius: 14, padding: '18px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Calendar size={16} color="#3B82F6" />
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Semana Atual</h3>
+                </div>
+                {pct !== null ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ height: 6, width: 80, borderRadius: 3, background: '#F3F4F6', overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: pctColor, borderRadius: 3, transition: 'width 0.6s ease' }} />
+                    </div>
+                    <span style={{ fontSize: 13, fontWeight: 800, color: pctColor }}>{completedCount}/{plannedCount}</span>
+                  </div>
+                ) : (
+                  <span style={{ fontSize: 12, color: '#9CA3AF' }}>Sem treinos programados</span>
+                )}
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+                {weekDays.map((d, i) => {
+                  const gc = d.matchedPlan
+                    ? (d.completed ? '#10B981' : d.partial ? '#F59E0B' : d.isPast ? '#EF4444' : '#3B82F6')
+                    : '#E5E7EB';
+                  const bgc = d.matchedPlan
+                    ? (d.completed ? '#ECFDF5' : d.partial ? '#FFFBEB' : d.isPast ? '#FEF2F2' : '#EFF6FF')
+                    : '#F9FAFB';
+                  const icon = d.completed ? '✓' : d.partial ? '…' : d.matchedPlan && d.isPast ? '✗' : d.matchedPlan ? '•' : '—';
+                  return (
+                    <div key={i} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: d.isToday ? '#3B82F6' : '#9CA3AF', letterSpacing: '0.04em' }}>
+                        {d.label}
+                      </span>
+                      <div style={{
+                        width: '100%', aspectRatio: '1', borderRadius: 10, background: bgc,
+                        border: `2px solid ${d.isToday ? '#3B82F6' : gc}`,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        flexDirection: 'column', gap: 2,
+                      }}>
+                        <span style={{ fontSize: 14, fontWeight: 900, color: gc, lineHeight: 1 }}>{icon}</span>
+                      </div>
+                      {d.matchedPlan && (
+                        <span style={{ fontSize: 9, color: '#9CA3AF', textAlign: 'center', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', fontWeight: 600 }}>
+                          {d.matchedPlan.name?.split(' ').slice(0, 2).join(' ')}
+                        </span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Legenda */}
+              <div style={{ display: 'flex', gap: 16, marginTop: 14, flexWrap: 'wrap' }}>
+                {[
+                  { color: '#10B981', bg: '#ECFDF5', label: 'Concluído' },
+                  { color: '#F59E0B', bg: '#FFFBEB', label: 'Parcial' },
+                  { color: '#EF4444', bg: '#FEF2F2', label: 'Faltou' },
+                  { color: '#3B82F6', bg: '#EFF6FF', label: 'Programado' },
+                ].map(l => (
+                  <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <div style={{ width: 8, height: 8, borderRadius: 2, background: l.bg, border: `1.5px solid ${l.color}` }} />
+                    <span style={{ fontSize: 11, color: '#6B7280' }}>{l.label}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* ── grade 2 colunas com o resto ── */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {/* Current plan */}
           <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
@@ -472,7 +566,9 @@ export default function AlunoDetalhe() {
             </div>
           )}
         </div>
-      )}
+      </div>
+    );
+      })()}
 
       {tab === 'Treinos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

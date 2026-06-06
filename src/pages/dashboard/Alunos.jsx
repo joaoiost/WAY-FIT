@@ -124,6 +124,31 @@ function InviteSheet({ student, inviteUrl, onClose }) {
   );
 }
 
+// Dias da semana — Seg a Dom — como dots visuais por aluno
+function WeekDots({ sessionDates }) {
+  const today = new Date();
+  const todayStr = today.toISOString().slice(0, 10);
+  const dayOfWeek = (today.getDay() + 6) % 7; // 0=Seg
+  return (
+    <div style={{ display: 'flex', gap: 3, alignItems: 'center' }}>
+      {Array.from({ length: 7 }, (_, i) => {
+        const d = new Date(today);
+        d.setDate(today.getDate() - dayOfWeek + i);
+        const dateStr = d.toISOString().slice(0, 10);
+        const trained = sessionDates.has(dateStr);
+        const isFuture = dateStr > todayStr;
+        return (
+          <div key={i} style={{
+            width: 7, height: 7, borderRadius: '50%',
+            background: trained ? '#10B981' : isFuture ? '#F3F4F6' : '#E5E7EB',
+            flexShrink: 0,
+          }} />
+        );
+      })}
+    </div>
+  );
+}
+
 export default function Alunos() {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -138,6 +163,7 @@ export default function Alunos() {
   const [quickSchedule, setQuickSchedule] = useState(null);
   const [quickForm, setQuickForm] = useState({ date: '', time: '08:00', type: 'Musculação' });
   const [quickSaving, setQuickSaving] = useState(false);
+  const [weekSessions, setWeekSessions] = useState({}); // student_id -> Set<date>
 
   useEffect(() => {
     if (!user) return;
@@ -146,6 +172,26 @@ export default function Alunos() {
         .then(({ data }) => setStudents(data || []));
       supabase.from('profiles').select('slug').eq('id', user.id).single()
         .then(({ data }) => { if (data?.slug) setPersonalSlug(data.slug); });
+
+      // Carrega sessões da semana atual para todos os alunos de uma só query
+      const today = new Date();
+      const dayOfWeek = (today.getDay() + 6) % 7;
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - dayOfWeek);
+      const weekStartStr = weekStart.toISOString().slice(0, 10);
+      supabase.from('workout_sessions')
+        .select('student_id, date')
+        .eq('personal_id', user.id)
+        .gte('date', weekStartStr)
+        .then(({ data }) => {
+          const map = {};
+          (data || []).forEach(s => {
+            const sid = String(s.student_id);
+            if (!map[sid]) map[sid] = new Set();
+            map[sid].add(s.date);
+          });
+          setWeekSessions(map);
+        });
     } else {
       setStudents(mockStudents);
       setPersonalSlug('demo');
@@ -309,7 +355,10 @@ export default function Alunos() {
                       <Avatar initials={s.initials} color={s.color} />
                       <div>
                         <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>{s.name}</p>
-                        <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>{s.goal || '—'}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                          <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>{s.goal || '—'}</p>
+                          <WeekDots sessionDates={weekSessions[String(s.id)] || new Set()} />
+                        </div>
                       </div>
                     </div>
                   </td>
@@ -362,9 +411,12 @@ export default function Alunos() {
                 <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>{s.name.split(' ')[0]} {s.name.split(' ').slice(-1)[0]}</span>
                 <Badge status={s.status} />
               </div>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                {s.phone || s.email || s.goal || s.plan || '—'}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
+                <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+                  {s.phone || s.email || s.goal || s.plan || '—'}
+                </p>
+                <WeekDots sessionDates={weekSessions[String(s.id)] || new Set()} />
+              </div>
             </div>
             <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
               <AppBadge student={s} />

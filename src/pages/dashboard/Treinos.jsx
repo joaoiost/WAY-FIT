@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Dumbbell, Trash2, X, Play, Loader, Save, Check, ChevronDown, Copy, HelpCircle, ChevronRight, User, Calendar, Lightbulb, ClipboardList } from 'lucide-react';
+import { Plus, Dumbbell, Trash2, X, Play, Loader, Save, Check, ChevronDown, Copy, HelpCircle, ChevronRight, ExternalLink, BookMarked, FolderOpen, Lightbulb, User, Calendar, Zap } from 'lucide-react';
 import { trainingPlans as mockPlans, students as mockStudents } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -24,6 +24,8 @@ const GROUP_COLORS = {
 const PLAN_TYPES = ['Hipertrofia','Força','Resistência','Funcional','Cardio','Mobilidade','Emagrecimento'];
 const REPS_QUICK = ['6','8','10','12','15','20','Falha'];
 const REST_QUICK = ['30s','45s','60s','75s','90s','2min'];
+const SUPERSET_LETTERS = ['A','B','C','D','E'];
+const SUPERSET_COLORS = { A:'#3B82F6', B:'#10B981', C:'#8B5CF6', D:'#F59E0B', E:'#EF4444' };
 const FREQ_PRESETS = {
   3: { days: [1,3,5], groups: ['Peito','Costas','Pernas'] },
   4: { days: [1,2,4,5], groups: ['Peito','Costas','Pernas','Ombro'] },
@@ -32,36 +34,21 @@ const FREQ_PRESETS = {
 };
 
 const TUTORIAL_STEPS = [
-  {
-    Icon: User,     color: '#3B82F6', bg: '#EFF6FF',
-    title: 'Selecione um aluno',
-    desc: 'Escolha para qual aluno você está montando o programa. Cada aluno tem sua própria semana de treinos.',
-  },
-  {
-    Icon: Calendar, color: '#8B5CF6', bg: '#F5F3FF',
-    title: 'Configure a semana',
-    desc: 'Clique em "Configurar semana" e defina quantos dias por semana o aluno treina e quais grupos musculares.',
-  },
-  {
-    Icon: Dumbbell, color: '#10B981', bg: '#ECFDF5',
-    title: 'Adicione os exercícios',
-    desc: 'Clique em qualquer dia para abrir o editor. Digite o nome — o autocomplete vai sugerir. Configure séries, reps e carga.',
-  },
-  {
-    Icon: Copy,     color: '#F59E0B', bg: '#FFFBEB',
-    title: 'Copie para outros alunos',
-    desc: 'Montou um programa que funcionou? Use "Copiar para..." para duplicar todos os treinos para outro aluno em segundos.',
-  },
+  { Icon: User,     color: '#3B82F6', bg: '#EFF6FF', title: 'Selecione um aluno', desc: 'Escolha para qual aluno você está montando o programa. Cada aluno tem sua própria semana de treinos.' },
+  { Icon: Calendar, color: '#8B5CF6', bg: '#F5F3FF', title: 'Configure a semana', desc: 'Clique em "Configurar semana" e defina quantos dias por semana o aluno treina e quais grupos musculares.' },
+  { Icon: Dumbbell, color: '#10B981', bg: '#ECFDF5', title: 'Adicione os exercícios', desc: 'Clique em qualquer dia para abrir o editor. Digite o nome — o autocomplete vai sugerir. Configure séries, reps e carga.' },
+  { Icon: Copy,     color: '#F59E0B', bg: '#FFFBEB', title: 'Copie para outros alunos', desc: 'Montou um programa que funcionou? Use "Copiar para..." para duplicar todos os treinos para outro aluno em segundos.' },
 ];
 
-/* ─── ExerciseCard ─────────────────────────────────────────────────── */
-function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColor, autoOpen }) {
+/* ─── ExerciseCard ──────────────────────────────────────────── */
+function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColor, autoOpen, supersetLetters }) {
   const [open, setOpen] = useState(autoOpen || !ex.name);
   const [suggestions, setSuggestions] = useState([]);
   const [showSugg, setShowSugg] = useState(false);
   const sets = parseInt(ex.sets) || 3;
   const ac = accentColor || '#3B82F6';
   const isCustomReps = ex.reps && !REPS_QUICK.includes(ex.reps);
+  const ssColor = ex.supersetGroup ? (SUPERSET_COLORS[ex.supersetGroup] || '#6B7280') : null;
 
   const handleNameChange = (val) => {
     onUpdate('name', val);
@@ -70,10 +57,48 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
     setShowSugg(s.length > 0);
   };
 
+  const selectSuggestion = (s) => {
+    onUpdate('name', s.name);
+    setSuggestions([]);
+    setShowSugg(false);
+  };
+
+  const searchVideo = () => {
+    const q = ex.name || 'exercício academia execução';
+    const found = suggestions.find(s => s.name === ex.name) || { videoSearch: ex.name + ' execução academia' };
+    window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(found.videoSearch || q + ' execução')}`, '_blank');
+  };
+
+  const cycleSuperset = () => {
+    if (!ex.supersetGroup) {
+      const nextLetter = supersetLetters[0] || 'A';
+      onUpdate('supersetGroup', nextLetter);
+    } else {
+      const idx = SUPERSET_LETTERS.indexOf(ex.supersetGroup);
+      const next = idx < SUPERSET_LETTERS.length - 1 ? SUPERSET_LETTERS[idx + 1] : null;
+      onUpdate('supersetGroup', next);
+    }
+  };
+
   return (
-    <div style={{ background: 'white', borderRadius: 16, border: `1.5px solid ${open ? ac + '40' : '#E5E7EB'}`, marginBottom: 10, overflow: 'visible', boxShadow: open ? `0 4px 16px ${ac}15` : '0 1px 4px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}>
-      <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', cursor: 'pointer', userSelect: 'none', borderRadius: 16 }}>
-        <div style={{ width: 26, height: 26, borderRadius: '50%', background: ac + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: ac, flexShrink: 0 }}>
+    <div style={{
+      background: 'white', borderRadius: 16, marginBottom: 10, overflow: 'visible',
+      border: ssColor ? `2px solid ${ssColor}40` : `1.5px solid ${open ? ac + '40' : '#E5E7EB'}`,
+      boxShadow: open ? `0 4px 16px ${ac}15` : '0 1px 4px rgba(0,0,0,0.05)',
+      transition: 'all 0.2s',
+    }}>
+      {/* Superset badge */}
+      {ssColor && (
+        <div style={{ background: ssColor, padding: '3px 12px 3px 12px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: '14px 14px 0 0' }}>
+          <Zap size={10} color="white" fill="white" />
+          <span style={{ fontSize: 10, fontWeight: 800, color: 'white', letterSpacing: '0.08em' }}>
+            SUPERSET {ex.supersetGroup}
+          </span>
+        </div>
+      )}
+
+      <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', cursor: 'pointer', userSelect: 'none' }}>
+        <div style={{ width: 26, height: 26, borderRadius: '50%', background: (ssColor || ac) + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: ssColor || ac, flexShrink: 0 }}>
           {index + 1}
         </div>
         <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: ex.name ? '#111827' : '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
@@ -94,19 +119,16 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
             {/* Nome com autocomplete */}
             <div style={{ marginBottom: 14, position: 'relative' }}>
               <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nome do exercício</p>
-              <input
-                value={ex.name}
-                onChange={e => handleNameChange(e.target.value)}
+              <input value={ex.name} onChange={e => handleNameChange(e.target.value)}
                 onFocus={() => { if (suggestions.length > 0) setShowSugg(true); }}
                 onBlur={() => setTimeout(() => setShowSugg(false), 150)}
                 placeholder="Digite para buscar na biblioteca..."
                 autoFocus={!ex.name}
-                style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
-              />
+                style={{ fontSize: 15, fontWeight: 600, color: '#111827' }} />
               {showSugg && suggestions.length > 0 && (
                 <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'white', borderRadius: 12, border: '1.5px solid #E5E7EB', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', overflow: 'hidden' }}>
                   {suggestions.map((s, i) => (
-                    <button key={i} onMouseDown={() => { onUpdate('name', s.name); setSuggestions([]); setShowSugg(false); }}
+                    <button key={i} onMouseDown={() => selectSuggestion(s)}
                       style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderBottom: i < suggestions.length - 1 ? '1px solid #F9FAFB' : 'none' }}
                       onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
                       onMouseLeave={e => e.currentTarget.style.background = 'none'}>
@@ -161,17 +183,30 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
               </div>
             </div>
 
+            {/* Vídeo */}
             <div style={{ marginBottom: 14 }}>
               <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>URL do Vídeo (YouTube)</p>
               <div style={{ display: 'flex', gap: 8 }}>
                 <input value={ex.videoUrl || ''} onChange={e => onUpdate('videoUrl', e.target.value)} placeholder="https://youtube.com/watch?v=..." style={{ flex: 1, fontSize: 13 }} />
+                {ex.name && (
+                  <button type="button" onClick={searchVideo}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0 12px', borderRadius: 10, background: '#FEF2F2', color: '#EF4444', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, flexShrink: 0, minHeight: 44 }}
+                    title="Buscar vídeo de demonstração no YouTube">
+                    <ExternalLink size={13} /> Buscar vídeo
+                  </button>
+                )}
                 {ex.videoUrl && (
                   <a href={ex.videoUrl} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0 14px', borderRadius: 10, background: '#FEF3C7', color: '#D97706', textDecoration: 'none', fontSize: 13, fontWeight: 700, flexShrink: 0, minHeight: 44 }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0 12px', borderRadius: 10, background: '#FEF3C7', color: '#D97706', textDecoration: 'none', fontSize: 13, fontWeight: 700, flexShrink: 0, minHeight: 44 }}>
                     <Play size={13} fill="#D97706" /> Ver
                   </a>
                 )}
               </div>
+              {ex.name && !ex.videoUrl && (
+                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#9CA3AF' }}>
+                  Clique em "Buscar" para encontrar um vídeo de demonstração no YouTube
+                </p>
+              )}
             </div>
 
             <div style={{ marginBottom: 14 }}>
@@ -181,9 +216,16 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
           </div>
 
           <div style={{ padding: '8px 16px 14px', display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: 6 }}>
-              <button onClick={() => onMove(index, -1)} disabled={index === 0} style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === 0 ? 'not-allowed' : 'pointer', color: index === 0 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↑ Subir</button>
-              <button onClick={() => onMove(index, 1)} disabled={index === total - 1} style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === total - 1 ? 'not-allowed' : 'pointer', color: index === total - 1 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↓ Descer</button>
+            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+              <button onClick={() => onMove(index, -1)} disabled={index === 0} style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === 0 ? 'not-allowed' : 'pointer', color: index === 0 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↑</button>
+              <button onClick={() => onMove(index, 1)} disabled={index === total - 1} style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === total - 1 ? 'not-allowed' : 'pointer', color: index === total - 1 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↓</button>
+              {/* Superset toggle */}
+              <button onClick={cycleSuperset}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', background: ssColor ? ssColor + '18' : '#F9FAFB', border: `1px solid ${ssColor || '#E5E7EB'}`, borderRadius: 8, cursor: 'pointer', color: ssColor || '#374151', fontSize: 13, fontWeight: 700 }}
+                title="Agrupar em superset (A, B, C...) — clique para ciclar">
+                <Zap size={12} />
+                {ex.supersetGroup ? `Superset ${ex.supersetGroup}` : 'Superset'}
+              </button>
             </div>
             <button onClick={onDelete} style={{ padding: '7px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, cursor: 'pointer', color: '#EF4444', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
               <Trash2 size={13} /> Remover
@@ -195,7 +237,87 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
   );
 }
 
-/* ─── ConfigWeekModal ──────────────────────────────────────────────── */
+/* ─── TemplateModal ─────────────────────────────────────────── */
+function TemplateModal({ mode, templates, exercises, planType, group, onSave, onLoad, onDelete, onClose }) {
+  const [name, setName] = useState('');
+  const canSave = exercises.filter(e => e.name?.trim()).length > 0;
+
+  if (mode === 'save') return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 480, padding: '24px 24px 40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 19, fontWeight: 900 }}>Salvar como template</h3>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>
+              {canSave ? `${exercises.filter(e => e.name?.trim()).length} exercícios serão salvos` : 'Adicione exercícios antes de salvar'}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} color="#6B7280" />
+          </button>
+        </div>
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Nome do template</label>
+        <input value={name} onChange={e => setName(e.target.value)} placeholder={`Ex: ${group} - ${planType}`} autoFocus style={{ marginBottom: 16 }} />
+        <button disabled={!canSave || !name.trim()} onClick={() => { onSave(name.trim()); onClose(); }}
+          style={{ width: '100%', padding: '15px', background: canSave && name.trim() ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#E5E7EB', border: 'none', borderRadius: 12, color: canSave && name.trim() ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: canSave && name.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <BookMarked size={16} /> Salvar template
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 480, padding: '24px 24px 40px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexShrink: 0 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 19, fontWeight: 900 }}>Carregar template</h3>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>{templates.length} template{templates.length !== 1 ? 's' : ''} salvos</p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} color="#6B7280" />
+          </button>
+        </div>
+        {templates.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '32px 0', color: '#9CA3AF' }}>
+            <BookMarked size={36} color="#E5E7EB" style={{ marginBottom: 10 }} />
+            <p style={{ margin: 0, fontSize: 14 }}>Nenhum template salvo ainda</p>
+            <p style={{ margin: '4px 0 0', fontSize: 12 }}>Monte um treino e clique em "Salvar template"</p>
+          </div>
+        ) : (
+          <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {[...templates].reverse().map(t => (
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', background: 'white' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Dumbbell size={18} color="#3B82F6" />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</p>
+                  <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>
+                    {t.exercises.length} exercício{t.exercises.length !== 1 ? 's' : ''} · {t.planType || ''}
+                    {t.exercises.some(e => e.supersetGroup) ? ' · tem supersets' : ''}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+                  <button onClick={() => { onLoad(t); onClose(); }}
+                    style={{ padding: '7px 14px', background: '#EFF6FF', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#3B82F6', fontSize: 13, fontWeight: 700 }}>
+                    Usar
+                  </button>
+                  <button onClick={() => onDelete(t.id)}
+                    style={{ width: 32, height: 32, borderRadius: 8, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <Trash2 size={13} color="#EF4444" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ─── ConfigWeekModal ───────────────────────────────────────── */
 function ConfigWeekModal({ onConfirm, onClose }) {
   const [freq, setFreq] = useState(4);
   const buildDayGroups = (f) => Object.fromEntries(FREQ_PRESETS[f].days.map((d, i) => [d, FREQ_PRESETS[f].groups[i]]));
@@ -215,7 +337,6 @@ function ConfigWeekModal({ onConfirm, onClose }) {
             <X size={18} color="#6B7280" />
           </button>
         </div>
-
         <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Frequência semanal</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 28 }}>
           {[3,4,5,6].map(f => (
@@ -226,7 +347,6 @@ function ConfigWeekModal({ onConfirm, onClose }) {
             </button>
           ))}
         </div>
-
         <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Dias e grupos musculares</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
           {DAYS.map(d => {
@@ -252,9 +372,8 @@ function ConfigWeekModal({ onConfirm, onClose }) {
             );
           })}
         </div>
-
         <button onClick={async () => { setSaving(true); await onConfirm(dayGroups); setSaving(false); onClose(); }} disabled={saving || count === 0}
-          style={{ width: '100%', padding: '18px', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 14, cursor: count === 0 ? 'not-allowed' : 'pointer', fontSize: 17, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: count === 0 ? 0.5 : 1 }}>
+          style={{ width: '100%', padding: '18px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', border: 'none', borderRadius: 14, cursor: count === 0 ? 'not-allowed' : 'pointer', fontSize: 17, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: count === 0 ? 0.5 : 1 }}>
           {saving ? <Loader size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={20} />}
           {saving ? 'Configurando...' : `Criar ${count} dias de treino`}
         </button>
@@ -263,12 +382,11 @@ function ConfigWeekModal({ onConfirm, onClose }) {
   );
 }
 
-/* ─── CopyPlanModal ────────────────────────────────────────────────── */
+/* ─── CopyPlanModal ─────────────────────────────────────────── */
 function CopyPlanModal({ students, currentStudentId, onConfirm, onClose }) {
   const [target, setTarget] = useState('');
   const [copying, setCopying] = useState(false);
   const others = students.filter(s => String(s.id) !== String(currentStudentId));
-
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
       <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 480, padding: '28px 24px 40px' }}>
@@ -297,7 +415,7 @@ function CopyPlanModal({ students, currentStudentId, onConfirm, onClose }) {
             </div>
         }
         <button disabled={!target || copying} onClick={async () => { setCopying(true); await onConfirm(target); setCopying(false); onClose(); }}
-          style={{ width: '100%', padding: '15px', background: target ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : '#E5E7EB', border: 'none', borderRadius: 12, color: target ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: target ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          style={{ width: '100%', padding: '15px', background: target ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#E5E7EB', border: 'none', borderRadius: 12, color: target ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: target ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           {copying ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Copy size={16} />}
           {copying ? 'Copiando...' : 'Copiar programa'}
         </button>
@@ -306,15 +424,55 @@ function CopyPlanModal({ students, currentStudentId, onConfirm, onClose }) {
   );
 }
 
-/* ─── DayEditorSheet (bottom sheet) ───────────────────────────────── */
-function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, planType, setPlanType, exercises, onUpdate, onDelete, onMove, onAdd, onSave, onDelete2, onClose, saving, saved, existing }) {
+/* ─── DayEditorSheet ────────────────────────────────────────── */
+function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, planType, setPlanType, exercises, onUpdate, onDelete, onMove, onAdd, onSave, onDelete2, onClose, saving, saved, existing, onOpenTemplate }) {
   const gc = GROUP_COLORS[group] || '#3B82F6';
+
+  // Compute which superset letters are already in use
+  const usedLetters = [...new Set(exercises.map(e => e.supersetGroup).filter(Boolean))];
+  const availableLetters = SUPERSET_LETTERS.filter(l => !usedLetters.includes(l));
+  const supersetLetters = usedLetters.length > 0 ? [...usedLetters, ...availableLetters].slice(0, 5) : SUPERSET_LETTERS;
+
+  // Group exercises for visual display
+  const renderList = () => {
+    const rendered = [];
+    const seenGroups = new Set();
+    exercises.forEach((ex, i) => {
+      if (ex.supersetGroup && !seenGroups.has(ex.supersetGroup)) {
+        seenGroups.add(ex.supersetGroup);
+        const ssColor = SUPERSET_COLORS[ex.supersetGroup] || '#3B82F6';
+        const groupExs = exercises.map((e, idx) => ({ e, idx })).filter(({ e }) => e.supersetGroup === ex.supersetGroup);
+        rendered.push(
+          <div key={`ss-${ex.supersetGroup}`} style={{ border: `2px solid ${ssColor}40`, borderRadius: 18, padding: '8px 8px 4px', marginBottom: 10, background: ssColor + '05' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px 8px' }}>
+              <Zap size={12} color={ssColor} fill={ssColor} />
+              <span style={{ fontSize: 11, fontWeight: 800, color: ssColor, letterSpacing: '0.08em' }}>SUPERSET {ex.supersetGroup}</span>
+              <span style={{ fontSize: 11, color: '#9CA3AF' }}>— sem descanso entre os exercícios</span>
+            </div>
+            {groupExs.map(({ e, idx }) => (
+              <ExerciseCard key={idx} ex={e} index={idx} total={exercises.length}
+                onUpdate={(field, val) => onUpdate(idx, field, val)} onDelete={() => onDelete(idx)}
+                onMove={onMove} accentColor={ssColor} autoOpen={!e.name}
+                supersetLetters={supersetLetters} />
+            ))}
+          </div>
+        );
+      } else if (!ex.supersetGroup) {
+        rendered.push(
+          <ExerciseCard key={i} ex={ex} index={i} total={exercises.length}
+            onUpdate={(field, val) => onUpdate(i, field, val)} onDelete={() => onDelete(i)}
+            onMove={onMove} accentColor={gc} autoOpen={!ex.name}
+            supersetLetters={supersetLetters} />
+        );
+      }
+    });
+    return rendered;
+  };
+
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()}
-        style={{ width: '100%', maxWidth: 680, margin: '0 auto', background: 'white', borderRadius: '20px 20px 0 0', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
-
-        {/* Sheet handle + header */}
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 680, margin: '0 auto', background: 'white', borderRadius: '20px 20px 0 0', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
         <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
           <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E5E7EB', margin: '0 auto 16px' }} />
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
@@ -322,26 +480,30 @@ function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, 
               <X size={16} color="#6B7280" />
             </button>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#374151', flex: 1 }}>{dayInfo?.full}</p>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 6 }}>
+              {/* Template buttons */}
+              <button onClick={() => onOpenTemplate('load')}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, height: 36, padding: '0 12px', background: '#F5F3FF', border: 'none', borderRadius: 10, cursor: 'pointer', color: '#7C3AED', fontSize: 12, fontWeight: 700 }}
+                title="Carregar template">
+                <FolderOpen size={14} /> Template
+              </button>
               {existing && (
                 <button onClick={onDelete2} style={{ width: 36, height: 36, borderRadius: '50%', background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                   <Trash2 size={15} color="#EF4444" />
                 </button>
               )}
               <button onClick={onSave} disabled={saving}
-                style={{ padding: '0 18px', height: 40, background: saved ? '#10B981' : gc, color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6, opacity: saving ? 0.7 : 1 }}>
+                style={{ padding: '0 18px', height: 36, background: saved ? '#10B981' : gc, color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6, opacity: saving ? 0.7 : 1 }}>
                 {saving ? <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> : saved ? <Check size={14} /> : <Save size={14} />}
                 {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar'}
               </button>
             </div>
           </div>
 
-          {/* Nome + tipo */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, marginBottom: 12 }}>
             <div>
               <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nome do treino</p>
-              <input value={planName} onChange={e => setPlanName(e.target.value)} placeholder={`Ex: Treino A — ${group}`}
-                style={{ fontSize: 14, fontWeight: 700, color: '#111827' }} />
+              <input value={planName} onChange={e => setPlanName(e.target.value)} placeholder={`Ex: Treino A — ${group}`} style={{ fontSize: 14, fontWeight: 700, color: '#111827' }} />
             </div>
             <div>
               <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tipo</p>
@@ -352,7 +514,6 @@ function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, 
             </div>
           </div>
 
-          {/* Grupo muscular */}
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12, paddingBottom: 14, borderBottom: '1px solid #F3F4F6' }}>
             {GROUPS.map(g => (
               <button key={g} onClick={() => setGroup(g)}
@@ -363,28 +524,27 @@ function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, 
           </div>
         </div>
 
-        {/* Exercise list — scrollable */}
+        {/* Exercise list */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
-          {exercises.length === 0
-            ? <div style={{ textAlign: 'center', padding: '32px 0', color: '#9CA3AF' }}>
-                <Dumbbell size={36} color="#E5E7EB" style={{ marginBottom: 10 }} />
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Nenhum exercício ainda</p>
-                <p style={{ margin: '4px 0 0', fontSize: 12 }}>Clique em "+ Adicionar exercício" abaixo</p>
-              </div>
-            : exercises.map((ex, i) => (
-                <ExerciseCard key={i} ex={ex} index={i} total={exercises.length}
-                  onUpdate={(field, val) => onUpdate(i, field, val)} onDelete={() => onDelete(i)}
-                  onMove={onMove} accentColor={gc} autoOpen={!ex.name} />
-              ))
-          }
+          {exercises.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 0', color: '#9CA3AF' }}>
+              <Dumbbell size={36} color="#E5E7EB" style={{ marginBottom: 10 }} />
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Nenhum exercício ainda</p>
+              <p style={{ margin: '4px 0 0', fontSize: 12 }}>Clique em "+ Adicionar exercício" abaixo ou carregue um template</p>
+            </div>
+          ) : renderList()}
           <div style={{ height: 16 }} />
         </div>
 
-        {/* Add exercise + bottom padding */}
-        <div style={{ padding: '12px 20px 32px', flexShrink: 0, borderTop: '1px solid #F3F4F6' }}>
-          <button onClick={onAdd}
-            style={{ width: '100%', padding: '14px', border: `2px dashed ${gc}60`, borderRadius: 14, background: gc + '06', color: gc, cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        {/* Footer */}
+        <div style={{ padding: '12px 20px 32px', flexShrink: 0, borderTop: '1px solid #F3F4F6', display: 'flex', gap: 10 }}>
+          <button onClick={onAdd} style={{ flex: 1, padding: '14px', border: `2px dashed ${gc}60`, borderRadius: 14, background: gc + '06', color: gc, cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             <Plus size={17} /> Adicionar exercício
+          </button>
+          <button onClick={() => onOpenTemplate('save')}
+            style={{ padding: '14px 16px', border: '2px dashed #7C3AED60', borderRadius: 14, background: '#F5F3FF', color: '#7C3AED', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}
+            title="Salvar como template para reutilizar">
+            <BookMarked size={16} />
           </button>
         </div>
       </div>
@@ -392,12 +552,12 @@ function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, 
   );
 }
 
-/* ─── Tutorial ─────────────────────────────────────────────────────── */
+/* ─── Tutorial ──────────────────────────────────────────────── */
 function Tutorial({ onDismiss }) {
   const [expanded, setExpanded] = useState(null);
   return (
-    <div style={{ background: 'white', borderRadius: 16, border: '1px solid #E0E7FF', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden', marginBottom: 16 }}>
-      <div style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', padding: '18px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+    <div style={{ background: 'white', borderRadius: 16, border: '1px solid #E0E7FF', overflow: 'hidden', marginBottom: 16 }}>
+      <div style={{ background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', padding: '18px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <HelpCircle size={20} color="white" />
           <div>
@@ -443,7 +603,7 @@ function Tutorial({ onDismiss }) {
   );
 }
 
-/* ─── Componente principal ─────────────────────────────────────────── */
+/* ─── Componente principal ──────────────────────────────────── */
 export default function Treinos() {
   const { user } = useAuth();
   const [plans, setPlans] = useState([]);
@@ -460,11 +620,21 @@ export default function Treinos() {
   const [configModal, setConfigModal] = useState(false);
   const [copyModal, setCopyModal] = useState(false);
   const [showTutorial, setShowTutorial] = useState(true);
+  const [templateModal, setTemplateModal] = useState(null); // null | 'save' | 'load'
+  const [templates, setTemplates] = useState([]);
 
   useEffect(() => {
-    const dismissed = localStorage.getItem('treinos_tutorial_dismissed');
-    if (dismissed) setShowTutorial(false);
+    if (localStorage.getItem('treinos_tutorial_dismissed')) setShowTutorial(false);
   }, []);
+
+  // Load templates from localStorage
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(`wf_templates_${user.id}`)) || [];
+      setTemplates(saved);
+    } catch { setTemplates([]); }
+  }, [user?.id]);
 
   const dismissTutorial = () => {
     setShowTutorial(false);
@@ -491,13 +661,12 @@ export default function Treinos() {
 
   const myPlans = plans.filter(p => String(p.student_id || p.studentId) === String(studentId));
   const planForDay = (d) => myPlans.find(p => (p.days || []).includes(d));
-  const newExercise = () => ({ name: '', sets: 4, reps: '10', rest: '60s', load: '', videoUrl: '', obs: '' });
+  const newExercise = () => ({ name: '', sets: 4, reps: '10', rest: '60s', load: '', videoUrl: '', obs: '', supersetGroup: null });
 
   const openDay = (d) => {
     setDay(d); setSaved(false);
     const plan = planForDay(d);
     if (plan) {
-      // Detecta grupo muscular pelo nome do plano — match exato ou substring
       const detectedGroup = GROUPS.find(g => g === plan.name)
         || GROUPS.find(g => plan.name?.toLowerCase().includes(g.toLowerCase()))
         || 'Peito';
@@ -505,7 +674,7 @@ export default function Treinos() {
       setPlanName(plan.name || '');
       setPlanType(plan.type || 'Hipertrofia');
       setExercises((plan.exercises || []).sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-        .map(ex => ({ name: ex.name, sets: ex.sets || 4, reps: ex.reps || '10', rest: ex.rest || '60s', load: ex.load || '', videoUrl: ex.video_url || '', obs: ex.obs || '' })));
+        .map(ex => ({ name: ex.name, sets: ex.sets || 4, reps: ex.reps || '10', rest: ex.rest || '60s', load: ex.load || '', videoUrl: ex.video_url || '', obs: ex.obs || '', supersetGroup: ex.superset_group || null })));
     } else {
       setGroup('Peito'); setPlanName(''); setPlanType('Hipertrofia');
       setExercises([newExercise()]);
@@ -522,6 +691,33 @@ export default function Treinos() {
     });
   };
 
+  // Template save/load
+  const saveTemplate = (name) => {
+    const template = {
+      id: `${Date.now()}`,
+      name,
+      group,
+      planType,
+      exercises: exercises.filter(e => e.name?.trim()).map(e => ({ ...e })),
+      savedAt: new Date().toISOString(),
+    };
+    const updated = [...templates, template];
+    setTemplates(updated);
+    localStorage.setItem(`wf_templates_${user.id}`, JSON.stringify(updated));
+  };
+
+  const loadTemplate = (template) => {
+    setExercises(template.exercises.map(e => ({ ...e })));
+    if (template.planType) setPlanType(template.planType);
+    if (template.group) setGroup(template.group);
+  };
+
+  const deleteTemplate = (id) => {
+    const updated = templates.filter(t => t.id !== id);
+    setTemplates(updated);
+    localStorage.setItem(`wf_templates_${user.id}`, JSON.stringify(updated));
+  };
+
   const savePlan = async () => {
     if (!studentId || day === null) return;
     const validEx = exercises.filter(e => e.name?.trim());
@@ -533,7 +729,12 @@ export default function Treinos() {
     const student = students.find(s => String(s.id) === String(studentId));
     const existing = planForDay(day);
     const finalName = planName.trim() || group;
-    const exRows = (id) => validEx.map((e, i) => ({ plan_id: id, name: e.name, sets: parseInt(e.sets)||4, reps: e.reps, load: e.load||'', rest: e.rest, video_url: e.videoUrl||'', obs: e.obs||'', order_index: i }));
+    const exRows = (id) => validEx.map((e, i) => ({
+      plan_id: id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps,
+      load: e.load || '', rest: e.rest, video_url: e.videoUrl || '',
+      obs: e.obs || '', order_index: i,
+      superset_group: e.supersetGroup || null,
+    }));
     if (hasSupabase) {
       if (existing) {
         await supabase.from('training_plans').update({ name: finalName, type: planType }).eq('id', existing.id);
@@ -551,7 +752,7 @@ export default function Treinos() {
       }
     } else {
       if (existing) setPlans(prev => prev.map(p => p.id === existing.id ? { ...p, name: finalName, type: planType, exercises: validEx } : p));
-      else setPlans(prev => [{ id: Date.now(), student_id: studentId, student_name: student?.name, name: finalName, type: planType, days: [day], exercises: validEx } , ...prev]);
+      else setPlans(prev => [{ id: Date.now(), student_id: studentId, student_name: student?.name, name: finalName, type: planType, days: [day], exercises: validEx }, ...prev]);
     }
     setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
@@ -604,7 +805,11 @@ export default function Treinos() {
       const exs = [...(plan.exercises || [])].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
       const { data: newPlan } = await supabase.from('training_plans').insert({ personal_id: user.id, student_id: target.id, student_name: target.name, name: plan.name, type: plan.type || 'Hipertrofia', days: plan.days || [] }).select().single();
       if (newPlan && exs.length) {
-        await supabase.from('exercises').insert(exs.map((e, i) => ({ plan_id: newPlan.id, name: e.name, sets: e.sets, reps: e.reps, rest: e.rest, load: e.load || '', video_url: e.video_url || e.videoUrl || '', obs: e.obs || '', order_index: i })));
+        await supabase.from('exercises').insert(exs.map((e, i) => ({
+          plan_id: newPlan.id, name: e.name, sets: e.sets, reps: e.reps,
+          rest: e.rest, load: e.load || '', video_url: e.video_url || e.videoUrl || '',
+          obs: e.obs || '', order_index: i, superset_group: e.superset_group || null,
+        })));
       }
     }
     const { data: refreshed } = await supabase.from('training_plans').select('*, exercises(*)').eq('personal_id', user.id);
@@ -625,16 +830,25 @@ export default function Treinos() {
       <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#111827' }}>Treinos</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#9CA3AF' }}>Monte o programa semanal de cada aluno</p>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#9CA3AF' }}>
+            Monte o programa semanal de cada aluno · {templates.length > 0 ? `${templates.length} template${templates.length !== 1 ? 's' : ''} salvos` : 'sem templates ainda'}
+          </p>
         </div>
-        {!showTutorial && (
-          <button onClick={() => setShowTutorial(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 20, background: '#F1F5F9', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#6B7280' }}>
-            <HelpCircle size={14} /> Como usar
-          </button>
-        )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          {templates.length > 0 && (
+            <button onClick={() => setTemplateModal('load')}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 20, background: '#F5F3FF', border: '1px solid #DDD6FE', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#7C3AED' }}>
+              <FolderOpen size={14} /> Templates
+            </button>
+          )}
+          {!showTutorial && (
+            <button onClick={() => setShowTutorial(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 20, background: '#F1F5F9', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#6B7280' }}>
+              <HelpCircle size={14} /> Como usar
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Tutorial */}
       {showTutorial && <Tutorial onDismiss={dismissTutorial} />}
 
       {/* Seleção de aluno */}
@@ -643,14 +857,12 @@ export default function Treinos() {
         {students.length === 0 ? (
           <p style={{ fontSize: 14, color: '#9CA3AF', margin: 0 }}>Nenhum aluno ativo. Cadastre primeiro na página Alunos.</p>
         ) : students.length > 8 ? (
-          /* Dropdown for many students */
           <select value={studentId} onChange={e => { setStudentId(e.target.value); setDay(null); }}
             style={{ width: '100%', height: 48, padding: '0 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', fontSize: 15, fontWeight: 700, color: studentId ? '#111827' : '#9CA3AF', background: 'white', cursor: 'pointer', outline: 'none' }}>
             <option value="">Selecione um aluno...</option>
             {students.map(s => <option key={s.id} value={String(s.id)}>{s.name}</option>)}
           </select>
         ) : (
-          /* Pills for up to 8 */
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {students.map(s => {
               const active = String(s.id) === studentId;
@@ -681,23 +893,20 @@ export default function Treinos() {
                 </button>
               )}
               <button onClick={() => setConfigModal(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 20, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 20, background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
                 Configurar semana
               </button>
             </div>
           </div>
 
-          {/* Week grid — now shows exercise names */}
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
             {DAYS.map(d => {
               const plan = planForDay(d.value);
               const isActive = day === d.value;
               const gc2 = plan ? (GROUP_COLORS[plan.name] || '#6B7280') : null;
-              const firstExercises = (plan?.exercises || [])
-                .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-                .slice(0, 3);
+              const firstExercises = (plan?.exercises || []).sort((a, b) => (a.order_index || 0) - (b.order_index || 0)).slice(0, 3);
               const remaining = Math.max(0, (plan?.exercises || []).length - 3);
-
+              const hasSupersets = (plan?.exercises || []).some(e => e.superset_group);
               return (
                 <button key={d.value} onClick={() => openDay(d.value)}
                   style={{ flex: '0 0 auto', width: 110, padding: '12px 10px', borderRadius: 14, border: `2px solid ${isActive ? '#3B82F6' : plan ? gc2 + '55' : '#E5E7EB'}`, background: isActive ? '#EFF6FF' : plan ? gc2 + '08' : '#F9FAFB', cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s', boxShadow: isActive ? '0 0 0 3px rgba(59,130,246,0.15)' : 'none' }}>
@@ -705,14 +914,13 @@ export default function Treinos() {
                   {plan ? (
                     <>
                       <p style={{ margin: '0 0 5px', fontSize: 12, fontWeight: 800, color: gc2, lineHeight: 1.2 }}>{plan.name}</p>
+                      {hasSupersets && <p style={{ margin: '0 0 4px', fontSize: 9, color: '#7C3AED', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}><Zap size={9} fill="#7C3AED" />supersets</p>}
                       {firstExercises.map((ex, ei) => (
                         <p key={ei} style={{ margin: '0 0 1px', fontSize: 10, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {ex.name.split(' ').slice(0, 3).join(' ')}
                         </p>
                       ))}
-                      {remaining > 0 && (
-                        <p style={{ margin: '2px 0 0', fontSize: 9, color: '#9CA3AF', fontWeight: 600 }}>+{remaining} mais</p>
-                      )}
+                      {remaining > 0 && <p style={{ margin: '2px 0 0', fontSize: 9, color: '#9CA3AF', fontWeight: 600 }}>+{remaining} mais</p>}
                     </>
                   ) : (
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
@@ -738,20 +946,35 @@ export default function Treinos() {
         </div>
       )}
 
-      {/* Bottom sheet editor */}
+      {/* Editor */}
       {day !== null && (
         <DayEditorSheet
           day={day} dayInfo={dayInfo} group={group} setGroup={setGroup}
           planName={planName} setPlanName={setPlanName} planType={planType} setPlanType={setPlanType}
           exercises={exercises}
-          onUpdate={updateEx} onDelete={deleteEx} onMove={moveEx} onAdd={() => setExercises(prev => [...prev, newExercise()])}
+          onUpdate={updateEx} onDelete={deleteEx} onMove={moveEx}
+          onAdd={() => setExercises(prev => [...prev, newExercise()])}
           onSave={savePlan} onDelete2={deleteDay} onClose={() => setDay(null)}
           saving={saving} saved={saved} existing={!!planForDay(day)}
+          onOpenTemplate={(mode) => setTemplateModal(mode)}
         />
       )}
 
       {configModal && studentId && <ConfigWeekModal onConfirm={handleConfigWeek} onClose={() => setConfigModal(false)} />}
       {copyModal && studentId && <CopyPlanModal students={students} currentStudentId={studentId} onConfirm={handleCopyPlan} onClose={() => setCopyModal(false)} />}
+      {templateModal && (
+        <TemplateModal
+          mode={templateModal}
+          templates={templates}
+          exercises={exercises}
+          planType={planType}
+          group={group}
+          onSave={saveTemplate}
+          onLoad={loadTemplate}
+          onDelete={deleteTemplate}
+          onClose={() => setTemplateModal(null)}
+        />
+      )}
 
       <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}} input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none} input[type=number]{-moz-appearance:textfield}`}</style>
     </div>

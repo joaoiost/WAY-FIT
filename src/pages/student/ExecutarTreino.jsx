@@ -456,6 +456,14 @@ export default function ExecutarTreino() {
   const hasVideo = !!getYouTubeId(ex.video_url || '');
   const isLastExercise = currentIdx === exercises.length - 1;
 
+  // Superset context
+  const ssGroup = ex.superset_group || null;
+  const ssColor = ssGroup ? ({ A:'#3B82F6', B:'#10B981', C:'#8B5CF6', D:'#F59E0B', E:'#EF4444' }[ssGroup] || '#6B7280') : null;
+  const ssExercises = ssGroup ? exercises.filter(e => e.superset_group === ssGroup) : [];
+  const ssPositionInGroup = ssGroup ? ssExercises.findIndex(e => e.id === ex.id) + 1 : 0;
+  const nextEx = exercises[currentIdx + 1] || null;
+  const nextInSameSuperset = ssGroup && nextEx?.superset_group === ssGroup;
+
   return (
     <div style={{ minHeight: '100vh', background: '#F1F5F9', display: 'flex', flexDirection: 'column' }}>
 
@@ -487,13 +495,27 @@ export default function ExecutarTreino() {
       <div style={{ flex: 1, padding: '16px 16px 0', maxWidth: 560, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
         {/* Exercise header */}
-        <div style={{ background: 'white', borderRadius: 16, padding: '18px 16px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+        <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+          {/* Superset banner */}
+          {ssGroup && (
+            <div style={{ background: ssColor, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 11, fontWeight: 900, color: 'white', letterSpacing: '0.08em' }}>
+                ⚡ SUPERSET {ssGroup} — {ssPositionInGroup} de {ssExercises.length}
+              </span>
+              {nextInSameSuperset && (
+                <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', marginLeft: 'auto' }}>
+                  próximo: {nextEx.name.split(' ').slice(0, 2).join(' ')}
+                </span>
+              )}
+            </div>
+          )}
+          <div style={{ padding: '18px 16px' }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-            <div style={{ width: 46, height: 46, borderRadius: 12, background: `${color}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <Dumbbell size={22} color={color} />
+            <div style={{ width: 46, height: 46, borderRadius: 12, background: `${(ssColor || color)}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Dumbbell size={22} color={ssColor || color} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{plan?.type}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, color: ssColor || color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{plan?.type}</span>
               <h2 style={{ margin: '2px 0 4px', fontSize: 19, fontWeight: 900, color: '#111827', lineHeight: 1.2 }}>{ex.name}</h2>
               <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>
                 {ex.sets} séries · {ex.reps} reps
@@ -515,7 +537,8 @@ export default function ExecutarTreino() {
             </div>
           )}
           {videoModal && <VideoModal videoUrl={ex.video_url} title={ex.name} onClose={() => setVideoModal(false)} />}
-        </div>
+          </div>{/* /padding wrapper */}
+        </div>{/* /exercise card */}
 
         {/* Rest timer */}
         {restTimer !== null && (

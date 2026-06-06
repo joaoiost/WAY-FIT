@@ -314,3 +314,13 @@ ALTER TABLE exercise_logs ADD COLUMN IF NOT EXISTS sets_data JSONB DEFAULT '[]';
 
 -- Chave PIX do personal trainer
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pix_key TEXT;
+
+-- ============================================================
+-- Feature: Supersets no builder de treinos
+-- ============================================================
+ALTER TABLE exercises ADD COLUMN IF NOT EXISTS superset_group TEXT;
+
+-- ============================================================
+-- Feature: Onboarding do aluno persistido no banco
+-- ============================================================
+ALTER TABLE students ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMPTZ;

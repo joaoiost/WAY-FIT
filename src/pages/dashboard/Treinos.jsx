@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Dumbbell, Trash2, X, Play, Loader, Save, Check, ChevronDown, Copy, HelpCircle, ChevronRight } from 'lucide-react';
+import { Plus, Dumbbell, Trash2, X, Play, Loader, Save, Check, ChevronDown, Copy, HelpCircle, ChevronRight, User, Calendar, Lightbulb, ClipboardList } from 'lucide-react';
 import { trainingPlans as mockPlans, students as mockStudents } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -33,22 +33,22 @@ const FREQ_PRESETS = {
 
 const TUTORIAL_STEPS = [
   {
-    icon: '👤',
+    Icon: User,     color: '#3B82F6', bg: '#EFF6FF',
     title: 'Selecione um aluno',
     desc: 'Escolha para qual aluno você está montando o programa. Cada aluno tem sua própria semana de treinos.',
   },
   {
-    icon: '📅',
+    Icon: Calendar, color: '#8B5CF6', bg: '#F5F3FF',
     title: 'Configure a semana',
     desc: 'Clique em "Configurar semana" e defina quantos dias por semana o aluno treina e quais grupos musculares.',
   },
   {
-    icon: '💪',
+    Icon: Dumbbell, color: '#10B981', bg: '#ECFDF5',
     title: 'Adicione os exercícios',
-    desc: 'Clique em qualquer dia da semana para abrir o editor. Digite o nome do exercício — o autocomplete vai sugerir. Configure séries, reps e carga.',
+    desc: 'Clique em qualquer dia para abrir o editor. Digite o nome — o autocomplete vai sugerir. Configure séries, reps e carga.',
   },
   {
-    icon: '📋',
+    Icon: Copy,     color: '#F59E0B', bg: '#FFFBEB',
     title: 'Copie para outros alunos',
     desc: 'Montou um programa que funcionou? Use "Copiar para..." para duplicar todos os treinos para outro aluno em segundos.',
   },
@@ -412,17 +412,16 @@ function Tutorial({ onDismiss }) {
       <div style={{ padding: '4px 0' }}>
         {TUTORIAL_STEPS.map((step, i) => {
           const isOpen = expanded === i;
+          const StepIcon = step.Icon;
           return (
             <div key={i}>
               <button onClick={() => setExpanded(isOpen ? null : i)}
                 style={{ width: '100%', padding: '14px 22px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', borderBottom: '1px solid #F3F4F6' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
-                  {step.icon}
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: step.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <StepIcon size={19} color={step.color} />
                 </div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontSize: 11, fontWeight: 800, color: '#3B82F6', background: '#EFF6FF', padding: '2px 8px', borderRadius: 20 }}>Passo {i + 1}</span>
-                  </div>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: step.color, background: step.bg, padding: '2px 8px', borderRadius: 20 }}>Passo {i + 1}</span>
                   <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 700, color: '#111827' }}>{step.title}</p>
                 </div>
                 <ChevronDown size={16} color="#9CA3AF" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
@@ -498,7 +497,11 @@ export default function Treinos() {
     setDay(d); setSaved(false);
     const plan = planForDay(d);
     if (plan) {
-      setGroup(plan.name || 'Peito');
+      // Detecta grupo muscular pelo nome do plano — match exato ou substring
+      const detectedGroup = GROUPS.find(g => g === plan.name)
+        || GROUPS.find(g => plan.name?.toLowerCase().includes(g.toLowerCase()))
+        || 'Peito';
+      setGroup(detectedGroup);
       setPlanName(plan.name || '');
       setPlanType(plan.type || 'Hipertrofia');
       setExercises((plan.exercises || []).sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
@@ -726,7 +729,7 @@ export default function Treinos() {
 
           {myPlans.length === 0 && (
             <div style={{ marginTop: 14, padding: '14px 16px', background: '#EFF6FF', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <span style={{ fontSize: 18 }}>💡</span>
+              <Lightbulb size={18} color="#3B82F6" style={{ flexShrink: 0 }} />
               <p style={{ margin: 0, fontSize: 13, color: '#1D4ED8', lineHeight: 1.5 }}>
                 Clique em <strong>"Configurar semana"</strong> para montar a divisão automaticamente, ou clique em qualquer dia para começar do zero.
               </p>

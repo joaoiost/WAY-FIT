@@ -41,6 +41,31 @@ function getYouTubeId(url) {
   return m ? m[1] : null;
 }
 
+function VideoModal({ videoUrl, title, onClose }) {
+  const id = getYouTubeId(videoUrl);
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 680, background: '#000', borderRadius: 14, overflow: 'hidden' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#111' }}>
+          <span style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>{title}</span>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', padding: 0 }}>
+            <X size={20} />
+          </button>
+        </div>
+        {id ? (
+          <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+            <iframe src={`https://www.youtube.com/embed/${id}?autoplay=1`} title={title}
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }} />
+          </div>
+        ) : (
+          <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>URL inválida</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function RatingModal({ plan, studentId, personalId, onClose, onSaved }) {
   const [stars, setStars] = useState(0);
   const [hovered, setHovered] = useState(0);
@@ -143,6 +168,7 @@ export default function ExecutarTreino() {
   const [finished, setFinished] = useState(false);
   const [showRating, setShowRating] = useState(false);
   const [ratedToday, setRatedToday] = useState(false);
+  const [videoModal, setVideoModal] = useState(false);
 
   // Save indicator: 'idle' | 'saving' | 'saved' | 'error'
   const [saveStatus, setSaveStatus] = useState('idle');
@@ -326,6 +352,7 @@ export default function ExecutarTreino() {
     const ex = exercises[currentIdx];
     if (ex) await saveExerciseWithSets(currentIdx, ex.id, setsDataRef.current[ex.id] || []);
     setRestTimer(null);
+    setVideoModal(false);
     if (currentIdx < exercises.length - 1) {
       setCurrentIdx(i => i + 1);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -475,17 +502,19 @@ export default function ExecutarTreino() {
               </p>
             </div>
             {hasVideo && (
-              <a href={ex.video_url} target="_blank" rel="noopener noreferrer"
-                style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#FEF2F2', color: '#EF4444', borderRadius: 8, padding: '6px 10px', fontSize: 12, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
-                <Play size={11} fill="#EF4444" /> Vídeo
-              </a>
+              <button onClick={() => setVideoModal(true)}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#EFF6FF', color: '#3B82F6', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', flexShrink: 0 }}>
+                <Play size={13} fill="#3B82F6" /> Ver vídeo
+              </button>
             )}
           </div>
           {ex.obs && (
-            <div style={{ marginTop: 12, background: '#FFFBEB', borderRadius: 8, padding: '8px 12px', border: '1px solid #FDE68A' }}>
-              <p style={{ margin: 0, fontSize: 12, color: '#92400E', lineHeight: 1.4 }}>💡 {ex.obs}</p>
+            <div style={{ marginTop: 12, background: '#FFFBEB', borderRadius: 8, padding: '8px 12px', border: '1px solid #FDE68A', display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+              <span style={{ fontSize: 15, flexShrink: 0, marginTop: 1 }}>💡</span>
+              <p style={{ margin: 0, fontSize: 12, color: '#92400E', lineHeight: 1.5 }}>{ex.obs}</p>
             </div>
           )}
+          {videoModal && <VideoModal videoUrl={ex.video_url} title={ex.name} onClose={() => setVideoModal(false)} />}
         </div>
 
         {/* Rest timer */}

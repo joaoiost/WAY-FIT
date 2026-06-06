@@ -124,44 +124,85 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Quick actions */}
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {[
-            { label: '+ Nova aula', to: '/dashboard/agenda', color: '#3B82F6', bg: '#EFF6FF' },
-            { label: '+ Aluno',     to: '/dashboard/alunos', color: '#10B981', bg: '#ECFDF5' },
-            { label: 'Chat',        to: '/dashboard/chat',   color: '#8B5CF6', bg: '#F5F3FF' },
-            { label: 'Financeiro',  to: '/dashboard/financeiro', color: '#F59E0B', bg: '#FFFBEB' },
-          ].map(a => (
-            <button key={a.to} onClick={() => navigate(a.to)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 20, border: `1.5px solid ${a.color}25`, background: a.bg, color: a.color, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-              {a.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Onboarding for new users */}
-      {students.length === 0 && (
-        <div style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', borderRadius: 16, padding: '22px 24px', marginBottom: 20, color: 'white' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 10, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Zap size={16} color="white" fill="white" />
-            </div>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Bem-vindo ao WAY FIT!</h3>
-          </div>
-          <p style={{ margin: '0 0 16px', fontSize: 13, opacity: 0.9 }}>Comece em 3 passos simples:</p>
+        {/* Quick actions — só quando já tem alunos */}
+        {students.length > 0 && (
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {[
-              { n: '1', label: 'Cadastrar aluno', to: '/dashboard/alunos' },
-              { n: '2', label: 'Montar treino',   to: '/dashboard/treinos' },
-              { n: '3', label: 'Agendar aula',    to: '/dashboard/agenda' },
-            ].map(s => (
-              <button key={s.n} onClick={() => navigate(s.to)}
-                style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', background: 'rgba(255,255,255,0.18)', border: '1px solid rgba(255,255,255,0.3)', borderRadius: 10, cursor: 'pointer', color: 'white', fontSize: 13, fontWeight: 600 }}>
-                <span style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, flexShrink: 0 }}>{s.n}</span>
-                {s.label}
+              { label: '+ Nova aula', to: '/dashboard/agenda',     color: '#3B82F6', bg: '#EFF6FF' },
+              { label: '+ Aluno',     to: '/dashboard/alunos',     color: '#10B981', bg: '#ECFDF5' },
+              { label: '+ Treino',    to: '/dashboard/treinos',    color: '#8B5CF6', bg: '#F5F3FF' },
+            ].map(a => (
+              <button key={a.to} onClick={() => navigate(a.to)}
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 20, border: `1.5px solid ${a.color}25`, background: a.bg, color: a.color, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                {a.label}
               </button>
             ))}
+          </div>
+        )}
+      </div>
+
+      {/* Primeiros passos — só aparece sem alunos */}
+      {students.length === 0 && (
+        <div style={{ background: 'white', borderRadius: 16, border: '1px solid #E5E7EB', marginBottom: 20, overflow: 'hidden' }}>
+          {/* Header */}
+          <div style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', padding: '18px 24px', display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 38, height: 38, borderRadius: 11, background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <Zap size={20} color="white" fill="white" />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 900, color: 'white', letterSpacing: '-0.3px' }}>Por onde começar?</h3>
+              <p style={{ margin: 0, fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>Siga esses 3 passos e estará pronto em minutos</p>
+            </div>
+          </div>
+          {/* Steps */}
+          <div style={{ padding: '0 8px 8px' }}>
+            {[
+              {
+                n: 1, icon: Users,    color: '#3B82F6', bg: '#EFF6FF',
+                title: 'Convide seu primeiro aluno',
+                desc:  'Gere um link de convite — o aluno cria a conta pelo celular',
+                cta:   'Ir para Alunos', to: '/dashboard/alunos',
+              },
+              {
+                n: 2, icon: Dumbbell, color: '#8B5CF6', bg: '#F5F3FF',
+                title: 'Monte o treino dele',
+                desc:  'Crie um plano com exercícios, séries e carga — o aluno acessa no app',
+                cta:   'Criar treino', to: '/dashboard/treinos',
+              },
+              {
+                n: 3, icon: Calendar, color: '#10B981', bg: '#ECFDF5',
+                title: 'Agende a primeira aula',
+                desc:  'Confirme o horário e envie lembrete automático pelo WhatsApp',
+                cta:   'Ver agenda', to: '/dashboard/agenda',
+              },
+            ].map((s, idx) => {
+              const Icon = s.icon;
+              const isLast = idx === 2;
+              return (
+                <div key={s.n} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderBottom: isLast ? 'none' : '1px solid #F3F4F6' }}>
+                  {/* Step circle */}
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                    <div style={{ width: 42, height: 42, borderRadius: 12, background: s.bg, border: `1.5px solid ${s.color}30`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <Icon size={19} color={s.color} />
+                    </div>
+                    {!isLast && <div style={{ width: 1, height: 14, background: '#E5E7EB', marginTop: 4 }} />}
+                  </div>
+                  {/* Text */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 2 }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: s.color, background: s.bg, padding: '1px 7px', borderRadius: 20 }}>Passo {s.n}</span>
+                    </div>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>{s.title}</p>
+                    <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6B7280', lineHeight: 1.4 }}>{s.desc}</p>
+                  </div>
+                  {/* CTA */}
+                  <button onClick={() => navigate(s.to)}
+                    style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 5, padding: '8px 14px', borderRadius: 10, border: 'none', background: s.bg, color: s.color, fontSize: 13, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+                    {s.cta} <ChevronRight size={13} />
+                  </button>
+                </div>
+              );
+            })}
           </div>
         </div>
       )}

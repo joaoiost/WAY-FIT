@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Calendar, DollarSign, Check, MessageCircle, ChevronRight, Clock, Plus, Zap } from 'lucide-react';
+import { Users, Calendar, DollarSign, Check, MessageCircle, ChevronRight, Clock, Plus, Zap, AlertTriangle, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/UI/Avatar';
 import Badge from '../../components/UI/Badge';
@@ -25,6 +25,14 @@ export default function Dashboard() {
   const [tomorrowAppts, setTomorrowAppts] = useState([]);
   const [revenue, setRevenue] = useState(0);
   const [markingDone, setMarkingDone] = useState(null);
+  const [alerts, setAlerts] = useState([]);
+
+  // Redirect to onboarding on first login
+  useEffect(() => {
+    if (!localStorage.getItem('pt_onboarded')) {
+      navigate('/onboarding', { replace: true });
+    }
+  }, []);
 
   useEffect(() => {
     if (!user) return;
@@ -40,6 +48,28 @@ export default function Dashboard() {
         });
       supabase.from('payments').select('amount').eq('personal_id', user.id).eq('status', 'pago')
         .then(({ data }) => setRevenue((data || []).reduce((s, p) => s + Number(p.amount), 0)));
+
+      // Build alerts: inactive students + overdue payments
+      const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+      const threeDaysAgo = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
+      Promise.all([
+        supabase.from('students').select('id, name, color, initials').eq('personal_id', user.id).eq('status', 'ativo'),
+        supabase.from('workout_sessions').select('student_id, date').eq('personal_id', user.id).gte('date', sevenDaysAgo),
+        supabase.from('payments').select('student_id, due_date, amount').eq('personal_id', user.id).eq('status', 'pendente').lt('due_date', TODAY),
+      ]).then(([{ data: sts }, { data: sessions }, { data: latePayments }]) => {
+        const builtAlerts = [];
+        const trainedIds = new Set((sessions || []).map(s => String(s.student_id)));
+        const latePaySet = new Set((latePayments || []).map(p => String(p.student_id)));
+        (sts || []).forEach(st => {
+          if (!trainedIds.has(String(st.id))) {
+            builtAlerts.push({ type: 'inactive', student: st, message: 'Não registra treino há mais de 7 dias' });
+          }
+          if (latePaySet.has(String(st.id))) {
+            builtAlerts.push({ type: 'payment', student: st, message: 'Pagamento em atraso' });
+          }
+        });
+        setAlerts(builtAlerts.slice(0, 5));
+      });
     } else {
       setStudents(mockStudents);
       setTodayAppts(mockAppts.filter(a => a.date === TODAY).sort((a, b) => a.time.localeCompare(b.time)));
@@ -306,6 +336,40 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Alerts */}
+      {alerts.length > 0 && (
+        <div style={{ marginTop: 16, background: 'white', borderRadius: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', border: '1px solid #F1F5F9', overflow: 'hidden' }}>
+          <div style={{ padding: '14px 20px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <AlertTriangle size={16} color="#D97706" />
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>Atenção necessária</h3>
+            <span style={{ background: '#FEF3C7', color: '#D97706', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>{alerts.length}</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            {alerts.map((alert, i) => {
+              const st = alert.student;
+              return (
+                <div key={`${alert.type}-${st.id}`}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 20px', borderBottom: i < alerts.length - 1 ? '1px solid #F9FAFB' : 'none', cursor: 'pointer' }}
+                  onClick={() => navigate(`/dashboard/alunos/${st.id}`)}
+                  onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                  onMouseLeave={e => e.currentTarget.style.background = 'transparent'}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: st.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: 'white', flexShrink: 0 }}>
+                    {(st.initials || st.name?.slice(0, 2)).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>{st.name}</p>
+                    <p style={{ margin: 0, fontSize: 12, color: alert.type === 'payment' ? '#DC2626' : '#D97706' }}>{alert.message}</p>
+                  </div>
+                  <div style={{ width: 28, height: 28, borderRadius: 8, background: alert.type === 'payment' ? '#FEE2E2' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    {alert.type === 'payment' ? <DollarSign size={14} color="#DC2626" /> : <AlertTriangle size={14} color="#D97706" />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

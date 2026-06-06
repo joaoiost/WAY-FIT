@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Dumbbell, TrendingUp, CheckCircle, Clock, Play, X, Loader, Bell, BellOff } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Calendar, Dumbbell, TrendingUp, Clock, Play, Loader, Bell, BellOff, ChevronRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { trainingPlans, appointments } from '../../data/mockData';
@@ -10,45 +11,16 @@ const TYPE_COLORS = {
   Cardio: '#F59E0B', Resistência: '#3B82F6', Mobilidade: '#06B6D4',
 };
 
-function getYouTubeId(url) {
-  if (!url) return null;
-  const m = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\n?#]+)/);
-  return m ? m[1] : null;
-}
-
-function VideoModal({ videoUrl, title, onClose }) {
-  const id = getYouTubeId(videoUrl);
-  return (
-    <div className="video-modal-backdrop" onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 720, background: '#000', borderRadius: 12, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#111' }}>
-          <span style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>{title}</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><X size={20} /></button>
-        </div>
-        {id ? (
-          <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
-            <iframe src={`https://www.youtube.com/embed/${id}?autoplay=1`} title={title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }} />
-          </div>
-        ) : (
-          <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>URL inválida</div>
-        )}
-      </div>
-    </div>
-  );
-}
 
 export default function StudentDashboard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [todayPlan, setTodayPlan] = useState(null);
   const [allPlans, setAllPlans] = useState([]);
   const [nextAppt, setNextAppt] = useState(null);
   const [personalName, setPersonalName] = useState('');
   const [attendanceRate, setAttendanceRate] = useState(null);
-  const [doneExercises, setDoneExercises] = useState({});
-  const [videoModal, setVideoModal] = useState(null);
   const [pushState, setPushState] = useState('idle'); // 'idle' | 'subscribed' | 'subscribing' | 'unsupported'
   const [studentId, setStudentId] = useState(null);
   const [studentGoal, setStudentGoal] = useState('');
@@ -68,6 +40,12 @@ export default function StudentDashboard() {
         if (student) {
           setStudentId(student.id);
           setStudentGoal(student.goal || '');
+
+          // Redirect to onboarding if never done
+          if (!localStorage.getItem(`aluno_onboarded_${user.id}`)) {
+            navigate('/aluno/onboarding', { replace: true });
+            return;
+          }
           const [{ data: plans }, { data: appts }, { data: profile }, { data: atts }] = await Promise.all([
             supabase.from('training_plans').select('*, exercises(*)').eq('student_id', student.id).order('created_at', { ascending: false }),
             supabase.from('appointments').select('*').eq('student_id', student.id).gte('date', todayStr).order('date').limit(1),
@@ -119,13 +97,9 @@ export default function StudentDashboard() {
     setPushState('idle');
   };
 
-  const toggleExercise = (i) => setDoneExercises(prev => ({ ...prev, [i]: !prev[i] }));
-
   const exercises = todayPlan?.exercises
     ? [...(todayPlan.exercises)].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0))
     : [];
-  const doneCount = exercises.filter((_, i) => doneExercises[i]).length;
-  const totalCount = exercises.length;
 
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 80 }}>
@@ -209,65 +183,58 @@ export default function StudentDashboard() {
 
       {/* Main grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) 340px', gap: 16 }} className="student-main-grid">
-        {/* Today's workout */}
-        <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+        {/* Today's workout — main CTA */}
+        <div style={{ background: 'white', borderRadius: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
           {todayPlan ? (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-                <div style={{ width: 38, height: 38, borderRadius: 10, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Dumbbell size={18} color="white" />
+              {/* Header gradient */}
+              {(todayPlan.days || []).includes(todayDay) && (
+                <div style={{ background: 'linear-gradient(135deg, #1E3A5F, #0F172A)', padding: '10px 18px' }}>
+                  <span style={{ fontSize: 11, fontWeight: 800, color: 'rgba(255,255,255,0.7)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+                    ⚡ Treino de hoje
+                  </span>
                 </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>
-                    {(todayPlan.days || []).includes(todayDay) ? 'Treino de Hoje' : 'Último treino cadastrado'}
-                  </h3>
-                  <p style={{ margin: 0, fontSize: 12, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{todayPlan.name}</p>
+              )}
+              <div style={{ padding: '18px 18px 0' }}>
+                <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 14 }}>
+                  <div style={{ width: 46, height: 46, borderRadius: 12, background: `${TYPE_COLORS[todayPlan.type] || '#6B7280'}18`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Dumbbell size={22} color={TYPE_COLORS[todayPlan.type] || '#6B7280'} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <h3 style={{ margin: '0 0 2px', fontSize: 17, fontWeight: 900, color: '#111827', lineHeight: 1.2 }}>{todayPlan.name}</h3>
+                    <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>
+                      {totalCount} exercícios · <span style={{ color: TYPE_COLORS[todayPlan.type] || '#6B7280', fontWeight: 700 }}>{todayPlan.type}</span>
+                    </p>
+                  </div>
                 </div>
-                <span style={{ background: `${TYPE_COLORS[todayPlan.type] || '#6B7280'}20`, color: TYPE_COLORS[todayPlan.type] || '#6B7280', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, flexShrink: 0 }}>
-                  {todayPlan.type}
-                </span>
+
+                {/* Exercise preview list */}
+                {exercises.slice(0, 4).map((ex, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: i < Math.min(exercises.length, 4) - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: TYPE_COLORS[todayPlan.type] || '#6B7280', flexShrink: 0 }} />
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#111827', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</span>
+                    <span style={{ fontSize: 12, color: '#9CA3AF', flexShrink: 0 }}>{ex.sets}x{ex.reps}</span>
+                  </div>
+                ))}
+                {exercises.length > 4 && (
+                  <p style={{ margin: '6px 0 0', fontSize: 12, color: '#9CA3AF' }}>+{exercises.length - 4} exercícios</p>
+                )}
               </div>
 
-              <div style={{ marginBottom: 16 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                  <span style={{ fontSize: 13, color: '#374151', fontWeight: 600 }}>Progresso</span>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#3B82F6' }}>{doneCount}/{totalCount} exercícios</span>
-                </div>
-                <div style={{ height: 8, background: '#E5E7EB', borderRadius: 4, overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: totalCount ? `${(doneCount / totalCount) * 100}%` : '0%', background: 'linear-gradient(90deg, #3B82F6, #8B5CF6)', borderRadius: 4, transition: 'width 0.4s ease' }} />
-                </div>
-              </div>
-
-              <div>
-                {exercises.map((ex, i) => {
-                  const done = !!doneExercises[i];
-                  const videoUrl = ex.video_url || ex.videoUrl || '';
-                  const hasVideo = !!getYouTubeId(videoUrl);
-                  return (
-                    <div key={i} style={{ padding: '11px 0', borderBottom: i < exercises.length - 1 ? '1px solid #F9FAFB' : 'none' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <button
-                          onClick={() => toggleExercise(i)}
-                          style={{ width: 24, height: 24, borderRadius: '50%', background: done ? '#D1FAE5' : '#F3F4F6', border: `2px solid ${done ? '#10B981' : '#E5E7EB'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s' }}
-                        >
-                          {done && <CheckCircle size={13} color="#10B981" />}
-                        </button>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <span style={{ fontSize: 14, fontWeight: done ? 400 : 600, color: done ? '#9CA3AF' : '#111827', textDecoration: done ? 'line-through' : 'none' }}>
-                            {ex.name}
-                          </span>
-                          <span style={{ fontSize: 12, color: '#6B7280', marginLeft: 8 }}>{ex.sets}x{ex.reps} · {ex.rest}</span>
-                          {ex.obs && <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>💡 {ex.obs}</p>}
-                        </div>
-                        {hasVideo && (
-                          <button className="video-btn" onClick={() => setVideoModal({ ...ex, videoUrl })} style={{ flexShrink: 0 }}>
-                            <Play size={10} /> Vídeo
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  );
-                })}
+              {/* Iniciar Treino CTA */}
+              <div style={{ padding: '16px 18px 18px' }}>
+                <button
+                  onClick={() => navigate(`/aluno/treinos/${todayPlan.id}/executar`)}
+                  style={{ width: '100%', padding: '15px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '-0.3px' }}
+                >
+                  <Play size={17} fill="white" /> Iniciar Treino
+                </button>
+                <button
+                  onClick={() => navigate('/aluno/treinos')}
+                  style={{ width: '100%', marginTop: 8, padding: '10px', borderRadius: 10, border: 'none', background: 'none', color: '#6B7280', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}
+                >
+                  Ver todos os treinos <ChevronRight size={14} />
+                </button>
               </div>
             </>
           ) : (
@@ -344,10 +311,6 @@ export default function StudentDashboard() {
           )}
         </div>
       </div>
-
-      {videoModal && (
-        <VideoModal videoUrl={videoModal.videoUrl} title={videoModal.name} onClose={() => setVideoModal(null)} />
-      )}
 
       <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
     </div>

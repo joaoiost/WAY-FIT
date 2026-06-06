@@ -27,6 +27,9 @@ import Privacidade from './pages/Privacidade';
 import StudentLogin from './pages/student/StudentLogin';
 import StudentDashboard from './pages/student/StudentDashboard';
 import MeusTreinos from './pages/student/MeusTreinos';
+import ExecutarTreino from './pages/student/ExecutarTreino';
+import OnboardingAluno from './pages/student/OnboardingAluno';
+import OnboardingPersonal from './pages/OnboardingPersonal';
 import AgendaAluno from './pages/student/AgendaAluno';
 import Progresso from './pages/student/Progresso';
 import Historico from './pages/student/Historico';
@@ -86,6 +89,18 @@ function StudentRoute() {
   );
 }
 
+// Full-screen layout for workout execution (no sidebar/bottom nav)
+function StudentRouteClean() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="loading-screen">Carregando...</div>;
+  if (!user || user.role !== 'student') return <Navigate to="/aluno/login" replace />;
+  return (
+    <NotificationsProvider>
+      <Outlet />
+    </NotificationsProvider>
+  );
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -103,6 +118,7 @@ export default function App() {
           <Route path="/privacidade" element={<Privacidade />} />
 
           <Route element={<PersonalRoute />}>
+            <Route path="/onboarding" element={<OnboardingPersonal />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/dashboard/alunos" element={<Alunos />} />
             <Route path="/dashboard/agenda" element={<Agenda />} />
@@ -116,6 +132,7 @@ export default function App() {
           </Route>
 
           <Route element={<StudentRoute />}>
+            <Route path="/aluno/onboarding" element={<OnboardingAluno />} />
             <Route path="/aluno/dashboard" element={<StudentDashboard />} />
             <Route path="/aluno/treinos" element={<MeusTreinos />} />
             <Route path="/aluno/agenda" element={<AgendaAluno />} />
@@ -124,6 +141,10 @@ export default function App() {
             <Route path="/aluno/chat" element={<ChatAluno />} />
             <Route path="/aluno/fotos" element={<FotosProgresso />} />
             <Route path="/aluno/saude" element={<Anamnese />} />
+          </Route>
+
+          <Route element={<StudentRouteClean />}>
+            <Route path="/aluno/treinos/:planId/executar" element={<ExecutarTreino />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/login" replace />} />

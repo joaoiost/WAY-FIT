@@ -257,3 +257,60 @@ CREATE POLICY "Personal manages own schedules" ON scheduled_notifications FOR AL
 ALTER TABLE student_notifications DROP CONSTRAINT IF EXISTS student_notifications_type_check;
 ALTER TABLE student_notifications ADD CONSTRAINT student_notifications_type_check
   CHECK (type IN ('message', 'workout', 'payment', 'appointment', 'custom', 'scheduled'));
+
+-- ============================================================
+-- Feature: Execução de treinos pelo aluno
+-- ============================================================
+CREATE TABLE IF NOT EXISTS workout_sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  plan_id UUID REFERENCES training_plans(id) ON DELETE CASCADE NOT NULL,
+  plan_name TEXT NOT NULL,
+  plan_type TEXT,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  started_at TIMESTAMPTZ DEFAULT NOW(),
+  finished_at TIMESTAMPTZ,
+  exercises_done INTEGER DEFAULT 0,
+  exercises_total INTEGER DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(student_id, plan_id, date)
+);
+ALTER TABLE workout_sessions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Aluno gerencia próprias sessões" ON workout_sessions;
+CREATE POLICY "Aluno gerencia próprias sessões" ON workout_sessions FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = workout_sessions.student_id AND s.user_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Personal vê sessões dos alunos" ON workout_sessions;
+CREATE POLICY "Personal vê sessões dos alunos" ON workout_sessions FOR SELECT USING (personal_id = auth.uid());
+
+CREATE TABLE IF NOT EXISTS exercise_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  session_id UUID REFERENCES workout_sessions(id) ON DELETE CASCADE NOT NULL,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  exercise_id UUID REFERENCES exercises(id) ON DELETE CASCADE NOT NULL,
+  exercise_name TEXT NOT NULL,
+  sets_planned INTEGER,
+  reps_planned TEXT,
+  load_planned TEXT,
+  load_actual TEXT,
+  reps_actual TEXT,
+  done BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(session_id, exercise_id)
+);
+ALTER TABLE exercise_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Aluno gerencia próprios logs" ON exercise_logs;
+CREATE POLICY "Aluno gerencia próprios logs" ON exercise_logs FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = exercise_logs.student_id AND s.user_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Personal vê logs dos alunos" ON exercise_logs;
+CREATE POLICY "Personal vê logs dos alunos" ON exercise_logs FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = exercise_logs.student_id AND s.personal_id = auth.uid())
+);
+
+-- Detalhe por série (array de {load, done} por exercício)
+ALTER TABLE exercise_logs ADD COLUMN IF NOT EXISTS sets_data JSONB DEFAULT '[]';
+
+-- Chave PIX do personal trainer
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pix_key TEXT;

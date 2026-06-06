@@ -1,8 +1,9 @@
-import { useState, useEffect, useRef } from 'react';
-import { Plus, Dumbbell, Trash2, X, Play, Loader, Save, Check, ArrowUp, ArrowDown, ExternalLink, ChevronDown } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Plus, Dumbbell, Trash2, X, Play, Loader, Save, Check, ChevronDown, Copy, HelpCircle, ChevronRight } from 'lucide-react';
 import { trainingPlans as mockPlans, students as mockStudents } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { searchExercises } from '../../data/exerciseLibrary';
 
 const DAYS = [
   { value: 1, label: 'Seg', full: 'Segunda-feira' },
@@ -14,16 +15,15 @@ const DAYS = [
   { value: 0, label: 'Dom', full: 'Domingo' },
 ];
 
-const GROUPS = ['Peito','Costas','Pernas','Ombro','Braços','Abdômen','Full Body','Cardio','Descanso'];
-
+const GROUPS = ['Peito','Costas','Pernas','Glúteos','Ombro','Braços','Abdômen','Full Body','Cardio','Descanso'];
 const GROUP_COLORS = {
-  Peito:'#EF4444', Costas:'#3B82F6', Pernas:'#8B5CF6', Ombro:'#F59E0B',
-  Braços:'#10B981', Abdômen:'#06B6D4', 'Full Body':'#EC4899', Cardio:'#F97316', Descanso:'#9CA3AF',
+  Peito:'#EF4444', Costas:'#3B82F6', Pernas:'#8B5CF6', Glúteos:'#EC4899',
+  Ombro:'#F59E0B', Braços:'#10B981', Abdômen:'#06B6D4',
+  'Full Body':'#F97316', Cardio:'#6366F1', Descanso:'#9CA3AF',
 };
-
+const PLAN_TYPES = ['Hipertrofia','Força','Resistência','Funcional','Cardio','Mobilidade','Emagrecimento'];
 const REPS_QUICK = ['6','8','10','12','15','20','Falha'];
 const REST_QUICK = ['30s','45s','60s','75s','90s','2min'];
-
 const FREQ_PRESETS = {
   3: { days: [1,3,5], groups: ['Peito','Costas','Pernas'] },
   4: { days: [1,2,4,5], groups: ['Peito','Costas','Pernas','Ombro'] },
@@ -31,83 +31,110 @@ const FREQ_PRESETS = {
   6: { days: [1,2,3,4,5,6], groups: ['Peito','Costas','Pernas','Ombro','Braços','Full Body'] },
 };
 
-/* ─── Componente de exercício com acordeão ──────────────────────── */
+const TUTORIAL_STEPS = [
+  {
+    icon: '👤',
+    title: 'Selecione um aluno',
+    desc: 'Escolha para qual aluno você está montando o programa. Cada aluno tem sua própria semana de treinos.',
+  },
+  {
+    icon: '📅',
+    title: 'Configure a semana',
+    desc: 'Clique em "Configurar semana" e defina quantos dias por semana o aluno treina e quais grupos musculares.',
+  },
+  {
+    icon: '💪',
+    title: 'Adicione os exercícios',
+    desc: 'Clique em qualquer dia da semana para abrir o editor. Digite o nome do exercício — o autocomplete vai sugerir. Configure séries, reps e carga.',
+  },
+  {
+    icon: '📋',
+    title: 'Copie para outros alunos',
+    desc: 'Montou um programa que funcionou? Use "Copiar para..." para duplicar todos os treinos para outro aluno em segundos.',
+  },
+];
+
+/* ─── ExerciseCard ─────────────────────────────────────────────────── */
 function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColor, autoOpen }) {
   const [open, setOpen] = useState(autoOpen || !ex.name);
+  const [suggestions, setSuggestions] = useState([]);
+  const [showSugg, setShowSugg] = useState(false);
   const sets = parseInt(ex.sets) || 3;
   const ac = accentColor || '#3B82F6';
   const isCustomReps = ex.reps && !REPS_QUICK.includes(ex.reps);
 
-  return (
-    <div style={{
-      background: 'white', borderRadius: 16,
-      border: `1.5px solid ${open ? ac + '40' : '#E5E7EB'}`,
-      marginBottom: 10, overflow: 'hidden',
-      boxShadow: open ? `0 4px 16px ${ac}15` : '0 1px 4px rgba(0,0,0,0.05)',
-      transition: 'all 0.2s',
-    }}>
+  const handleNameChange = (val) => {
+    onUpdate('name', val);
+    const s = searchExercises(val);
+    setSuggestions(s);
+    setShowSugg(s.length > 0);
+  };
 
-      {/* ── Linha compacta (sempre visível) ── */}
-      <div onClick={() => setOpen(o => !o)}
-        style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', cursor: 'pointer', userSelect: 'none' }}>
-        {/* Número */}
+  return (
+    <div style={{ background: 'white', borderRadius: 16, border: `1.5px solid ${open ? ac + '40' : '#E5E7EB'}`, marginBottom: 10, overflow: 'visible', boxShadow: open ? `0 4px 16px ${ac}15` : '0 1px 4px rgba(0,0,0,0.05)', transition: 'all 0.2s' }}>
+      <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', cursor: 'pointer', userSelect: 'none', borderRadius: 16 }}>
         <div style={{ width: 26, height: 26, borderRadius: '50%', background: ac + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: ac, flexShrink: 0 }}>
           {index + 1}
         </div>
-        {/* Nome */}
         <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: ex.name ? '#111827' : '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
           {ex.name || 'Nome do exercício...'}
         </span>
-        {/* Resumo quando fechado */}
         {!open && ex.name && (
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: ac, background: ac + '12', padding: '3px 10px', borderRadius: 20 }}>{sets}×{ex.reps || '—'}</span>
-            {ex.load && <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 600 }}>{ex.load} kg</span>}
-            {ex.rest && <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 600 }}>{ex.rest}</span>}
-            {ex.videoUrl && <Play size={13} color="#D97706" fill="#D97706" />}
+          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: ac, background: ac + '12', padding: '3px 9px', borderRadius: 20 }}>{sets}×{ex.reps || '—'}</span>
+            {ex.load && <span style={{ fontSize: 11, color: '#6B7280' }}>{ex.load}kg</span>}
           </div>
         )}
-        {/* Seta */}
         <ChevronDown size={16} color="#9CA3AF" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
       </div>
 
-      {/* ── Formulário expandido ── */}
       {open && (
         <>
           <div style={{ borderTop: '1px solid #F3F4F6', padding: '16px 16px 0' }}>
-            {/* Nome editável */}
-            <div style={{ marginBottom: 14 }}>
+            {/* Nome com autocomplete */}
+            <div style={{ marginBottom: 14, position: 'relative' }}>
               <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nome do exercício</p>
               <input
                 value={ex.name}
-                onChange={e => onUpdate('name', e.target.value)}
-                placeholder="Ex: Supino Reto com Barra"
+                onChange={e => handleNameChange(e.target.value)}
+                onFocus={() => { if (suggestions.length > 0) setShowSugg(true); }}
+                onBlur={() => setTimeout(() => setShowSugg(false), 150)}
+                placeholder="Digite para buscar na biblioteca..."
                 autoFocus={!ex.name}
                 style={{ fontSize: 15, fontWeight: 600, color: '#111827' }}
               />
+              {showSugg && suggestions.length > 0 && (
+                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'white', borderRadius: 12, border: '1.5px solid #E5E7EB', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', overflow: 'hidden' }}>
+                  {suggestions.map((s, i) => (
+                    <button key={i} onMouseDown={() => { onUpdate('name', s.name); setSuggestions([]); setShowSugg(false); }}
+                      style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderBottom: i < suggestions.length - 1 ? '1px solid #F9FAFB' : 'none' }}
+                      onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                      onMouseLeave={e => e.currentTarget.style.background = 'none'}>
+                      <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{s.name}</span>
+                      <span style={{ fontSize: 10, color: '#9CA3AF', background: '#F3F4F6', padding: '2px 7px', borderRadius: 20, flexShrink: 0, fontWeight: 600 }}>{s.group}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Séries + Carga lado a lado */}
+            {/* Séries + Carga */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
               <div>
                 <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Séries</p>
                 <div style={{ display: 'flex', alignItems: 'center', background: '#F9FAFB', borderRadius: 12, border: '1.5px solid #E5E7EB', overflow: 'hidden', height: 52 }}>
-                  <button onClick={() => onUpdate('sets', Math.max(1, sets - 1))}
-                    style={{ width: 48, height: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
+                  <button onClick={() => onUpdate('sets', Math.max(1, sets - 1))} style={{ width: 48, height: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
                   <span style={{ flex: 1, fontSize: 24, fontWeight: 900, color: '#111827', textAlign: 'center' }}>{sets}</span>
-                  <button onClick={() => onUpdate('sets', sets + 1)}
-                    style={{ width: 48, height: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
+                  <button onClick={() => onUpdate('sets', sets + 1)} style={{ width: 48, height: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
                 </div>
               </div>
               <div>
                 <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Carga (kg)</p>
-                <input value={ex.load || ''} onChange={e => onUpdate('load', e.target.value)}
-                  placeholder="0" type="number" min="0"
+                <input value={ex.load || ''} onChange={e => onUpdate('load', e.target.value)} placeholder="0" type="number" min="0"
                   style={{ height: 52, fontSize: 24, fontWeight: 900, textAlign: 'center', background: '#F9FAFB', borderRadius: 12 }} />
               </div>
             </div>
 
-            {/* Repetições */}
             <div style={{ marginBottom: 14 }}>
               <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Repetições</p>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -117,12 +144,11 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
                     {r}
                   </button>
                 ))}
-                <input value={isCustomReps ? ex.reps : ''} onChange={e => onUpdate('reps', e.target.value)}
-                  placeholder="outro..." style={{ width: 76, fontSize: 13, height: 40, textAlign: 'center', borderRadius: 22, border: `2px solid ${isCustomReps ? ac : '#E5E7EB'}`, background: isCustomReps ? ac + '10' : '#F9FAFB', color: isCustomReps ? ac : '#6B7280', fontWeight: 700 }} />
+                <input value={isCustomReps ? ex.reps : ''} onChange={e => onUpdate('reps', e.target.value)} placeholder="outro..."
+                  style={{ width: 76, fontSize: 13, height: 40, textAlign: 'center', borderRadius: 22, border: `2px solid ${isCustomReps ? ac : '#E5E7EB'}`, background: isCustomReps ? ac + '10' : '#F9FAFB', color: isCustomReps ? ac : '#6B7280', fontWeight: 700 }} />
               </div>
             </div>
 
-            {/* Descanso */}
             <div style={{ marginBottom: 14 }}>
               <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Descanso</p>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -135,12 +161,10 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
               </div>
             </div>
 
-            {/* URL do vídeo */}
             <div style={{ marginBottom: 14 }}>
               <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>URL do Vídeo (YouTube)</p>
               <div style={{ display: 'flex', gap: 8 }}>
-                <input value={ex.videoUrl || ''} onChange={e => onUpdate('videoUrl', e.target.value)}
-                  placeholder="https://youtube.com/watch?v=..." style={{ flex: 1, fontSize: 13 }} />
+                <input value={ex.videoUrl || ''} onChange={e => onUpdate('videoUrl', e.target.value)} placeholder="https://youtube.com/watch?v=..." style={{ flex: 1, fontSize: 13 }} />
                 {ex.videoUrl && (
                   <a href={ex.videoUrl} target="_blank" rel="noopener noreferrer"
                     style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0 14px', borderRadius: 10, background: '#FEF3C7', color: '#D97706', textDecoration: 'none', fontSize: 13, fontWeight: 700, flexShrink: 0, minHeight: 44 }}>
@@ -150,24 +174,18 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
               </div>
             </div>
 
-            {/* Observações */}
             <div style={{ marginBottom: 14 }}>
               <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Observações</p>
-              <input value={ex.obs || ''} onChange={e => onUpdate('obs', e.target.value)}
-                placeholder="Dica de execução, equipamento, etc." style={{ fontSize: 13 }} />
+              <input value={ex.obs || ''} onChange={e => onUpdate('obs', e.target.value)} placeholder="Dica de execução, equipamento, variação..." style={{ fontSize: 13 }} />
             </div>
           </div>
 
-          {/* Ações */}
           <div style={{ padding: '8px 16px 14px', display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', gap: 6 }}>
-              <button onClick={() => onMove(index, -1)} disabled={index === 0}
-                style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === 0 ? 'not-allowed' : 'pointer', color: index === 0 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↑ Subir</button>
-              <button onClick={() => onMove(index, 1)} disabled={index === total - 1}
-                style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === total - 1 ? 'not-allowed' : 'pointer', color: index === total - 1 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↓ Descer</button>
+              <button onClick={() => onMove(index, -1)} disabled={index === 0} style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === 0 ? 'not-allowed' : 'pointer', color: index === 0 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↑ Subir</button>
+              <button onClick={() => onMove(index, 1)} disabled={index === total - 1} style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === total - 1 ? 'not-allowed' : 'pointer', color: index === total - 1 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↓ Descer</button>
             </div>
-            <button onClick={onDelete}
-              style={{ padding: '7px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, cursor: 'pointer', color: '#EF4444', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
+            <button onClick={onDelete} style={{ padding: '7px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, cursor: 'pointer', color: '#EF4444', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
               <Trash2 size={13} /> Remover
             </button>
           </div>
@@ -177,35 +195,18 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
   );
 }
 
-/* ─── Modal configurar semana ──────────────────────────────────────── */
+/* ─── ConfigWeekModal ──────────────────────────────────────────────── */
 function ConfigWeekModal({ onConfirm, onClose }) {
   const [freq, setFreq] = useState(4);
-  const buildDayGroups = (f) => {
-    const p = FREQ_PRESETS[f];
-    return Object.fromEntries(p.days.map((d, i) => [d, p.groups[i]]));
-  };
+  const buildDayGroups = (f) => Object.fromEntries(FREQ_PRESETS[f].days.map((d, i) => [d, FREQ_PRESETS[f].groups[i]]));
   const [dayGroups, setDayGroups] = useState(() => buildDayGroups(4));
   const [saving, setSaving] = useState(false);
-
-  const applyFreq = (f) => { setFreq(f); setDayGroups(buildDayGroups(f)); };
-
-  const toggleDay = (dv) => {
-    if (dayGroups[dv] !== undefined) {
-      const next = { ...dayGroups }; delete next[dv]; setDayGroups(next);
-    } else {
-      setDayGroups(prev => ({ ...prev, [dv]: 'Peito' }));
-    }
-  };
-
   const count = Object.keys(dayGroups).length;
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-      onClick={onClose}>
-      <div onClick={e => e.stopPropagation()}
-        style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 620, padding: '28px 24px 40px', maxHeight: '92vh', overflowY: 'auto' }}>
-
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 620, padding: '28px 24px 40px', maxHeight: '92vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
           <div>
             <h3 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#111827' }}>Configurar Semana</h3>
             <p style={{ margin: '4px 0 0', fontSize: 14, color: '#9CA3AF' }}>Monte a divisão semanal em segundos</p>
@@ -215,60 +216,229 @@ function ConfigWeekModal({ onConfirm, onClose }) {
           </button>
         </div>
 
-        {/* Frequência */}
         <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Frequência semanal</p>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 28 }}>
           {[3,4,5,6].map(f => (
-            <button key={f} onClick={() => applyFreq(f)}
-              style={{ padding: '16px 8px', borderRadius: 16, border: `2.5px solid ${freq === f ? '#3B82F6' : '#E5E7EB'}`, background: freq === f ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'center', transition: 'all 0.12s' }}>
+            <button key={f} onClick={() => { setFreq(f); setDayGroups(buildDayGroups(f)); }}
+              style={{ padding: '16px 8px', borderRadius: 16, border: `2.5px solid ${freq === f ? '#3B82F6' : '#E5E7EB'}`, background: freq === f ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'center' }}>
               <p style={{ margin: 0, fontSize: 28, fontWeight: 900, color: freq === f ? '#3B82F6' : '#374151' }}>{f}x</p>
               <p style={{ margin: '2px 0 0', fontSize: 12, color: freq === f ? '#3B82F6' : '#9CA3AF', fontWeight: 600 }}>por semana</p>
             </button>
           ))}
         </div>
 
-        {/* Dias */}
         <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Dias e grupos musculares</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 28 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
           {DAYS.map(d => {
             const on = dayGroups[d.value] !== undefined;
             const grp = dayGroups[d.value];
             const gc = grp ? (GROUP_COLORS[grp] || '#3B82F6') : '#E5E7EB';
             return (
-              <div key={d.value}
-                style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, border: `2px solid ${on ? gc + '50' : '#F1F5F9'}`, background: on ? gc + '08' : '#F9FAFB', transition: 'all 0.12s', cursor: 'pointer' }}
-                onClick={() => toggleDay(d.value)}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, border: `2.5px solid ${on ? gc : '#D1D5DB'}`, background: on ? gc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'all 0.15s' }}>
+              <div key={d.value} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, border: `2px solid ${on ? gc + '50' : '#F1F5F9'}`, background: on ? gc + '08' : '#F9FAFB', cursor: 'pointer' }} onClick={() => {
+                if (on) { const next = { ...dayGroups }; delete next[d.value]; setDayGroups(next); }
+                else setDayGroups(prev => ({ ...prev, [d.value]: 'Peito' }));
+              }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, border: `2.5px solid ${on ? gc : '#D1D5DB'}`, background: on ? gc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   {on && <Check size={15} color="white" strokeWidth={3} />}
                 </div>
                 <span style={{ width: 100, fontSize: 15, fontWeight: 700, color: on ? '#111827' : '#9CA3AF' }}>{d.full}</span>
                 {on ? (
-                  <select value={grp} onChange={e => { e.stopPropagation(); setDayGroups(prev => ({ ...prev, [d.value]: e.target.value })); }}
-                    onClick={e => e.stopPropagation()}
-                    style={{ flex: 1, fontSize: 15, fontWeight: 700, color: gc, border: 'none', background: 'transparent', outline: 'none', cursor: 'pointer', boxShadow: 'none', padding: 0 }}>
+                  <select value={grp} onChange={e => { e.stopPropagation(); setDayGroups(prev => ({ ...prev, [d.value]: e.target.value })); }} onClick={e => e.stopPropagation()}
+                    style={{ flex: 1, fontSize: 15, fontWeight: 700, color: gc, border: 'none', background: 'transparent', outline: 'none', cursor: 'pointer' }}>
                     {GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
                   </select>
-                ) : (
-                  <span style={{ flex: 1, fontSize: 14, color: '#C4C4C4' }}>Descanso</span>
-                )}
+                ) : <span style={{ flex: 1, fontSize: 14, color: '#C4C4C4' }}>Descanso</span>}
               </div>
             );
           })}
         </div>
 
-        <div style={{ background: '#F0FDF4', borderRadius: 12, padding: '14px 16px', marginBottom: 20, display: 'flex', gap: 10, alignItems: 'center' }}>
-          <Check size={18} color="#10B981" style={{ flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: 14, color: '#065F46', lineHeight: 1.5 }}>
-            <strong>{count} dias de treino</strong> serão criados. Você adiciona os exercícios depois, dia por dia.
-          </p>
-        </div>
-
-        <button onClick={async () => { setSaving(true); await onConfirm(dayGroups); setSaving(false); onClose(); }}
-          disabled={saving || count === 0}
+        <button onClick={async () => { setSaving(true); await onConfirm(dayGroups); setSaving(false); onClose(); }} disabled={saving || count === 0}
           style={{ width: '100%', padding: '18px', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 14, cursor: count === 0 ? 'not-allowed' : 'pointer', fontSize: 17, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: count === 0 ? 0.5 : 1 }}>
           {saving ? <Loader size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={20} />}
           {saving ? 'Configurando...' : `Criar ${count} dias de treino`}
         </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── CopyPlanModal ────────────────────────────────────────────────── */
+function CopyPlanModal({ students, currentStudentId, onConfirm, onClose }) {
+  const [target, setTarget] = useState('');
+  const [copying, setCopying] = useState(false);
+  const others = students.filter(s => String(s.id) !== String(currentStudentId));
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 480, padding: '28px 24px 40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 900 }}>Copiar programa</h3>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>Todos os treinos da semana serão duplicados</p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} color="#6B7280" />
+          </button>
+        </div>
+        {others.length === 0
+          ? <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '20px 0' }}>Não há outros alunos ativos.</p>
+          : <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
+              {others.map(s => (
+                <button key={s.id} onClick={() => setTarget(String(s.id))}
+                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: `2px solid ${target === String(s.id) ? '#3B82F6' : '#E5E7EB'}`, background: target === String(s.id) ? '#EFF6FF' : 'white', cursor: 'pointer' }}>
+                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: s.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'white', flexShrink: 0 }}>
+                    {(s.initials || s.name?.slice(0, 2)).toUpperCase()}
+                  </div>
+                  <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: target === String(s.id) ? '#1D4ED8' : '#374151' }}>{s.name}</span>
+                  {target === String(s.id) && <Check size={16} color="#3B82F6" />}
+                </button>
+              ))}
+            </div>
+        }
+        <button disabled={!target || copying} onClick={async () => { setCopying(true); await onConfirm(target); setCopying(false); onClose(); }}
+          style={{ width: '100%', padding: '15px', background: target ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : '#E5E7EB', border: 'none', borderRadius: 12, color: target ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: target ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          {copying ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Copy size={16} />}
+          {copying ? 'Copiando...' : 'Copiar programa'}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── DayEditorSheet (bottom sheet) ───────────────────────────────── */
+function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, planType, setPlanType, exercises, onUpdate, onDelete, onMove, onAdd, onSave, onDelete2, onClose, saving, saved, existing }) {
+  const gc = GROUP_COLORS[group] || '#3B82F6';
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()}
+        style={{ width: '100%', maxWidth: 680, margin: '0 auto', background: 'white', borderRadius: '20px 20px 0 0', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+
+        {/* Sheet handle + header */}
+        <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
+          <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E5E7EB', margin: '0 auto 16px' }} />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+            <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <X size={16} color="#6B7280" />
+            </button>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#374151', flex: 1 }}>{dayInfo?.full}</p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {existing && (
+                <button onClick={onDelete2} style={{ width: 36, height: 36, borderRadius: '50%', background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Trash2 size={15} color="#EF4444" />
+                </button>
+              )}
+              <button onClick={onSave} disabled={saving}
+                style={{ padding: '0 18px', height: 40, background: saved ? '#10B981' : gc, color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6, opacity: saving ? 0.7 : 1 }}>
+                {saving ? <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> : saved ? <Check size={14} /> : <Save size={14} />}
+                {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar'}
+              </button>
+            </div>
+          </div>
+
+          {/* Nome + tipo */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, marginBottom: 12 }}>
+            <div>
+              <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nome do treino</p>
+              <input value={planName} onChange={e => setPlanName(e.target.value)} placeholder={`Ex: Treino A — ${group}`}
+                style={{ fontSize: 14, fontWeight: 700, color: '#111827' }} />
+            </div>
+            <div>
+              <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tipo</p>
+              <select value={planType} onChange={e => setPlanType(e.target.value)}
+                style={{ height: 44, padding: '0 10px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, fontWeight: 700, color: '#374151', background: 'white', cursor: 'pointer', outline: 'none' }}>
+                {PLAN_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Grupo muscular */}
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12, paddingBottom: 14, borderBottom: '1px solid #F3F4F6' }}>
+            {GROUPS.map(g => (
+              <button key={g} onClick={() => setGroup(g)}
+                style={{ padding: '4px 10px', borderRadius: 20, border: `2px solid ${group === g ? (GROUP_COLORS[g] || '#3B82F6') : 'transparent'}`, background: group === g ? (GROUP_COLORS[g] || '#3B82F6') : 'transparent', color: group === g ? 'white' : '#9CA3AF', fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.12s' }}>
+                {g}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Exercise list — scrollable */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
+          {exercises.length === 0
+            ? <div style={{ textAlign: 'center', padding: '32px 0', color: '#9CA3AF' }}>
+                <Dumbbell size={36} color="#E5E7EB" style={{ marginBottom: 10 }} />
+                <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Nenhum exercício ainda</p>
+                <p style={{ margin: '4px 0 0', fontSize: 12 }}>Clique em "+ Adicionar exercício" abaixo</p>
+              </div>
+            : exercises.map((ex, i) => (
+                <ExerciseCard key={i} ex={ex} index={i} total={exercises.length}
+                  onUpdate={(field, val) => onUpdate(i, field, val)} onDelete={() => onDelete(i)}
+                  onMove={onMove} accentColor={gc} autoOpen={!ex.name} />
+              ))
+          }
+          <div style={{ height: 16 }} />
+        </div>
+
+        {/* Add exercise + bottom padding */}
+        <div style={{ padding: '12px 20px 32px', flexShrink: 0, borderTop: '1px solid #F3F4F6' }}>
+          <button onClick={onAdd}
+            style={{ width: '100%', padding: '14px', border: `2px dashed ${gc}60`, borderRadius: 14, background: gc + '06', color: gc, cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <Plus size={17} /> Adicionar exercício
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Tutorial ─────────────────────────────────────────────────────── */
+function Tutorial({ onDismiss }) {
+  const [expanded, setExpanded] = useState(null);
+  return (
+    <div style={{ background: 'white', borderRadius: 16, border: '1px solid #E0E7FF', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden', marginBottom: 16 }}>
+      <div style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', padding: '18px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <HelpCircle size={20} color="white" />
+          <div>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'white' }}>Como montar um treino</p>
+            <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Siga esses passos e seu aluno terá o treino em minutos</p>
+          </div>
+        </div>
+        <button onClick={onDismiss} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <X size={15} color="white" />
+        </button>
+      </div>
+      <div style={{ padding: '4px 0' }}>
+        {TUTORIAL_STEPS.map((step, i) => {
+          const isOpen = expanded === i;
+          return (
+            <div key={i}>
+              <button onClick={() => setExpanded(isOpen ? null : i)}
+                style={{ width: '100%', padding: '14px 22px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', borderBottom: '1px solid #F3F4F6' }}>
+                <div style={{ width: 40, height: 40, borderRadius: 12, background: '#F1F5F9', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20, flexShrink: 0 }}>
+                  {step.icon}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 11, fontWeight: 800, color: '#3B82F6', background: '#EFF6FF', padding: '2px 8px', borderRadius: 20 }}>Passo {i + 1}</span>
+                  </div>
+                  <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 700, color: '#111827' }}>{step.title}</p>
+                </div>
+                <ChevronDown size={16} color="#9CA3AF" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
+              </button>
+              {isOpen && (
+                <div style={{ padding: '12px 22px 14px 76px', background: '#F9FAFB', borderBottom: '1px solid #F3F4F6' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: '#6B7280', lineHeight: 1.6 }}>{step.desc}</p>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div style={{ padding: '14px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>Selecione um aluno acima para começar →</p>
+        <button onClick={onDismiss} style={{ fontSize: 12, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Entendido</button>
       </div>
     </div>
   );
@@ -283,10 +453,24 @@ export default function Treinos() {
   const [studentId, setStudentId] = useState('');
   const [day, setDay] = useState(null);
   const [group, setGroup] = useState('Peito');
+  const [planName, setPlanName] = useState('');
+  const [planType, setPlanType] = useState('Hipertrofia');
   const [exercises, setExercises] = useState([]);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [configModal, setConfigModal] = useState(false);
+  const [copyModal, setCopyModal] = useState(false);
+  const [showTutorial, setShowTutorial] = useState(true);
+
+  useEffect(() => {
+    const dismissed = localStorage.getItem('treinos_tutorial_dismissed');
+    if (dismissed) setShowTutorial(false);
+  }, []);
+
+  const dismissTutorial = () => {
+    setShowTutorial(false);
+    localStorage.setItem('treinos_tutorial_dismissed', '1');
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -308,7 +492,6 @@ export default function Treinos() {
 
   const myPlans = plans.filter(p => String(p.student_id || p.studentId) === String(studentId));
   const planForDay = (d) => myPlans.find(p => (p.days || []).includes(d));
-
   const newExercise = () => ({ name: '', sets: 4, reps: '10', rest: '60s', load: '', videoUrl: '', obs: '' });
 
   const openDay = (d) => {
@@ -316,12 +499,12 @@ export default function Treinos() {
     const plan = planForDay(d);
     if (plan) {
       setGroup(plan.name || 'Peito');
-      setExercises((plan.exercises || [])
-        .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-        .map(ex => ({ name: ex.name, sets: ex.sets || 4, reps: ex.reps || '10', rest: ex.rest || '60s', load: ex.load || '', videoUrl: ex.video_url || '', obs: ex.obs || '' }))
-      );
+      setPlanName(plan.name || '');
+      setPlanType(plan.type || 'Hipertrofia');
+      setExercises((plan.exercises || []).sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+        .map(ex => ({ name: ex.name, sets: ex.sets || 4, reps: ex.reps || '10', rest: ex.rest || '60s', load: ex.load || '', videoUrl: ex.video_url || '', obs: ex.obs || '' })));
     } else {
-      setGroup('Peito');
+      setGroup('Peito'); setPlanName(''); setPlanType('Hipertrofia');
       setExercises([newExercise()]);
     }
   };
@@ -332,11 +515,9 @@ export default function Treinos() {
     setExercises(prev => {
       const arr = [...prev]; const swap = idx + dir;
       if (swap < 0 || swap >= arr.length) return arr;
-      [arr[idx], arr[swap]] = [arr[swap], arr[idx]];
-      return arr;
+      [arr[idx], arr[swap]] = [arr[swap], arr[idx]]; return arr;
     });
   };
-  const addEx = () => setExercises(prev => [...prev, newExercise()]);
 
   const savePlan = async () => {
     if (!studentId || day === null) return;
@@ -344,16 +525,17 @@ export default function Treinos() {
     const student = students.find(s => String(s.id) === String(studentId));
     const validEx = exercises.filter(e => e.name?.trim());
     const existing = planForDay(day);
+    const finalName = planName.trim() || group;
+    const exRows = (id) => validEx.map((e, i) => ({ plan_id: id, name: e.name, sets: parseInt(e.sets)||4, reps: e.reps, load: e.load||'', rest: e.rest, video_url: e.videoUrl||'', obs: e.obs||'', order_index: i }));
     if (hasSupabase) {
-      const exRows = (id) => validEx.map((e, i) => ({ plan_id: id, name: e.name, sets: parseInt(e.sets)||4, reps: e.reps, load: e.load||'', rest: e.rest, video_url: e.videoUrl||'', obs: e.obs||'', order_index: i }));
       if (existing) {
-        await supabase.from('training_plans').update({ name: group, type: 'Hipertrofia' }).eq('id', existing.id);
+        await supabase.from('training_plans').update({ name: finalName, type: planType }).eq('id', existing.id);
         await supabase.from('exercises').delete().eq('plan_id', existing.id);
         if (validEx.length) await supabase.from('exercises').insert(exRows(existing.id));
         const { data: u } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', existing.id).single();
         if (u) setPlans(prev => prev.map(p => p.id === existing.id ? u : p));
       } else {
-        const { data: plan } = await supabase.from('training_plans').insert({ personal_id: user.id, student_id: student?.id, student_name: student?.name, name: group, type: 'Hipertrofia', days: [day] }).select().single();
+        const { data: plan } = await supabase.from('training_plans').insert({ personal_id: user.id, student_id: student?.id, student_name: student?.name, name: finalName, type: planType, days: [day] }).select().single();
         if (plan) {
           if (validEx.length) await supabase.from('exercises').insert(exRows(plan.id));
           const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', plan.id).single();
@@ -361,11 +543,10 @@ export default function Treinos() {
         }
       }
     } else {
-      if (existing) setPlans(prev => prev.map(p => p.id === existing.id ? { ...p, name: group, exercises: validEx } : p));
-      else setPlans(prev => [{ id: Date.now(), student_id: studentId, student_name: student?.name, name: group, type: 'Hipertrofia', days: [day], exercises: validEx, created_at: new Date().toISOString() }, ...prev]);
+      if (existing) setPlans(prev => prev.map(p => p.id === existing.id ? { ...p, name: finalName, type: planType, exercises: validEx } : p));
+      else setPlans(prev => [{ id: Date.now(), student_id: studentId, student_name: student?.name, name: finalName, type: planType, days: [day], exercises: validEx } , ...prev]);
     }
-    setSaving(false); setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
   };
 
   const deleteDay = async () => {
@@ -396,7 +577,7 @@ export default function Treinos() {
           }
         }
       } else {
-        newPlansLocal.push({ type: 'insert', plan: { id: Date.now() + dv, student_id: studentId, student_name: student.name, name: grpName, type: 'Hipertrofia', days: [dv], exercises: [], created_at: new Date().toISOString() } });
+        newPlansLocal.push({ type: 'insert', plan: { id: Date.now() + dv, student_id: studentId, student_name: student.name, name: grpName, type: 'Hipertrofia', days: [dv], exercises: [] } });
       }
     }
     setPlans(prev => {
@@ -409,9 +590,21 @@ export default function Treinos() {
     });
   };
 
-  const gc = GROUP_COLORS[group] || '#3B82F6';
+  const handleCopyPlan = async (targetStudentId) => {
+    const target = students.find(s => String(s.id) === targetStudentId);
+    if (!target || !hasSupabase) return;
+    for (const plan of myPlans) {
+      const exs = [...(plan.exercises || [])].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
+      const { data: newPlan } = await supabase.from('training_plans').insert({ personal_id: user.id, student_id: target.id, student_name: target.name, name: plan.name, type: plan.type || 'Hipertrofia', days: plan.days || [] }).select().single();
+      if (newPlan && exs.length) {
+        await supabase.from('exercises').insert(exs.map((e, i) => ({ plan_id: newPlan.id, name: e.name, sets: e.sets, reps: e.reps, rest: e.rest, load: e.load || '', video_url: e.video_url || e.videoUrl || '', obs: e.obs || '', order_index: i })));
+      }
+    }
+    const { data: refreshed } = await supabase.from('training_plans').select('*, exercises(*)').eq('personal_id', user.id);
+    if (refreshed) setPlans(refreshed);
+  };
+
   const dayInfo = DAYS.find(d => d.value === day);
-  const selectedStudent = students.find(s => String(s.id) === studentId);
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, flex: 1 }}>
@@ -422,29 +615,46 @@ export default function Treinos() {
 
   return (
     <div className="page-padding" style={{ flex: 1 }}>
-      {/* Page header */}
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#111827' }}>Treinos</h2>
-        <p style={{ margin: '4px 0 0', fontSize: 14, color: '#9CA3AF' }}>Monte o treino semanal de cada aluno</p>
+      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#111827' }}>Treinos</h2>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#9CA3AF' }}>Monte o programa semanal de cada aluno</p>
+        </div>
+        {!showTutorial && (
+          <button onClick={() => setShowTutorial(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 20, background: '#F1F5F9', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#6B7280' }}>
+            <HelpCircle size={14} /> Como usar
+          </button>
+        )}
       </div>
 
+      {/* Tutorial */}
+      {showTutorial && <Tutorial onDismiss={dismissTutorial} />}
+
       {/* Seleção de aluno */}
-      <div style={{ background: 'white', borderRadius: 16, padding: '20px 22px', marginBottom: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-        <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Aluno</p>
+      <div style={{ background: 'white', borderRadius: 16, padding: '18px 20px', marginBottom: 14, border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+        <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Aluno</p>
         {students.length === 0 ? (
           <p style={{ fontSize: 14, color: '#9CA3AF', margin: 0 }}>Nenhum aluno ativo. Cadastre primeiro na página Alunos.</p>
+        ) : students.length > 8 ? (
+          /* Dropdown for many students */
+          <select value={studentId} onChange={e => { setStudentId(e.target.value); setDay(null); }}
+            style={{ width: '100%', height: 48, padding: '0 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', fontSize: 15, fontWeight: 700, color: studentId ? '#111827' : '#9CA3AF', background: 'white', cursor: 'pointer', outline: 'none' }}>
+            <option value="">Selecione um aluno...</option>
+            {students.map(s => <option key={s.id} value={String(s.id)}>{s.name}</option>)}
+          </select>
         ) : (
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          /* Pills for up to 8 */
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {students.map(s => {
               const active = String(s.id) === studentId;
               return (
                 <button key={s.id} onClick={() => { setStudentId(String(s.id)); setDay(null); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 18px', borderRadius: 40, border: `2.5px solid ${active ? '#3B82F6' : '#E5E7EB'}`, background: active ? '#EFF6FF' : 'white', cursor: 'pointer', transition: 'all 0.12s', minHeight: 50 }}>
-                  <div style={{ width: 34, height: 34, borderRadius: '50%', background: s.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'white', flexShrink: 0 }}>
-                    {s.initials || s.name?.slice(0,2).toUpperCase()}
+                  style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 16px', borderRadius: 40, border: `2.5px solid ${active ? '#3B82F6' : '#E5E7EB'}`, background: active ? '#EFF6FF' : 'white', cursor: 'pointer', transition: 'all 0.12s' }}>
+                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: s.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: 'white', flexShrink: 0 }}>
+                    {(s.initials || s.name?.slice(0, 2)).toUpperCase()}
                   </div>
-                  <span style={{ fontSize: 15, fontWeight: 700, color: active ? '#1D4ED8' : '#374151' }}>{s.name.split(' ')[0]}</span>
-                  {active && <Check size={16} color="#3B82F6" />}
+                  <span style={{ fontSize: 14, fontWeight: 700, color: active ? '#1D4ED8' : '#374151' }}>{s.name.split(' ')[0]}</span>
+                  {active && <Check size={14} color="#3B82F6" />}
                 </button>
               );
             })}
@@ -453,117 +663,88 @@ export default function Treinos() {
       </div>
 
       {studentId && (
-        <>
-          {/* Semana */}
-          <div style={{ background: 'white', borderRadius: 16, padding: '20px 22px', marginBottom: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 12, flexWrap: 'wrap' }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Semana de Treinos</p>
+        <div style={{ background: 'white', borderRadius: 16, padding: '18px 20px', border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 10, flexWrap: 'wrap' }}>
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Semana de treinos</p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              {myPlans.length > 0 && (
+                <button onClick={() => setCopyModal(true)}
+                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 14px', borderRadius: 20, background: '#F3F4F6', color: '#374151', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                  <Copy size={13} /> Copiar para...
+                </button>
+              )}
               <button onClick={() => setConfigModal(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 18px', borderRadius: 22, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, minHeight: 42 }}>
+                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 20, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
                 Configurar semana
               </button>
             </div>
-            <div style={{ display: 'flex', gap: 10, overflowX: 'auto', paddingBottom: 4 }}>
-              {DAYS.map(d => {
-                const plan = planForDay(d.value);
-                const isActive = day === d.value;
-                const gc2 = plan ? (GROUP_COLORS[plan.name] || '#6B7280') : null;
-                return (
-                  <button key={d.value} onClick={() => openDay(d.value)}
-                    style={{ flex: '0 0 auto', minWidth: 84, padding: '14px 8px', borderRadius: 16, border: `2.5px solid ${isActive ? '#3B82F6' : plan ? gc2 + '60' : '#E5E7EB'}`, background: isActive ? '#EFF6FF' : plan ? gc2 + '0F' : '#F9FAFB', cursor: 'pointer', textAlign: 'center', transition: 'all 0.12s', boxShadow: isActive ? '0 0 0 4px rgba(59,130,246,0.15)' : 'none' }}>
-                    <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 800, color: isActive ? '#3B82F6' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{d.label}</p>
-                    {plan ? (
-                      <>
-                        <p style={{ margin: 0, fontSize: 12, fontWeight: 800, color: gc2, lineHeight: 1.3 }}>{plan.name}</p>
-                        <p style={{ margin: '3px 0 0', fontSize: 11, color: '#9CA3AF' }}>{(plan.exercises||[]).length} ex.</p>
-                      </>
-                    ) : (
-                      <div style={{ width: 28, height: 28, borderRadius: 8, border: '2px dashed #D1D5DB', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto' }}>
-                        <Plus size={13} color="#9CA3AF" />
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
           </div>
 
-          {/* Editor do dia */}
-          {day !== null && (
-            <div style={{ background: 'white', borderRadius: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+          {/* Week grid — now shows exercise names */}
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
+            {DAYS.map(d => {
+              const plan = planForDay(d.value);
+              const isActive = day === d.value;
+              const gc2 = plan ? (GROUP_COLORS[plan.name] || '#6B7280') : null;
+              const firstExercises = (plan?.exercises || [])
+                .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+                .slice(0, 3);
+              const remaining = Math.max(0, (plan?.exercises || []).length - 3);
 
-              {/* Header */}
-              <div style={{ padding: '18px 22px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12, background: gc + '08', flexWrap: 'wrap' }}>
-                <button onClick={() => setDay(null)} style={{ width: 38, height: 38, borderRadius: '50%', background: 'white', border: '1.5px solid #E5E7EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <X size={17} color="#6B7280" />
-                </button>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{dayInfo?.full}</p>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 2, flexWrap: 'wrap' }}>
-                    {GROUPS.map(g => (
-                      <button key={g} onClick={() => setGroup(g)}
-                        style={{ padding: '4px 12px', borderRadius: 20, border: `2px solid ${group === g ? (GROUP_COLORS[g]||'#3B82F6') : 'transparent'}`, background: group === g ? (GROUP_COLORS[g]||'#3B82F6') : 'transparent', color: group === g ? 'white' : '#9CA3AF', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        {g}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-                  {planForDay(day) && (
-                    <button onClick={deleteDay} style={{ width: 38, height: 38, borderRadius: '50%', background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Trash2 size={16} color="#EF4444" />
-                    </button>
+              return (
+                <button key={d.value} onClick={() => openDay(d.value)}
+                  style={{ flex: '0 0 auto', width: 110, padding: '12px 10px', borderRadius: 14, border: `2px solid ${isActive ? '#3B82F6' : plan ? gc2 + '55' : '#E5E7EB'}`, background: isActive ? '#EFF6FF' : plan ? gc2 + '08' : '#F9FAFB', cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s', boxShadow: isActive ? '0 0 0 3px rgba(59,130,246,0.15)' : 'none' }}>
+                  <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 800, color: isActive ? '#3B82F6' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{d.label}</p>
+                  {plan ? (
+                    <>
+                      <p style={{ margin: '0 0 5px', fontSize: 12, fontWeight: 800, color: gc2, lineHeight: 1.2 }}>{plan.name}</p>
+                      {firstExercises.map((ex, ei) => (
+                        <p key={ei} style={{ margin: '0 0 1px', fontSize: 10, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {ex.name.split(' ').slice(0, 3).join(' ')}
+                        </p>
+                      ))}
+                      {remaining > 0 && (
+                        <p style={{ margin: '2px 0 0', fontSize: 9, color: '#9CA3AF', fontWeight: 600 }}>+{remaining} mais</p>
+                      )}
+                    </>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 6, border: '2px dashed #D1D5DB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <Plus size={11} color="#9CA3AF" />
+                      </div>
+                      <span style={{ fontSize: 10, color: '#9CA3AF' }}>Adicionar</span>
+                    </div>
                   )}
-                  <button onClick={savePlan} disabled={saving}
-                    style={{ padding: '0 22px', height: 44, background: saved ? '#10B981' : gc, color: 'white', border: 'none', borderRadius: 12, cursor: 'pointer', fontWeight: 700, fontSize: 15, display: 'flex', alignItems: 'center', gap: 7, opacity: saving ? 0.7 : 1, transition: 'background 0.2s' }}>
-                    {saving ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : saved ? <Check size={16} /> : <Save size={16} />}
-                    {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar treino'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Lista de exercícios */}
-              <div style={{ padding: '22px 22px 8px' }}>
-                {exercises.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '32px 0', color: '#9CA3AF' }}>
-                    <Dumbbell size={36} color="#E5E7EB" style={{ marginBottom: 10 }} />
-                    <p style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>Nenhum exercício ainda</p>
-                    <p style={{ margin: '4px 0 0', fontSize: 13 }}>Clique em "+ Adicionar exercício" abaixo</p>
-                  </div>
-                ) : (
-                  exercises.map((ex, i) => (
-                    <ExerciseCard
-                      key={i}
-                      ex={ex}
-                      index={i}
-                      total={exercises.length}
-                      onUpdate={(field, val) => updateEx(i, field, val)}
-                      onDelete={() => deleteEx(i)}
-                      onMove={moveEx}
-                      accentColor={gc}
-                      autoOpen={!ex.name}
-                    />
-                  ))
-                )}
-              </div>
-
-              {/* Adicionar exercício */}
-              <div style={{ padding: '0 22px 22px' }}>
-                <button onClick={addEx}
-                  style={{ width: '100%', padding: '16px', border: `2px dashed ${gc}60`, borderRadius: 14, background: gc + '06', color: gc, cursor: 'pointer', fontSize: 15, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, transition: 'all 0.15s' }}
-                  onMouseEnter={e => e.currentTarget.style.background = gc + '12'}
-                  onMouseLeave={e => e.currentTarget.style.background = gc + '06'}>
-                  <Plus size={18} /> Adicionar exercício
                 </button>
-              </div>
+              );
+            })}
+          </div>
+
+          {myPlans.length === 0 && (
+            <div style={{ marginTop: 14, padding: '14px 16px', background: '#EFF6FF', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 18 }}>💡</span>
+              <p style={{ margin: 0, fontSize: 13, color: '#1D4ED8', lineHeight: 1.5 }}>
+                Clique em <strong>"Configurar semana"</strong> para montar a divisão automaticamente, ou clique em qualquer dia para começar do zero.
+              </p>
             </div>
           )}
-        </>
+        </div>
       )}
 
-      {configModal && studentId && (
-        <ConfigWeekModal onConfirm={handleConfigWeek} onClose={() => setConfigModal(false)} />
+      {/* Bottom sheet editor */}
+      {day !== null && (
+        <DayEditorSheet
+          day={day} dayInfo={dayInfo} group={group} setGroup={setGroup}
+          planName={planName} setPlanName={setPlanName} planType={planType} setPlanType={setPlanType}
+          exercises={exercises}
+          onUpdate={updateEx} onDelete={deleteEx} onMove={moveEx} onAdd={() => setExercises(prev => [...prev, newExercise()])}
+          onSave={savePlan} onDelete2={deleteDay} onClose={() => setDay(null)}
+          saving={saving} saved={saved} existing={!!planForDay(day)}
+        />
       )}
+
+      {configModal && studentId && <ConfigWeekModal onConfirm={handleConfigWeek} onClose={() => setConfigModal(false)} />}
+      {copyModal && studentId && <CopyPlanModal students={students} currentStudentId={studentId} onConfirm={handleCopyPlan} onClose={() => setCopyModal(false)} />}
 
       <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}} input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none} input[type=number]{-moz-appearance:textfield}`}</style>
     </div>

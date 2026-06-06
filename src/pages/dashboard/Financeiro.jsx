@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, TrendingUp, Clock, CheckCircle, Download, Zap, X, AlertCircle, Plus } from 'lucide-react';
+import { DollarSign, TrendingUp, Clock, CheckCircle, Download, Zap, X, AlertCircle, Plus, MessageCircle, Key } from 'lucide-react';
 import { exportFinanceiroPDF, exportFinanceiroExcel } from '../../utils/export';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Badge from '../../components/UI/Badge';
@@ -55,6 +55,10 @@ export default function Financeiro() {
   const [newPayModal, setNewPayModal] = useState(false);
   const [newPayForm, setNewPayForm] = useState({ student_id: '', amount: '', due_date: new Date().toISOString().slice(0, 10), plan: 'Mensal', status: 'pendente' });
   const [newPaySaving, setNewPaySaving] = useState(false);
+  const [pixKey, setPixKey] = useState('');
+  const [pixModal, setPixModal] = useState(false);
+  const [pixInput, setPixInput] = useState('');
+  const [pendingPixPayment, setPendingPixPayment] = useState(null);
 
   const now = new Date();
   const currentMonthISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
@@ -90,10 +94,43 @@ export default function Financeiro() {
   useEffect(() => {
     loadPayments();
     if (user && hasSupabase) {
-      supabase.from('students').select('id, name, plan, plan_price').eq('personal_id', user.id).eq('status', 'ativo')
+      supabase.from('students').select('id, name, plan, plan_price, phone').eq('personal_id', user.id).eq('status', 'ativo')
         .then(({ data }) => setStudents(data || []));
+      supabase.from('profiles').select('pix_key').eq('id', user.id).maybeSingle()
+        .then(({ data }) => { if (data?.pix_key) setPixKey(data.pix_key); });
     }
   }, [user?.id]);
+
+  const sendPixCharge = (payment) => {
+    const student = students.find(s => String(s.id) === String(payment.student_id));
+    const phone = student?.phone?.replace(/\D/g, '');
+    if (!phone) return;
+    const full = phone.startsWith('55') ? phone : `55${phone}`;
+    const name = (payment.student_name || student?.name || '').split(' ')[0];
+    const due = new Date((payment.due_date) + 'T12:00:00').toLocaleDateString('pt-BR');
+    const msg = `Olá ${name}! 😊\n\nVencimento da sua mensalidade:\n• Plano: ${payment.plan}\n• Valor: R$ ${Number(payment.amount).toLocaleString('pt-BR')}\n• Vencimento: ${due}\n\nChave PIX: *${pixKey}*\n\nApós o pagamento, me confirme aqui! 🙏`;
+    window.open(`https://wa.me/${full}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
+  const handlePixClick = (payment) => {
+    if (pixKey) {
+      sendPixCharge(payment);
+    } else {
+      setPendingPixPayment(payment);
+      setPixInput('');
+      setPixModal(true);
+    }
+  };
+
+  const savePixKey = async () => {
+    if (!pixInput.trim()) return;
+    setPixKey(pixInput.trim());
+    if (hasSupabase && user) {
+      await supabase.from('profiles').update({ pix_key: pixInput.trim() }).eq('id', user.id);
+    }
+    setPixModal(false);
+    if (pendingPixPayment) sendPixCharge({ ...pendingPixPayment, _pixOverride: pixInput.trim() });
+  };
 
   const markPaid = async (id) => {
     const paidDate = new Date().toISOString().slice(0, 10);
@@ -190,6 +227,37 @@ export default function Financeiro() {
 
   return (
     <div className="page-padding" style={{ flex: 1 }}>
+      {/* PIX key modal */}
+      {pixModal && (
+        <div className="modal-overlay" onClick={() => setPixModal(false)}>
+          <div className="modal-content" style={{ maxWidth: 380, padding: 28 }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
+              <div style={{ width: 40, height: 40, borderRadius: 12, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Key size={20} color="#3B82F6" />
+              </div>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#111827' }}>Configure sua chave PIX</h3>
+                <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>Será usada para gerar cobranças automáticas</p>
+              </div>
+            </div>
+            <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Chave PIX (CPF, e-mail, telefone ou aleatória)</label>
+            <input
+              value={pixInput}
+              onChange={e => setPixInput(e.target.value)}
+              placeholder="Ex: 12345678900 ou seu@email.com"
+              autoFocus
+              style={{ marginBottom: 16 }}
+            />
+            <div style={{ display: 'flex', gap: 10 }}>
+              <button onClick={() => setPixModal(false)} className="btn-secondary" style={{ flex: 1 }}>Cancelar</button>
+              <button onClick={savePixKey} disabled={!pixInput.trim()} className="btn-primary" style={{ flex: 1, justifyContent: 'center', opacity: !pixInput.trim() ? 0.5 : 1 }}>
+                Salvar e cobrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Confirmation modal */}
       {genModal && (
         <div className="modal-overlay" onClick={() => setGenModal(false)}>
@@ -450,14 +518,23 @@ export default function Financeiro() {
                     <Badge status={p.status} />
                   </td>
                   <td style={{ padding: '8px 16px' }}>
-                    {p.status !== 'pago' && (
-                      <button
-                        onClick={() => markPaid(p.id)}
-                        style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#D1FAE5', border: 'none', borderRadius: 8, color: '#065F46', fontSize: 12, fontWeight: 700, padding: '6px 12px', cursor: 'pointer', whiteSpace: 'nowrap' }}
-                      >
-                        <CheckCircle size={13} /> Marcar pago
-                      </button>
-                    )}
+                    {p.status !== 'pago' ? (
+                      <div style={{ display: 'flex', gap: 6 }}>
+                        <button
+                          onClick={() => handlePixClick(p)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#EFF6FF', border: 'none', borderRadius: 8, color: '#3B82F6', fontSize: 12, fontWeight: 700, padding: '6px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                          title="Cobrar via PIX no WhatsApp"
+                        >
+                          <MessageCircle size={13} /> PIX
+                        </button>
+                        <button
+                          onClick={() => markPaid(p.id)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#D1FAE5', border: 'none', borderRadius: 8, color: '#065F46', fontSize: 12, fontWeight: 700, padding: '6px 10px', cursor: 'pointer', whiteSpace: 'nowrap' }}
+                        >
+                          <CheckCircle size={13} /> Pago
+                        </button>
+                      </div>
+                    ) : null}
                   </td>
                 </tr>
               ))}

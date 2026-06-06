@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Dumbbell, DollarSign, TrendingUp, MessageCircle, Check, X, Phone, Mail, Edit2, Clock, BarChart2, Activity, Star, FileText } from 'lucide-react';
+import { ArrowLeft, Calendar, Dumbbell, DollarSign, TrendingUp, MessageCircle, Check, X, Phone, Mail, Edit2, Clock, BarChart2, Activity, Star, FileText, Flame, ChevronDown, ChevronUp } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import Modal from '../../components/UI/Modal';
@@ -28,7 +28,7 @@ function StatBox({ icon: Icon, label, value, color, bg }) {
   );
 }
 
-const TABS = ['Visão Geral', 'Treinos', 'Agenda', 'Frequência', 'Pagamentos', 'Saúde', 'Feedback'];
+const TABS = ['Visão Geral', 'Evolução', 'Treinos', 'Agenda', 'Frequência', 'Pagamentos', 'Saúde', 'Feedback'];
 
 export default function AlunoDetalhe() {
   const { id } = useParams();
@@ -44,6 +44,8 @@ export default function AlunoDetalhe() {
   const [measurements, setMeasurements] = useState([]);
   const [anamnese, setAnamnese] = useState(null);
   const [ratings, setRatings] = useState([]);
+  const [workoutSessions, setWorkoutSessions] = useState([]);
+  const [exerciseLogs, setExerciseLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [scheduleModal, setScheduleModal] = useState(false);
@@ -70,6 +72,8 @@ export default function AlunoDetalhe() {
         { data: meas },
         { data: ana },
         { data: rat },
+        { data: ws },
+        { data: el },
       ] = await Promise.all([
         supabase.from('students').select('*').eq('id', id).eq('personal_id', user.id).maybeSingle(),
         supabase.from('training_plans').select('*, exercises(*)').eq('student_id', id).order('created_at', { ascending: false }),
@@ -79,6 +83,8 @@ export default function AlunoDetalhe() {
         supabase.from('student_measurements').select('*').eq('student_id', id).order('recorded_at').limit(10),
         supabase.from('anamneses').select('*').eq('student_id', id).maybeSingle(),
         supabase.from('session_ratings').select('*').eq('student_id', id).order('date', { ascending: false }).limit(30),
+        supabase.from('workout_sessions').select('id, date, plan_name, plan_type, exercises_done, exercises_total, finished_at').eq('student_id', id).order('date', { ascending: false }).limit(30),
+        supabase.from('exercise_logs').select('exercise_name, load_actual, done, created_at, session_id').eq('student_id', id).not('load_actual', 'is', null).order('created_at', { ascending: true }).limit(500),
       ]);
 
       setStudent(s);
@@ -89,6 +95,8 @@ export default function AlunoDetalhe() {
       setMeasurements((meas || []).map(m => ({ ...m, date: m.recorded_at || m.date })));
       setAnamnese(ana);
       setRatings(rat || []);
+      setWorkoutSessions(ws || []);
+      setExerciseLogs(el || []);
       setLoading(false);
     };
     load();
@@ -265,6 +273,126 @@ export default function AlunoDetalhe() {
       </div>
 
       {/* Tab content */}
+      {tab === 'Evolução' && (() => {
+        const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+        const thisWeekSessions = workoutSessions.filter(s => s.date >= sevenDaysAgo);
+        const totalSessionsAll = workoutSessions.length;
+        const completedSessions = workoutSessions.filter(s => s.exercises_total > 0 && s.exercises_done >= s.exercises_total).length;
+
+        // Build per-exercise load history
+        const byExercise = {};
+        exerciseLogs.forEach(log => {
+          if (!log.load_actual || !log.done) return;
+          const n = log.exercise_name;
+          if (!byExercise[n]) byExercise[n] = [];
+          byExercise[n].push({ date: log.created_at?.slice(0, 10), load: log.load_actual });
+        });
+        // Sort each exercise by date and keep unique dates (last entry per date)
+        const exerciseProgression = Object.entries(byExercise)
+          .map(([name, entries]) => {
+            const sorted = entries.sort((a, b) => a.date?.localeCompare(b.date));
+            const first = sorted[0];
+            const last = sorted[sorted.length - 1];
+            return { name, entries: sorted, first, last, count: sorted.length };
+          })
+          .filter(e => e.count >= 2)
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 8);
+
+        return (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Week summary */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
+              {[
+                { label: 'Treinos essa semana', value: thisWeekSessions.length, icon: Flame, color: '#EF4444', bg: '#FEE2E2' },
+                { label: 'Total de sessões', value: totalSessionsAll, icon: Dumbbell, color: '#8B5CF6', bg: '#F5F3FF' },
+                { label: 'Completados', value: completedSessions, icon: Check, color: '#10B981', bg: '#D1FAE5' },
+              ].map(s => (
+                <div key={s.label} style={{ background: 'white', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <s.icon size={20} color={s.color} />
+                  </div>
+                  <div>
+                    <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#111827' }}>{s.value}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>{s.label}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Exercise progression */}
+            <div style={{ background: 'white', borderRadius: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #F3F4F6' }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827' }}>Evolução por exercício</h3>
+                <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9CA3AF' }}>Baseado nos pesos registrados pelo aluno</p>
+              </div>
+              {exerciseProgression.length === 0 ? (
+                <div style={{ padding: '40px 20px', textAlign: 'center' }}>
+                  <Dumbbell size={36} color="#E5E7EB" style={{ marginBottom: 10 }} />
+                  <p style={{ margin: 0, fontSize: 14, color: '#9CA3AF' }}>Nenhuma evolução registrada ainda</p>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: '#D1D5DB' }}>O aluno precisa registrar pesos em pelo menos 2 sessões</p>
+                </div>
+              ) : exerciseProgression.map((ex, i) => {
+                const loadFirst = parseFloat(ex.first?.load);
+                const loadLast = parseFloat(ex.last?.load);
+                const diff = (!isNaN(loadFirst) && !isNaN(loadLast)) ? (loadLast - loadFirst) : null;
+                const isUp = diff !== null && diff > 0;
+                const isDown = diff !== null && diff < 0;
+                return (
+                  <div key={ex.name} style={{ padding: '14px 20px', borderBottom: i < exerciseProgression.length - 1 ? '1px solid #F9FAFB' : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: '0 0 3px', fontSize: 14, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</p>
+                      <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>
+                        {ex.first?.load} → <strong style={{ color: '#111827' }}>{ex.last?.load}</strong>
+                        {' · '}{ex.count} registro{ex.count !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    {diff !== null && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 20, background: isUp ? '#D1FAE5' : isDown ? '#FEE2E2' : '#F3F4F6', flexShrink: 0 }}>
+                        <TrendingUp size={13} color={isUp ? '#10B981' : isDown ? '#EF4444' : '#9CA3AF'} style={{ transform: isDown ? 'scaleY(-1)' : 'none' }} />
+                        <span style={{ fontSize: 13, fontWeight: 800, color: isUp ? '#059669' : isDown ? '#DC2626' : '#6B7280' }}>
+                          {isUp ? '+' : ''}{diff.toFixed(1)}kg
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Recent sessions */}
+            <div style={{ background: 'white', borderRadius: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid #F3F4F6' }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827' }}>Sessões recentes</h3>
+              </div>
+              {workoutSessions.length === 0 ? (
+                <div style={{ padding: '32px', textAlign: 'center' }}>
+                  <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF' }}>Nenhuma sessão registrada ainda</p>
+                </div>
+              ) : workoutSessions.slice(0, 10).map((session, i) => {
+                const pct = session.exercises_total > 0 ? Math.round((session.exercises_done / session.exercises_total) * 100) : 0;
+                const done = pct === 100;
+                return (
+                  <div key={session.id} style={{ padding: '12px 20px', borderBottom: i < Math.min(workoutSessions.length, 10) - 1 ? '1px solid #F9FAFB' : 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
+                    <div style={{ width: 38, height: 38, borderRadius: 10, background: done ? '#D1FAE5' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {done ? <Check size={18} color="#10B981" /> : <Dumbbell size={16} color="#D97706" />}
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.plan_name}</p>
+                      <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>
+                        {new Date(session.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        {session.exercises_total > 0 && ` · ${session.exercises_done}/${session.exercises_total} exercícios`}
+                      </p>
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: done ? '#10B981' : '#D97706', flexShrink: 0 }}>{pct}%</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {tab === 'Visão Geral' && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {/* Current plan */}

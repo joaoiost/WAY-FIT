@@ -43,7 +43,7 @@ export default function Progresso() {
         .order('recorded_at');
 
       const normalized = (data || []).map(m => ({ ...m, date: m.recorded_at || m.date }));
-      setMeasurements(normalized.length ? normalized : MOCK);
+      setMeasurements(normalized);
       setLoading(false);
     };
     load();
@@ -73,11 +73,12 @@ export default function Progresso() {
     setForm(EMPTY_FORM);
   };
 
-  const first = measurements[0];
-  const last = measurements[measurements.length - 1];
-  const weightDiff = first && last ? (last.weight - first.weight).toFixed(1) : 0;
-  const fatDiff = first && last ? (last.body_fat - first.body_fat).toFixed(1) : 0;
-  const armDiff = first && last ? (last.arm - first.arm).toFixed(1) : 0;
+  const hasData = measurements.length > 0;
+  const first = hasData ? measurements[0] : null;
+  const last = hasData ? measurements[measurements.length - 1] : null;
+  const weightDiff = first && last && first.weight != null && last.weight != null ? +(last.weight - first.weight).toFixed(1) : null;
+  const fatDiff = first && last && first.body_fat != null && last.body_fat != null ? +(last.body_fat - first.body_fat).toFixed(1) : null;
+  const armDiff = first && last && first.arm != null && last.arm != null ? +(last.arm - first.arm).toFixed(1) : null;
 
   const chartData = measurements.map(m => ({
     ...m,
@@ -117,9 +118,9 @@ export default function Progresso() {
 
       <div className="grid-3" style={{ marginBottom: 20 }}>
         {[
-          { label: 'Peso perdido', value: `${Math.abs(weightDiff)}kg`, sub: `De ${first?.weight}kg → ${last?.weight}kg`, trend: weightDiff < 0, color: '#3B82F6' },
-          { label: 'Gordura reduzida', value: `${Math.abs(fatDiff)}%`, sub: `De ${first?.body_fat}% → ${last?.body_fat}%`, trend: fatDiff < 0, color: '#EF4444' },
-          { label: 'Ganho muscular (braço)', value: `+${armDiff}cm`, sub: `De ${first?.arm}cm → ${last?.arm}cm`, trend: armDiff > 0, color: '#8B5CF6' },
+          { label: 'Variação de peso', value: weightDiff !== null ? `${weightDiff > 0 ? '+' : ''}${weightDiff}kg` : '—', sub: first && last ? `De ${first.weight}kg → ${last.weight}kg` : 'Sem dados ainda', trend: weightDiff !== null && weightDiff < 0, color: '#3B82F6' },
+          { label: 'Variação de gordura', value: fatDiff !== null ? `${fatDiff > 0 ? '+' : ''}${fatDiff}%` : '—', sub: first && last ? `De ${first.body_fat}% → ${last.body_fat}%` : 'Sem dados ainda', trend: fatDiff !== null && fatDiff < 0, color: '#EF4444' },
+          { label: 'Evolução do braço', value: armDiff !== null ? `${armDiff > 0 ? '+' : ''}${armDiff}cm` : '—', sub: first && last ? `De ${first.arm}cm → ${last.arm}cm` : 'Sem dados ainda', trend: armDiff !== null && armDiff > 0, color: '#8B5CF6' },
         ].map(c => (
           <div key={c.label} style={{ background: 'white', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
@@ -132,57 +133,72 @@ export default function Progresso() {
         ))}
       </div>
 
-      <div style={{ background: 'white', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Evolução ao longo do tempo</h3>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {METRICS.map(m => (
-              <button key={m.key} onClick={() => setActiveMetric(m.key)} style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20, border: 'none', cursor: 'pointer', background: activeMetric === m.key ? m.color : '#F3F4F6', color: activeMetric === m.key ? 'white' : '#6B7280', transition: 'all 0.15s' }}>
-                {m.label}
-              </button>
-            ))}
-          </div>
+      {!hasData && (
+        <div style={{ background: 'white', borderRadius: 12, padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+          <Scale size={40} color="#E5E7EB" style={{ marginBottom: 12 }} />
+          <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: '#374151' }}>Nenhuma medição ainda</p>
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: '#9CA3AF' }}>Registre sua primeira medição para acompanhar a evolução</p>
+          <button className="btn-primary" onClick={() => setModal(true)}>
+            <Plus size={16} /> Registrar Medidas
+          </button>
         </div>
-        <ResponsiveContainer width="100%" height={220}>
-          <LineChart data={chartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
-            <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
-            <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} width={40} />
-            <Tooltip contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', fontSize: 13 }} />
-            <Line type="monotone" dataKey={activeMetric} stroke={selected?.color} strokeWidth={2.5} dot={{ r: 4, fill: selected?.color }} name={selected?.label} />
-          </LineChart>
-        </ResponsiveContainer>
-      </div>
+      )}
 
-      <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-        <div style={{ padding: '16px 18px', borderBottom: '1px solid #F3F4F6' }}>
-          <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Histórico de Medições</h3>
-        </div>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
-            <thead>
-              <tr style={{ background: '#F9FAFB' }}>
-                {['Data', 'Peso', '% Gord.', 'Cintura', 'Peito', 'Braço', 'Quadril'].map(h => (
-                  <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{h}</th>
+      {hasData && (
+        <>
+          <div style={{ background: 'white', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Evolução ao longo do tempo</h3>
+              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {METRICS.map(m => (
+                  <button key={m.key} onClick={() => setActiveMetric(m.key)} style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20, border: 'none', cursor: 'pointer', background: activeMetric === m.key ? m.color : '#F3F4F6', color: activeMetric === m.key ? 'white' : '#6B7280', transition: 'all 0.15s' }}>
+                    {m.label}
+                  </button>
                 ))}
-              </tr>
-            </thead>
-            <tbody>
-              {[...measurements].reverse().map(m => (
-                <tr key={m.id} style={{ borderBottom: '1px solid #F9FAFB' }} className="table-row">
-                  <td style={{ padding: '12px 14px', fontWeight: 600, color: '#374151' }}>{new Date(m.date + 'T12:00:00').toLocaleDateString('pt-BR')}</td>
-                  <td style={{ padding: '12px 14px', color: '#3B82F6', fontWeight: 700 }}>{m.weight}kg</td>
-                  <td style={{ padding: '12px 14px', color: '#EF4444', fontWeight: 700 }}>{m.body_fat}%</td>
-                  <td style={{ padding: '12px 14px', color: '#374151' }}>{m.waist}cm</td>
-                  <td style={{ padding: '12px 14px', color: '#374151' }}>{m.chest}cm</td>
-                  <td style={{ padding: '12px 14px', color: '#8B5CF6', fontWeight: 700 }}>{m.arm}cm</td>
-                  <td style={{ padding: '12px 14px', color: '#374151' }}>{m.hip}cm</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+              </div>
+            </div>
+            <ResponsiveContainer width="100%" height={220}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                <XAxis dataKey="dateLabel" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
+                <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} width={40} />
+                <Tooltip contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', fontSize: 13 }} />
+                <Line type="monotone" dataKey={activeMetric} stroke={selected?.color} strokeWidth={2.5} dot={{ r: 4, fill: selected?.color }} name={selected?.label} />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+            <div style={{ padding: '16px 18px', borderBottom: '1px solid #F3F4F6' }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Histórico de Medições</h3>
+            </div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+                <thead>
+                  <tr style={{ background: '#F9FAFB' }}>
+                    {['Data', 'Peso', '% Gord.', 'Cintura', 'Peito', 'Braço', 'Quadril'].map(h => (
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[...measurements].reverse().map(m => (
+                    <tr key={m.id} style={{ borderBottom: '1px solid #F9FAFB' }} className="table-row">
+                      <td style={{ padding: '12px 14px', fontWeight: 600, color: '#374151' }}>{new Date(m.date + 'T12:00:00').toLocaleDateString('pt-BR')}</td>
+                      <td style={{ padding: '12px 14px', color: '#3B82F6', fontWeight: 700 }}>{m.weight}kg</td>
+                      <td style={{ padding: '12px 14px', color: '#EF4444', fontWeight: 700 }}>{m.body_fat}%</td>
+                      <td style={{ padding: '12px 14px', color: '#374151' }}>{m.waist}cm</td>
+                      <td style={{ padding: '12px 14px', color: '#374151' }}>{m.chest}cm</td>
+                      <td style={{ padding: '12px 14px', color: '#8B5CF6', fontWeight: 700 }}>{m.arm}cm</td>
+                      <td style={{ padding: '12px 14px', color: '#374151' }}>{m.hip}cm</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </>
+      )}
 
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(false)}>

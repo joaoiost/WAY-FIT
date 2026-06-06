@@ -16,6 +16,8 @@ export default function Progresso() {
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState(EMPTY_FORM);
   const [activeMetric, setActiveMetric] = useState('weight');
+  const [exerciseLogs, setExerciseLogs] = useState([]);
+  const [selectedExercise, setSelectedExercise] = useState('');
 
   useEffect(() => {
     if (!user) return;
@@ -30,14 +32,14 @@ export default function Progresso() {
       if (!student) { setMeasurements([]); setLoading(false); return; }
       setStudentId(student.id);
 
-      const { data } = await supabase
-        .from('student_measurements')
-        .select('*')
-        .eq('student_id', student.id)
-        .order('recorded_at');
+      const [{ data }, { data: logs }] = await Promise.all([
+        supabase.from('student_measurements').select('*').eq('student_id', student.id).order('recorded_at'),
+        supabase.from('exercise_logs').select('exercise_name, load_actual, created_at').eq('student_id', student.id).not('load_actual', 'is', null).eq('done', true).order('created_at').limit(500),
+      ]);
 
       const normalized = (data || []).map(m => ({ ...m, date: m.recorded_at || m.date }));
       setMeasurements(normalized);
+      setExerciseLogs(logs || []);
       setLoading(false);
     };
     load();
@@ -88,6 +90,19 @@ export default function Progresso() {
   ];
 
   const selected = METRICS.find(m => m.key === activeMetric);
+
+  const exerciseNames = [...new Set(exerciseLogs.map(l => l.exercise_name))].filter(Boolean).sort();
+  const loadChartData = selectedExercise
+    ? exerciseLogs
+        .filter(l => l.exercise_name === selectedExercise)
+        .map(l => ({
+          date: new Date(l.created_at).toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' }),
+          load: parseFloat(l.load_actual),
+        }))
+    : [];
+  const firstLoad = loadChartData[0]?.load;
+  const lastLoad = loadChartData[loadChartData.length - 1]?.load;
+  const diffLoad = firstLoad != null && lastLoad != null ? +(lastLoad - firstLoad).toFixed(1) : null;
 
   if (loading) {
     return (
@@ -192,6 +207,52 @@ export default function Progresso() {
             </div>
           </div>
         </>
+      )}
+
+      {/* Evolução de cargas por exercício */}
+      {exerciseLogs.length > 0 && (
+        <div style={{ background: 'white', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Evolução de Cargas</h3>
+            <select value={selectedExercise} onChange={e => setSelectedExercise(e.target.value)}
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid #E5E7EB', fontSize: 13, color: '#374151', outline: 'none', background: 'white', maxWidth: 240 }}>
+              <option value="">Selecione um exercício</option>
+              {exerciseNames.map(n => <option key={n} value={n}>{n}</option>)}
+            </select>
+          </div>
+
+          {selectedExercise && loadChartData.length > 0 && (
+            <>
+              {diffLoad !== null && (
+                <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
+                  {[
+                    { label: 'Carga inicial', value: `${firstLoad}kg`, color: '#9CA3AF' },
+                    { label: 'Carga atual', value: `${lastLoad}kg`, color: '#3B82F6' },
+                    { label: 'Evolução', value: `${diffLoad >= 0 ? '+' : ''}${diffLoad}kg`, color: diffLoad >= 0 ? '#10B981' : '#EF4444' },
+                    { label: 'Sessões', value: loadChartData.length, color: '#8B5CF6' },
+                  ].map(s => (
+                    <div key={s.label} style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 14px' }}>
+                      <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: s.color }}>{s.value}</p>
+                      <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9CA3AF' }}>{s.label}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={loadChartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11, fill: '#9CA3AF' }} />
+                  <YAxis tick={{ fontSize: 11, fill: '#9CA3AF' }} width={42} domain={['auto', 'auto']} />
+                  <Tooltip contentStyle={{ borderRadius: 8, border: 'none', boxShadow: '0 4px 12px rgba(0,0,0,0.12)', fontSize: 13 }} />
+                  <Line type="monotone" dataKey="load" stroke="#3B82F6" strokeWidth={2.5} dot={{ r: 4, fill: '#3B82F6' }} name="Carga (kg)" />
+                </LineChart>
+              </ResponsiveContainer>
+            </>
+          )}
+          {!selectedExercise && (
+            <p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 13, padding: '16px 0' }}>Selecione um exercício para ver a evolução de carga</p>
+          )}
+        </div>
       )}
 
       {modal && (

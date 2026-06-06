@@ -4,7 +4,6 @@ import { ArrowLeft, Calendar, Dumbbell, DollarSign, TrendingUp, MessageCircle, C
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import Modal from '../../components/UI/Modal';
-import { exportStudentReport } from '../../utils/export';
 
 const TYPE_COLORS = {
   Musculação: '#3B82F6', Funcional: '#10B981', Hipertrofia: '#8B5CF6',
@@ -223,7 +222,7 @@ export default function AlunoDetalhe() {
             <MessageCircle size={15} /> Chat
           </button>
           <button
-            onClick={() => exportStudentReport({ student, measurements, plans, attendances, payments })}
+            onClick={() => window.open(`/dashboard/alunos/${id}/relatorio`, '_blank')}
             className="btn-secondary"
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: 13 }}
           >
@@ -441,7 +440,7 @@ export default function AlunoDetalhe() {
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
+              <div className="week-days-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6 }}>
                 {weekDays.map((d, i) => {
                   const gc = d.matchedPlan
                     ? (d.completed ? '#10B981' : d.partial ? '#F59E0B' : d.isPast ? '#EF4444' : '#3B82F6')

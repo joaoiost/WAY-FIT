@@ -19,6 +19,7 @@ import WhatsApp from './pages/dashboard/WhatsApp';
 import Perfil from './pages/dashboard/Perfil';
 import Frequencia from './pages/dashboard/Frequencia';
 import Chat from './pages/dashboard/Chat';
+import RelatorioAluno from './pages/dashboard/RelatorioAluno';
 
 import PublicProfile from './pages/PublicProfile';
 import Termos from './pages/Termos';
@@ -89,6 +90,18 @@ function StudentRoute() {
   );
 }
 
+// Full-screen layout for print/report pages (no sidebar/bottom nav)
+function PersonalRouteClean() {
+  const { user, loading } = useAuth();
+  if (loading) return <div className="loading-screen">Carregando...</div>;
+  if (!user || user.role !== 'personal') return <Navigate to="/login" replace />;
+  return (
+    <NotificationsProvider>
+      <Outlet />
+    </NotificationsProvider>
+  );
+}
+
 // Full-screen layout for workout execution (no sidebar/bottom nav)
 function StudentRouteClean() {
   const { user, loading } = useAuth();
@@ -129,6 +142,10 @@ export default function App() {
             <Route path="/dashboard/frequencia" element={<Frequencia />} />
             <Route path="/dashboard/chat" element={<Chat />} />
             <Route path="/dashboard/alunos/:id" element={<AlunoDetalhe />} />
+          </Route>
+
+          <Route element={<PersonalRouteClean />}>
+            <Route path="/dashboard/alunos/:id/relatorio" element={<RelatorioAluno />} />
           </Route>
 
           <Route element={<StudentRoute />}>

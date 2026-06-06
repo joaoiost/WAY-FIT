@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Users, Calendar, DollarSign, Check, MessageCircle, ChevronRight, Clock, Plus, Zap, AlertTriangle, TrendingUp } from 'lucide-react';
+import { Users, Calendar, DollarSign, Check, MessageCircle, ChevronRight, Clock, Plus, Zap, AlertTriangle, TrendingUp, Bell, CheckCircle, Dumbbell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/UI/Avatar';
 import Badge from '../../components/UI/Badge';
@@ -26,6 +26,8 @@ export default function Dashboard() {
   const [revenue, setRevenue] = useState(0);
   const [markingDone, setMarkingDone] = useState(null);
   const [alerts, setAlerts] = useState([]);
+  const [notifyingId, setNotifyingId] = useState(null);
+  const [notifiedIds, setNotifiedIds] = useState(new Set());
 
   // Redirect to onboarding on first login
   useEffect(() => {
@@ -98,6 +100,24 @@ export default function Dashboard() {
     const full = phone.startsWith('55') ? phone : `55${phone}`;
     const msg = `Olá ${(appt.student_name || '').split(' ')[0]}! Lembrando da sua aula de ${appt.type} hoje às ${appt.time}. Te vejo lá! 💪`;
     window.open(`https://wa.me/${full}?text=${encodeURIComponent(msg)}`, '_blank');
+  };
+
+  const handleNotifyInactive = async (e, student) => {
+    e.stopPropagation();
+    setNotifyingId(student.id);
+    try {
+      await supabase.functions.invoke('send-push', {
+        body: {
+          student_ids: [student.id],
+          title: 'Sentimos sua falta! 💪',
+          message: 'Seu personal está esperando você. Que tal retomar os treinos hoje?',
+          personal_id: user.id,
+          url: '/aluno/dashboard',
+        },
+      });
+      setNotifiedIds(prev => new Set([...prev, student.id]));
+    } catch {}
+    setNotifyingId(null);
   };
 
   const activeStudents = students.filter(s => s.status === 'ativo');
@@ -402,6 +422,16 @@ export default function Dashboard() {
                     <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>{st.name}</p>
                     <p style={{ margin: 0, fontSize: 12, color: alert.type === 'payment' ? '#DC2626' : '#D97706' }}>{alert.message}</p>
                   </div>
+                  {alert.type === 'inactive' && (
+                    <button
+                      onClick={e => handleNotifyInactive(e, st)}
+                      disabled={!!notifyingId || notifiedIds.has(st.id)}
+                      title="Enviar notificação push"
+                      style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 8, border: 'none', cursor: notifiedIds.has(st.id) ? 'default' : 'pointer', background: notifiedIds.has(st.id) ? '#ECFDF5' : '#EFF6FF', color: notifiedIds.has(st.id) ? '#059669' : '#3B82F6', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                      {notifyingId === st.id ? <Bell size={13} style={{ animation: 'spin 1s linear infinite' }} /> : notifiedIds.has(st.id) ? <CheckCircle size={13} /> : <Bell size={13} />}
+                      {notifiedIds.has(st.id) ? 'Enviado' : 'Notificar'}
+                    </button>
+                  )}
                   <div style={{ width: 28, height: 28, borderRadius: 8, background: alert.type === 'payment' ? '#FEE2E2' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     {alert.type === 'payment' ? <DollarSign size={14} color="#DC2626" /> : <AlertTriangle size={14} color="#D97706" />}
                   </div>

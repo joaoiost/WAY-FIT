@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star } from 'lucide-react';
+import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star, TrendingUp } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
@@ -565,6 +565,42 @@ export default function ExecutarTreino() {
               {doneCount}/{sets.length} feitas
             </span>
           </div>
+
+          {/* Sugestão de carga progressiva */}
+          {(() => {
+            const lastRaw = lastLoads[ex.id];
+            const last = parseFloat(lastRaw);
+            if (!lastRaw || isNaN(last)) return null;
+            const sug = Math.round((last + 2.5) * 4) / 4;
+            const sugStr = sug % 1 === 0 ? String(sug) : sug.toFixed(1);
+            const allPending = sets.every(s => !s.done);
+            const applySuggestion = () => {
+              setSetsData(prev => ({
+                ...prev,
+                [ex.id]: (prev[ex.id] || []).map(s => s.done ? s : { ...s, load: sugStr }),
+              }));
+            };
+            return (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', borderRadius: 10, marginBottom: 14, border: '1px solid #BFDBFE' }}>
+                <TrendingUp size={16} color="#3B82F6" style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>
+                    Última sessão: <strong style={{ color: '#374151' }}>{lastRaw}</strong>
+                  </p>
+                  <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 900, color: '#1D4ED8', lineHeight: 1 }}>
+                    Sugestão: {sugStr}kg
+                    <span style={{ fontSize: 11, fontWeight: 600, color: '#10B981', marginLeft: 6 }}>+2,5kg ↑</span>
+                  </p>
+                </div>
+                {allPending && (
+                  <button onClick={applySuggestion}
+                    style={{ padding: '7px 14px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
+                    Usar
+                  </button>
+                )}
+              </div>
+            );
+          })()}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {sets.map((set, si) => (
               <div key={si} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: set.done ? '#F0FDF4' : '#F9FAFB', border: `1.5px solid ${set.done ? '#86EFAC' : '#E5E7EB'}`, transition: 'all 0.2s' }}>

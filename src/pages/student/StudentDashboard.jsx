@@ -24,6 +24,9 @@ export default function StudentDashboard() {
   const [pushState, setPushState] = useState('idle'); // 'idle' | 'subscribed' | 'subscribing' | 'unsupported'
   const [studentId, setStudentId] = useState(null);
   const [studentGoal, setStudentGoal] = useState('');
+  const [streak, setStreak] = useState(0);
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [installDismissed, setInstallDismissed] = useState(() => !!localStorage.getItem('pwa_install_dismissed'));
 
   const now = new Date();
   const todayDay = now.getDay();
@@ -34,41 +37,57 @@ export default function StudentDashboard() {
     if (!user) return;
     if (hasSupabase) {
       (async () => {
-        const { data: student } = await supabase
-          .from('students').select('id, personal_id, plan, goal, onboarded_at').eq('user_id', user.id).maybeSingle();
+        try {
+          const { data: student } = await supabase
+            .from('students').select('id, personal_id, plan, goal, onboarded_at').eq('user_id', user.id).maybeSingle();
 
-        if (student) {
-          setStudentId(student.id);
-          setStudentGoal(student.goal || '');
+          if (student) {
+            setStudentId(student.id);
+            setStudentGoal(student.goal || '');
 
-          // Redirect to onboarding if never done — checa DB primeiro, localStorage como fallback
-          const neverOnboarded = !student.onboarded_at && !localStorage.getItem(`aluno_onboarded_${user.id}`);
-          if (neverOnboarded) {
-            navigate('/aluno/onboarding', { replace: true });
-            return;
+            const neverOnboarded = !student.onboarded_at && !localStorage.getItem(`aluno_onboarded_${user.id}`);
+            if (neverOnboarded) {
+              navigate('/aluno/onboarding', { replace: true });
+              setLoading(false);
+              return;
+            }
+
+            const [{ data: plans }, { data: appts }, { data: profile }, { data: atts }, sessionsResult] = await Promise.all([
+              supabase.from('training_plans').select('*, exercises(*)').eq('student_id', student.id).order('created_at', { ascending: false }),
+              supabase.from('appointments').select('*').eq('student_id', student.id).gte('date', todayStr).order('date').limit(1),
+              student.personal_id ? supabase.from('profiles').select('name').eq('id', student.personal_id).single() : { data: null },
+              supabase.from('attendances').select('status').eq('student_id', student.id).gte('date', monthStart),
+              supabase.from('workout_sessions').select('date').eq('student_id', student.id).order('date', { ascending: false }).limit(90),
+            ]);
+
+            const sessions = sessionsResult?.data || [];
+            const uniqueDates = [...new Set(sessions.map(s => s.date))].sort().reverse();
+            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+            if (uniqueDates.length && (uniqueDates[0] === todayStr || uniqueDates[0] === yesterday)) {
+              let s = 0, check = uniqueDates[0];
+              for (const d of uniqueDates) {
+                if (d === check) { s++; const dt = new Date(check + 'T12:00:00'); dt.setDate(dt.getDate() - 1); check = dt.toISOString().slice(0, 10); }
+                else break;
+              }
+              setStreak(s);
+            }
+
+            const planList = plans || [];
+            setAllPlans(planList);
+            setTodayPlan(planList.find(p => (p.days || []).includes(todayDay)) || planList[0] || null);
+            setNextAppt(appts?.[0] || null);
+            setPersonalName(profile?.name || '');
+
+            if (atts && atts.length > 0) {
+              const present = atts.filter(a => a.status === 'present' || a.status === 'late').length;
+              setAttendanceRate(Math.round((present / atts.length) * 100));
+            }
           }
-          const [{ data: plans }, { data: appts }, { data: profile }, { data: atts }] = await Promise.all([
-            supabase.from('training_plans').select('*, exercises(*)').eq('student_id', student.id).order('created_at', { ascending: false }),
-            supabase.from('appointments').select('*').eq('student_id', student.id).gte('date', todayStr).order('date').limit(1),
-            student.personal_id ? supabase.from('profiles').select('name').eq('id', student.personal_id).single() : { data: null },
-            supabase.from('attendances').select('status').eq('student_id', student.id).gte('date', monthStart),
-          ]);
-
-          const planList = plans || [];
-          setAllPlans(planList);
-
-          const tp = planList.find(p => (p.days || []).includes(todayDay));
-          setTodayPlan(tp || planList[0] || null);
-
-          setNextAppt(appts?.[0] || null);
-          setPersonalName(profile?.name || '');
-
-          if (atts && atts.length > 0) {
-            const present = atts.filter(a => a.status === 'present' || a.status === 'late').length;
-            setAttendanceRate(Math.round((present / atts.length) * 100));
-          }
+        } catch (err) {
+          console.error('StudentDashboard load error:', err);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
       })();
     } else {
       const myPlans = trainingPlans.filter(p => p.studentId === 1);
@@ -84,6 +103,12 @@ export default function StudentDashboard() {
   useEffect(() => {
     if (!isPushSupported()) { setPushState('unsupported'); return; }
     isPushSubscribed().then(ok => setPushState(ok ? 'subscribed' : 'idle'));
+  }, []);
+
+  useEffect(() => {
+    const handler = e => { e.preventDefault(); setInstallPrompt(e); };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
   }, []);
 
   const handleEnableNotifications = async () => {
@@ -120,48 +145,76 @@ export default function StudentDashboard() {
         </p>
       </div>
 
-      {/* Push notification banner */}
-      {pushState === 'idle' && isPushSupported() && (
-        <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Bell size={20} color="#3B82F6" style={{ flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1D4ED8' }}>Ative as notificações</p>
-            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#3B82F6' }}>Receba avisos do seu personal direto no celular</p>
+      {/* Banners area — wrapper estável evita insertBefore em siblings condicionais */}
+      <div>
+        {pushState === 'idle' && isPushSupported() && (
+          <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Bell size={20} color="#3B82F6" style={{ flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#1D4ED8' }}>Ative as notificações</p>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#3B82F6' }}>Receba avisos do seu personal direto no celular</p>
+            </div>
+            <button onClick={handleEnableNotifications}
+              style={{ background: '#3B82F6', color: 'white', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
+              Ativar
+            </button>
           </div>
-          <button
-            onClick={handleEnableNotifications}
-            style={{ background: '#3B82F6', color: 'white', border: 'none', borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}
-          >
-            Ativar
-          </button>
-        </div>
-      )}
-      {pushState === 'subscribing' && (
-        <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Loader size={18} color="#3B82F6" style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: 14, color: '#3B82F6' }}>Ativando notificações...</p>
-        </div>
-      )}
-      {pushState === 'subscribed' && (
-        <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <Bell size={20} color="#10B981" style={{ flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#059669', flex: 1 }}>Notificações ativadas</p>
-          <button onClick={handleDisableNotifications} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex', padding: 4 }}>
-            <BellOff size={16} />
-          </button>
-        </div>
-      )}
-
-      {/* Objetivo do aluno */}
-      {studentGoal && (
-        <div style={{ background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 24 }}>🎯</span>
-          <div>
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Seu objetivo</p>
-            <p style={{ margin: '2px 0 0', fontSize: 15, fontWeight: 700, color: 'white' }}>{studentGoal}</p>
+        )}
+        {pushState === 'subscribing' && (
+          <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Loader size={18} color="#3B82F6" style={{ animation: 'spin 1s linear infinite', flexShrink: 0 }} />
+            <p style={{ margin: 0, fontSize: 14, color: '#3B82F6' }}>Ativando notificações...</p>
           </div>
-        </div>
-      )}
+        )}
+        {pushState === 'subscribed' && (
+          <div style={{ background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Bell size={20} color="#10B981" style={{ flexShrink: 0 }} />
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#059669', flex: 1 }}>Notificações ativadas</p>
+            <button onClick={handleDisableNotifications} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex', padding: 4 }}>
+              <BellOff size={16} />
+            </button>
+          </div>
+        )}
+        {streak > 0 && (
+          <div style={{ background: 'linear-gradient(135deg, #FEF3C7, #FEF9C3)', border: '1px solid #FDE68A', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 28, lineHeight: 1 }}>🔥</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#92400E' }}>{streak} {streak === 1 ? 'dia seguido' : 'dias seguidos'}!</p>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#B45309' }}>Continue treinando para manter sua sequência</p>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#D97706' }}>{streak}</p>
+              <p style={{ margin: 0, fontSize: 9, color: '#B45309', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.04em' }}>streak</p>
+            </div>
+          </div>
+        )}
+        {installPrompt && !installDismissed && (
+          <div style={{ background: 'linear-gradient(135deg, #0F172A, #1E3A5F)', borderRadius: 12, padding: '12px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 24, lineHeight: 1 }}>📱</span>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'white' }}>Instalar o WAY FIT</p>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: 'rgba(255,255,255,0.6)' }}>Acesse seus treinos sem abrir o navegador</p>
+            </div>
+            <button onClick={async () => { installPrompt.prompt(); const { outcome } = await installPrompt.userChoice; if (outcome === 'accepted') setInstallPrompt(null); }}
+              style={{ padding: '7px 14px', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+              Instalar
+            </button>
+            <button onClick={() => { setInstallPrompt(null); setInstallDismissed(true); localStorage.setItem('pwa_install_dismissed', '1'); }}
+              style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 4, flexShrink: 0 }}>
+              ✕
+            </button>
+          </div>
+        )}
+        {studentGoal && (
+          <div style={{ background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ fontSize: 24 }}>🎯</span>
+            <div>
+              <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Seu objetivo</p>
+              <p style={{ margin: '2px 0 0', fontSize: 15, fontWeight: 700, color: 'white' }}>{studentGoal}</p>
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Stats */}
       <div className="grid-3" style={{ marginBottom: 20 }}>

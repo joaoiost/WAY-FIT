@@ -850,14 +850,14 @@ export default function Treinos() {
 
   return (
     <div className="page-padding" style={{ flex: 1 }}>
-      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
-        <div>
+      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ minWidth: 0 }}>
           <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#111827' }}>Treinos</h2>
           <p style={{ margin: '4px 0 0', fontSize: 14, color: '#9CA3AF' }}>
             Monte o programa semanal de cada aluno · {templates.length > 0 ? `${templates.length} template${templates.length !== 1 ? 's' : ''} salvos` : 'sem templates ainda'}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
           {templates.length > 0 && (
             <button onClick={() => setTemplateModal('load')}
               style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 20, background: '#F5F3FF', border: '1px solid #DDD6FE', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#7C3AED' }}>

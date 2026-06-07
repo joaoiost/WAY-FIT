@@ -75,8 +75,9 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
     onUpdate('name', s.name);
     setSuggestions([]);
     setShowSugg(false);
-    // Busca vídeo automaticamente via YouTube API (cache 30 dias)
-    if (!ex.videoUrl) {
+    // Busca vídeo automaticamente — sempre busca ao selecionar (substitui URL de busca por URL direta)
+    const jaTemVideoReal = ex.videoUrl && (ex.videoUrl.includes('watch?v=') || ex.videoUrl.includes('youtu.be'));
+    if (!jaTemVideoReal) {
       setVideoFetching(true);
       fetchExerciseVideo(s.name, s.videoSearch).then(url => {
         setVideoFetching(false);

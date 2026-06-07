@@ -25,6 +25,7 @@ export async function fetchExerciseVideo(exerciseName, videoSearch) {
   if (!exerciseName || exerciseName.length < 3) return null;
 
   const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
+  console.log('[YouTube] apiKey carregada:', apiKey ? 'SIM' : 'NÃO');
   if (!apiKey) return null;
 
   const cacheKey = exerciseName.toLowerCase().replace(/\s+/g, '_');

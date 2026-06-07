@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { searchExercises } from '../../data/exerciseLibrary';
 import { fetchExerciseImage } from '../../lib/exerciseImages';
+import { fetchExerciseVideo } from '../../lib/youtubeVideo';
 
 const DAYS = [
   { value: 1, label: 'Seg', full: 'Segunda-feira' },
@@ -48,6 +49,7 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
   const [showSugg, setShowSugg] = useState(false);
   const [exerciseImg, setExerciseImg] = useState(null);
   const [imgLoading, setImgLoading] = useState(false);
+  const [videoFetching, setVideoFetching] = useState(false);
 
   // Auto-busca imagem quando nome do exercício muda
   useEffect(() => {
@@ -73,6 +75,18 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
     onUpdate('name', s.name);
     setSuggestions([]);
     setShowSugg(false);
+    // Busca vídeo automaticamente via YouTube API (cache 30 dias)
+    if (!ex.videoUrl) {
+      setVideoFetching(true);
+      fetchExerciseVideo(s.name, s.videoSearch).then(url => {
+        setVideoFetching(false);
+        if (url) onUpdate('videoUrl', url);
+        else if (s.videoSearch) onUpdate('videoUrl', `https://www.youtube.com/results?search_query=${encodeURIComponent(s.videoSearch)}`);
+      }).catch(() => {
+        setVideoFetching(false);
+        if (s.videoSearch) onUpdate('videoUrl', `https://www.youtube.com/results?search_query=${encodeURIComponent(s.videoSearch)}`);
+      });
+    }
   };
 
   const searchVideo = () => {
@@ -208,9 +222,12 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
 
             {/* Vídeo */}
             <div style={{ marginBottom: 14 }}>
-              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>URL do Vídeo (YouTube)</p>
+              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
+                URL do Vídeo (YouTube)
+                {videoFetching && <span style={{ marginLeft: 8, fontSize: 10, color: '#3B82F6', fontWeight: 600 }}>⏳ buscando vídeo...</span>}
+              </p>
               <div style={{ display: 'flex', gap: 8 }}>
-                <input value={ex.videoUrl || ''} onChange={e => onUpdate('videoUrl', e.target.value)} placeholder="https://youtube.com/watch?v=..." style={{ flex: 1, fontSize: 13 }} />
+                <input value={ex.videoUrl || ''} onChange={e => onUpdate('videoUrl', e.target.value)} placeholder={videoFetching ? 'Buscando vídeo automaticamente...' : 'https://youtube.com/watch?v=...'} style={{ flex: 1, fontSize: 13 }} />
                 {ex.name && (
                   <button type="button" onClick={searchVideo}
                     style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0 12px', borderRadius: 10, background: '#FEF2F2', color: '#EF4444', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, flexShrink: 0, minHeight: 44 }}
@@ -225,11 +242,19 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
                   </a>
                 )}
               </div>
-              {ex.name && !ex.videoUrl && (
-                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#9CA3AF' }}>
-                  Clique em "Buscar" para encontrar um vídeo de demonstração no YouTube
+              {ex.videoUrl && ex.videoUrl.includes('watch?v=') ? (
+                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#10B981' }}>
+                  ✓ Vídeo encontrado — o aluno vai ver embutido no app durante o treino
                 </p>
-              )}
+              ) : ex.videoUrl && ex.videoUrl.includes('results?') ? (
+                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#F59E0B' }}>
+                  ⚠ Sem chave YouTube API — o aluno será redirecionado para busca. Adicione VITE_YOUTUBE_API_KEY no .env para vídeo automático.
+                </p>
+              ) : !ex.videoUrl && !videoFetching && ex.name ? (
+                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#9CA3AF' }}>
+                  Selecione o exercício pelo autocomplete para buscar o vídeo automaticamente
+                </p>
+              ) : null}
             </div>
 
             <div style={{ marginBottom: 14 }}>

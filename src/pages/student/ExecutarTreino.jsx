@@ -44,22 +44,25 @@ function getYouTubeId(url) {
 function VideoModal({ videoUrl, title, onClose }) {
   const id = getYouTubeId(videoUrl);
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 680, background: '#000', borderRadius: 14, overflow: 'hidden' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#111' }}>
-          <span style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>{title}</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', padding: 0 }}>
-            <X size={20} />
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 680, background: '#000', borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: '#111' }}>
+          <div>
+            <p style={{ margin: 0, fontSize: 11, color: '#6B7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Demonstração</p>
+            <span style={{ color: 'white', fontWeight: 800, fontSize: 15 }}>{title}</span>
+          </div>
+          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', padding: 8, borderRadius: 8 }}>
+            <X size={18} />
           </button>
         </div>
         {id ? (
           <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
-            <iframe src={`https://www.youtube.com/embed/${id}?autoplay=1`} title={title}
+            <iframe src={`https://www.youtube.com/embed/${id}?autoplay=1&rel=0`} title={title}
               allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
               allowFullScreen style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }} />
           </div>
         ) : (
-          <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>URL inválida</div>
+          <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>URL de vídeo inválida</div>
         )}
       </div>
     </div>
@@ -453,7 +456,7 @@ export default function ExecutarTreino() {
   const allSetsDone = doneCount === sets.length && sets.length > 0;
   const color = TYPE_COLORS[plan?.type] || '#6B7280';
   const pct = (currentIdx / exercises.length) * 100;
-  const hasVideo = !!getYouTubeId(ex.video_url || '');
+  const hasVideo = !!(ex.video_url && (getYouTubeId(ex.video_url) || ex.video_url.includes('youtube.com')));
   const isLastExercise = currentIdx === exercises.length - 1;
 
   // Superset context
@@ -524,7 +527,12 @@ export default function ExecutarTreino() {
               </p>
             </div>
             {hasVideo && (
-              <button onClick={() => setVideoModal(true)}
+              <button
+                onClick={() => {
+                  const isSearch = !getYouTubeId(ex.video_url) && ex.video_url?.includes('youtube.com/results');
+                  if (isSearch) window.open(ex.video_url, '_blank');
+                  else setVideoModal(true);
+                }}
                 style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#EFF6FF', color: '#3B82F6', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', flexShrink: 0 }}>
                 <Play size={13} fill="#3B82F6" /> Ver vídeo
               </button>

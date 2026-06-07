@@ -43,12 +43,12 @@ export async function fetchExerciseVideo(exerciseName, videoSearch) {
 
     const data = await res.json();
     const videoId = data.items?.[0]?.id?.videoId;
-    const url = videoId ? `https://www.youtube.com/watch?v=${videoId}` : null;
+    if (!videoId) return null;
 
+    const url = `https://www.youtube.com/watch?v=${videoId}`;
     setCache(cacheKey, url);
     return url;
   } catch {
-    setCache(cacheKey, null);
-    return null;
+    return null; // não cacheia falha — tenta de novo na próxima seleção
   }
 }

@@ -25,7 +25,6 @@ export async function fetchExerciseVideo(exerciseName, videoSearch) {
   if (!exerciseName || exerciseName.length < 3) return null;
 
   const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
-  console.log('[YouTube] apiKey carregada:', apiKey ? 'SIM' : 'NÃO');
   if (!apiKey) return null;
 
   const cacheKey = exerciseName.toLowerCase().replace(/\s+/g, '_');
@@ -40,7 +39,11 @@ export async function fetchExerciseVideo(exerciseName, videoSearch) {
       { signal: AbortSignal.timeout(6000) }
     );
 
-    if (!res.ok) { setCache(cacheKey, null); return null; }
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      console.error('[YouTube] erro API:', res.status, errData?.error?.message);
+      return null;
+    }
 
     const data = await res.json();
     const videoId = data.items?.[0]?.id?.videoId;
@@ -49,7 +52,8 @@ export async function fetchExerciseVideo(exerciseName, videoSearch) {
     const url = `https://www.youtube.com/watch?v=${videoId}`;
     setCache(cacheKey, url);
     return url;
-  } catch {
-    return null; // não cacheia falha — tenta de novo na próxima seleção
+  } catch (e) {
+    console.error('[YouTube] erro fetch:', e.message);
+    return null;
   }
 }

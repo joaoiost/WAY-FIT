@@ -243,15 +243,15 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
                   </a>
                 )}
               </div>
-              {ex.videoUrl && ex.videoUrl.includes('watch?v=') ? (
-                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#10B981' }}>
-                  ✓ Vídeo encontrado — o aluno vai ver embutido no app durante o treino
-                </p>
+              {videoFetching ? (
+                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#3B82F6' }}>⏳ Buscando vídeo no YouTube...</p>
+              ) : ex.videoUrl && ex.videoUrl.includes('watch?v=') ? (
+                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#10B981' }}>✓ Vídeo encontrado — aluno verá embutido no app</p>
               ) : ex.videoUrl && ex.videoUrl.includes('results?') ? (
                 <p style={{ margin: '5px 0 0', fontSize: 11, color: '#F59E0B' }}>
-                  ⚠ Sem chave YouTube API — o aluno será redirecionado para busca. Adicione VITE_YOUTUBE_API_KEY no .env para vídeo automático.
+                  ⚠ API key não carregada — selecione o exercício de novo no autocomplete para tentar
                 </p>
-              ) : !ex.videoUrl && !videoFetching && ex.name ? (
+              ) : !ex.videoUrl && ex.name ? (
                 <p style={{ margin: '5px 0 0', fontSize: 11, color: '#9CA3AF' }}>
                   Selecione o exercício pelo autocomplete para buscar o vídeo automaticamente
                 </p>

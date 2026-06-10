@@ -31,6 +31,7 @@ export default function InviteAccept() {
   const [showPass, setShowPass] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [accountExists, setAccountExists] = useState(false);
 
   const [onboarding, setOnboarding] = useState({ weight: '', height: '', goal: '' });
   const [savingOnboarding, setSavingOnboarding] = useState(false);
@@ -46,8 +47,8 @@ export default function InviteAccept() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.password !== form.confirm) { setError('As senhas não coincidem'); return; }
-    if (form.password.length < 6) { setError('Mínimo 6 caracteres'); return; }
+    if (!accountExists && form.password !== form.confirm) { setError('As senhas não coincidem'); return; }
+    if (!accountExists && form.password.length < 6) { setError('Mínimo 6 caracteres'); return; }
     setSubmitting(true);
     setError('');
     try {
@@ -58,7 +59,16 @@ export default function InviteAccept() {
         body: JSON.stringify({ email: invite.email, password: form.password, name: form.name, inviteToken: token }),
       });
       const data = await resp.json();
-      if (!data.ok) { setError(data.error || 'Erro ao criar conta'); return; }
+      if (!data.ok) {
+        // Detecta erro de "já cadastrado" e muda o label do formulário
+        if ((data.error || '').toLowerCase().includes('already') || (data.error || '').toLowerCase().includes('cadastrado')) {
+          setAccountExists(true);
+          setError('Você já tem uma conta WAY FIT. Use sua senha atual para aceitar o convite.');
+        } else {
+          setError(data.error || 'Erro ao criar conta');
+        }
+        return;
+      }
 
       // Login automático — usuário já está confirmado
       if (hasSupabase) {
@@ -67,13 +77,20 @@ export default function InviteAccept() {
           password: form.password,
         });
         if (signInErr) {
-          setError('Conta criada! Entre agora em Acesso Aluno para continuar.');
+          // switched=true: aluno já existia, senha digitada pode ser a antiga
+          if (data.switched) {
+            setError('Convite aceito! Faça login na área do aluno com seu email e senha habituais.');
+          } else {
+            setError('Conta criada! Entre agora em Acesso Aluno para continuar.');
+          }
           return;
         }
         setUserId(signInData.user?.id);
       } else {
         setUserId(data.userId);
       }
+      // Se aluno já existia (troca de personal), pula onboarding e vai direto
+      if (data.switched) { setStage('done'); return; }
       setStage('onboarding');
     } catch (e) {
       setError('Erro de conexão. Tente novamente.');
@@ -140,27 +157,39 @@ export default function InviteAccept() {
               <p style={{ margin: '2px 0 0', fontSize: 12, color: '#3B82F6' }}>para acessar sua área exclusiva 🎉</p>
             </div>
 
-            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>Criar sua conta</h2>
+            <h2 style={{ fontSize: 20, fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>
+              {accountExists ? 'Aceitar convite' : 'Criar sua conta'}
+            </h2>
             <p style={{ fontSize: 13, color: '#6B7280', margin: '0 0 20px' }}>Email: <strong>{invite.email}</strong></p>
 
-            {error && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 13, color: '#DC2626' }}>{error}</div>}
+            {accountExists && (
+              <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 8, padding: '10px 14px', marginBottom: 4, fontSize: 13, color: '#1D4ED8' }}>
+                Você já tem uma conta WAY FIT. Insira sua senha atual para aceitar o convite de <strong>{invite.personal_name}</strong>.
+              </div>
+            )}
+
+            {error && !accountExists && <div style={{ background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, padding: '10px 14px', marginBottom: 14, fontSize: 13, color: '#DC2626' }}>{error}</div>}
 
             <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-              <div>
-                <label>Seu nome *</label>
-                <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Nome completo" required />
-              </div>
+              {!accountExists && (
+                <div>
+                  <label>Seu nome *</label>
+                  <input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="Nome completo" required />
+                </div>
+              )}
               <div style={{ position: 'relative' }}>
-                <label>Senha *</label>
-                <input type={showPass ? 'text' : 'password'} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder="Mínimo 6 caracteres" required style={{ paddingRight: 40 }} />
+                <label>{accountExists ? 'Sua senha atual *' : 'Senha *'}</label>
+                <input type={showPass ? 'text' : 'password'} value={form.password} onChange={e => setForm(f => ({ ...f, password: e.target.value }))} placeholder={accountExists ? 'Sua senha WAY FIT' : 'Mínimo 6 caracteres'} required style={{ paddingRight: 40 }} />
                 <button type="button" onClick={() => setShowPass(!showPass)} style={{ position: 'absolute', right: 12, bottom: 10, background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', padding: 0 }}>
                   {showPass ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
-              <div>
-                <label>Confirmar senha *</label>
-                <input type="password" value={form.confirm} onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))} placeholder="••••••••" required />
-              </div>
+              {!accountExists && (
+                <div>
+                  <label>Confirmar senha *</label>
+                  <input type="password" value={form.confirm} onChange={e => setForm(f => ({ ...f, confirm: e.target.value }))} placeholder="••••••••" required />
+                </div>
+              )}
               <button type="submit" className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: 13, fontSize: 15, opacity: submitting ? 0.7 : 1 }} disabled={submitting}>
                 {submitting ? 'Criando conta...' : 'Continuar'}
                 {!submitting && <ChevronRight size={18} />}

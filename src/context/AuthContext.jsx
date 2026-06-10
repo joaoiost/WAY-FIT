@@ -71,11 +71,14 @@ export function AuthProvider({ children }) {
       let studentId = null;
       let personalId = null;
       if (profile.role === 'student') {
-        const { data: studentRow } = await supabase
+        // limit(1) + order protege contra múltiplos rows quando aluno troca de personal
+        const { data: studentRows } = await supabase
           .from('students')
           .select('id, personal_id')
           .eq('user_id', authUser.id)
-          .maybeSingle();
+          .order('created_at', { ascending: false })
+          .limit(1);
+        const studentRow = studentRows?.[0] || null;
         if (studentRow) {
           studentId = studentRow.id;
           personalId = studentRow.personal_id;

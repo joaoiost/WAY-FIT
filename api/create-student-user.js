@@ -1,6 +1,9 @@
 // Cria usuário no Supabase SEM exigir confirmação de email.
 // Requer SUPABASE_SERVICE_ROLE_KEY nas variáveis de ambiente do Vercel.
 // Obtenha em: Supabase dashboard → Settings → API → service_role key
+//
+// Suporta troca de personal: se aluno já tem conta, vincula o novo personal
+// sem criar usuário duplicado.
 
 const SUPABASE_URL = 'https://mpgfigjvsuddqvfxcmmp.supabase.co';
 
@@ -29,8 +32,20 @@ export default async function handler(req, res) {
       'apikey': serviceKey,
       'Content-Type': 'application/json',
     };
+    const patchHeaders = { ...adminHeaders, 'Prefer': 'return=minimal' };
 
-    // Cria usuário via Admin API — email_confirm: true bypassa confirmação de email
+    // Busca dados do convite primeiro (precisa para os dois caminhos)
+    let invite = null;
+    if (inviteToken) {
+      const invResp = await fetch(
+        `${SUPABASE_URL}/rest/v1/invites?token=eq.${encodeURIComponent(inviteToken)}&select=*`,
+        { headers: adminHeaders }
+      );
+      const invites = await invResp.json();
+      invite = Array.isArray(invites) ? invites[0] : null;
+    }
+
+    // Tenta criar usuário via Admin API — email_confirm: true bypassa confirmação de email
     const createResp = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
       method: 'POST',
       headers: adminHeaders,
@@ -43,43 +58,59 @@ export default async function handler(req, res) {
     });
 
     const userData = await createResp.json();
+
+    // Aluno já tem conta — troca de personal ou re-invite
     if (!createResp.ok) {
-      const msg = userData.msg || userData.message || userData.error || JSON.stringify(userData);
-      return res.status(400).json({ ok: false, error: msg });
-    }
+      const msg = (userData.msg || userData.message || userData.error || '').toLowerCase();
+      const isAlreadyRegistered = msg.includes('already') || msg.includes('registered') || msg.includes('exists');
 
-    const userId = userData.id;
+      if (!isAlreadyRegistered) {
+        return res.status(400).json({ ok: false, error: userData.msg || userData.message || userData.error || JSON.stringify(userData) });
+      }
 
-    // Processa token de convite se fornecido
-    if (inviteToken) {
-      // Busca dados do convite
-      const invResp = await fetch(
-        `${SUPABASE_URL}/rest/v1/invites?token=eq.${encodeURIComponent(inviteToken)}&select=*`,
+      // Busca user_id existente via tabela students (service role bypassa RLS)
+      const existingResp = await fetch(
+        `${SUPABASE_URL}/rest/v1/students?email=eq.${encodeURIComponent(email)}&user_id=not.is.null&select=user_id&limit=1`,
         { headers: adminHeaders }
       );
-      const invites = await invResp.json();
-      const invite = Array.isArray(invites) ? invites[0] : null;
+      const existingRows = await existingResp.json();
+      const existingUserId = Array.isArray(existingRows) ? existingRows[0]?.user_id : null;
+
+      if (!existingUserId) {
+        return res.status(400).json({ ok: false, error: 'Email já cadastrado. Faça login na área do aluno.' });
+      }
 
       if (invite) {
-        const patchHeaders = { ...adminHeaders, 'Prefer': 'return=minimal' };
-
+        // Vincula o row do novo personal ao user_id existente
+        await fetch(
+          `${SUPABASE_URL}/rest/v1/students?personal_id=eq.${invite.personal_id}&email=eq.${encodeURIComponent(invite.email)}&user_id=is.null`,
+          { method: 'PATCH', headers: patchHeaders, body: JSON.stringify({ user_id: existingUserId }) }
+        );
         // Marca convite como usado
         await fetch(`${SUPABASE_URL}/rest/v1/invites?token=eq.${encodeURIComponent(inviteToken)}`, {
-          method: 'PATCH',
-          headers: patchHeaders,
-          body: JSON.stringify({ used: true }),
+          method: 'PATCH', headers: patchHeaders, body: JSON.stringify({ used: true }),
         });
-
-        // Vincula o aluno ao user_id criado
-        await fetch(
-          `${SUPABASE_URL}/rest/v1/students?personal_id=eq.${invite.personal_id}&email=eq.${encodeURIComponent(invite.email)}`,
-          {
-            method: 'PATCH',
-            headers: patchHeaders,
-            body: JSON.stringify({ user_id: userId }),
-          }
-        );
       }
+
+      return res.status(200).json({ ok: true, userId: existingUserId, switched: true });
+    }
+
+    // Novo usuário criado com sucesso
+    const userId = userData.id;
+
+    if (invite) {
+      // Marca convite como usado
+      await fetch(`${SUPABASE_URL}/rest/v1/invites?token=eq.${encodeURIComponent(inviteToken)}`, {
+        method: 'PATCH',
+        headers: patchHeaders,
+        body: JSON.stringify({ used: true }),
+      });
+
+      // Vincula o aluno ao user_id criado
+      await fetch(
+        `${SUPABASE_URL}/rest/v1/students?personal_id=eq.${invite.personal_id}&email=eq.${encodeURIComponent(invite.email)}`,
+        { method: 'PATCH', headers: patchHeaders, body: JSON.stringify({ user_id: userId }) }
+      );
     }
 
     return res.status(200).json({ ok: true, userId });

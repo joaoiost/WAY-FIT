@@ -6,6 +6,7 @@ import autoTable from 'jspdf-autotable';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { trainingPlans } from '../../data/mockData';
+import { fetchExerciseVideo } from '../../lib/youtubeVideo';
 
 const TYPE_COLORS = {
   Hipertrofia: '#8B5CF6', Funcional: '#10B981', Força: '#EF4444',
@@ -45,7 +46,10 @@ function VideoModal({ videoUrl, title, onClose }) {
               allowFullScreen style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }} />
           </div>
         ) : (
-          <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>URL inválida</div>
+          <div style={{ padding: 40, textAlign: 'center' }}>
+            <Loader size={28} color="rgba(255,255,255,0.3)" style={{ margin: '0 auto 12px', display: 'block', animation: 'spin 1s linear infinite' }} />
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Carregando demonstração...</p>
+          </div>
         )}
       </div>
     </div>
@@ -148,6 +152,7 @@ export default function MeusTreinos() {
   const [sessionInfoMap, setSessionInfoMap] = useState({}); // { planId: { exercises_done } }
   const [ratingModal, setRatingModal] = useState(null);
   const [ratedToday, setRatedToday] = useState(false);
+  const [autoVideoUrls, setAutoVideoUrls] = useState({});
 
   const today = new Date().getDay();
   const todayLabel = DAYS_FULL[today];
@@ -199,7 +204,21 @@ export default function MeusTreinos() {
     return [...exs].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
   };
 
-  const getVideoUrl = (ex) => ex.video_url || ex.videoUrl || '';
+  const getVideoUrl = (ex) => ex.video_url || ex.videoUrl || autoVideoUrls[ex.id] || '';
+
+  // Auto-fetch YouTube videos when a plan is expanded
+  useEffect(() => {
+    if (!expanded) return;
+    const plan = plans.find(p => p.id === expanded);
+    if (!plan) return;
+    getExercises(plan).forEach(ex => {
+      if (ex.video_url || ex.videoUrl || autoVideoUrls[ex.id] !== undefined) return;
+      setAutoVideoUrls(prev => ({ ...prev, [ex.id]: null }));
+      fetchExerciseVideo(ex.name, ex.video_search).then(url => {
+        setAutoVideoUrls(prev => ({ ...prev, [ex.id]: url }));
+      });
+    });
+  }, [expanded, plans]);
   const getPlanDays = (plan) => plan.days || [];
   const isTodayPlan = (plan) => { const days = getPlanDays(plan); return days.length > 0 && days.includes(today); };
 
@@ -369,7 +388,9 @@ export default function MeusTreinos() {
             <div style={{ paddingTop: allDone ? 14 : 10 }}>
               {exercises.map((ex, i) => {
                 const done = !!doneMap[ex.id];
-                const hasVideo = !!getYouTubeId(getVideoUrl(ex));
+                const videoUrl = getVideoUrl(ex);
+                const hasVideo = !!getYouTubeId(videoUrl);
+                const videoLoading = !ex.video_url && !ex.videoUrl && autoVideoUrls[ex.id] === null;
                 return (
                   <div key={ex.id} style={{ padding: '11px 0', borderBottom: i < exercises.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
@@ -386,6 +407,11 @@ export default function MeusTreinos() {
                         </p>
                         {ex.obs && <p style={{ margin: '3px 0 0', fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>💡 {ex.obs}</p>}
                       </div>
+                      {videoLoading && (
+                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#9CA3AF' }}>
+                          <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} />
+                        </div>
+                      )}
                       {hasVideo && (
                         <button className="video-btn" onClick={() => setVideoModal(ex)} style={{ flexShrink: 0 }}>
                           <Play size={10} /> Vídeo
@@ -452,7 +478,11 @@ export default function MeusTreinos() {
       )}
 
       {videoModal && (
-        <VideoModal videoUrl={getVideoUrl(videoModal)} title={videoModal.name} onClose={() => setVideoModal(null)} />
+        <VideoModal
+          videoUrl={videoModal.video_url || videoModal.videoUrl || autoVideoUrls[videoModal.id] || ''}
+          title={videoModal.name}
+          onClose={() => setVideoModal(null)}
+        />
       )}
 
       {ratingModal && (

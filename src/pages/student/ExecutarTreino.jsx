@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star, TrendingUp } from 'lucide-react';
+import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star, TrendingUp, Loader } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { fetchExerciseVideo } from '../../lib/youtubeVideo';
 
 const TYPE_COLORS = {
   Hipertrofia: '#8B5CF6', Funcional: '#10B981', Força: '#EF4444',
@@ -43,7 +44,6 @@ function getYouTubeId(url) {
 
 function VideoModal({ videoUrl, title, onClose }) {
   const id = getYouTubeId(videoUrl);
-  const searchUrl = videoUrl?.includes('results') ? videoUrl : `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' execução correta')}`;
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 680, background: '#000', borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
@@ -64,15 +64,8 @@ function VideoModal({ videoUrl, title, onClose }) {
           </div>
         ) : (
           <div style={{ padding: '40px 24px', textAlign: 'center', background: '#0A0A0A' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-              <Play size={26} color="rgba(255,255,255,0.25)" />
-            </div>
-            <p style={{ margin: '0 0 6px', color: 'white', fontWeight: 700, fontSize: 15 }}>{title}</p>
-            <p style={{ margin: '0 0 24px', color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Nenhum vídeo vinculado. Busque no YouTube:</p>
-            <a href={searchUrl} target="_blank" rel="noopener noreferrer"
-              style={{ background: '#EF4444', color: 'white', padding: '12px 28px', borderRadius: 12, textDecoration: 'none', fontWeight: 700, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-              <Play size={15} fill="white" /> Buscar no YouTube
-            </a>
+            <Loader size={28} color="rgba(255,255,255,0.3)" style={{ margin: '0 auto 14px', display: 'block' }} />
+            <p style={{ margin: 0, color: 'rgba(255,255,255,0.5)', fontSize: 13 }}>Carregando vídeo...</p>
           </div>
         )}
       </div>
@@ -174,6 +167,8 @@ export default function ExecutarTreino() {
   const [lastLoads, setLastLoads] = useState({});
   const [loadHistory, setLoadHistory] = useState({}); // { exId: [{load, done, date}] }
 
+  const [autoVideoUrls, setAutoVideoUrls] = useState({}); // { exId: url | null }
+
   const [restTimer, setRestTimer] = useState(null);
   const restRef = useRef(null);
   const sessionIdRef = useRef(null);
@@ -266,6 +261,19 @@ export default function ExecutarTreino() {
     restRef.current = setTimeout(() => setRestTimer(t => t - 1), 1000);
     return () => clearTimeout(restRef.current);
   }, [restTimer]);
+
+  // Auto-fetch YouTube video for current (and next) exercise when no video_url set
+  useEffect(() => {
+    if (!exercises.length) return;
+    const toFetch = [exercises[currentIdx], exercises[currentIdx + 1]].filter(Boolean);
+    toFetch.forEach(ex => {
+      if (ex.video_url || autoVideoUrls[ex.id] !== undefined) return;
+      setAutoVideoUrls(prev => ({ ...prev, [ex.id]: null })); // mark as fetching
+      fetchExerciseVideo(ex.name, ex.video_search).then(url => {
+        setAutoVideoUrls(prev => ({ ...prev, [ex.id]: url }));
+      });
+    });
+  }, [currentIdx, exercises]);
 
   const setSaveIndicator = (status) => {
     clearTimeout(saveTimerRef.current);
@@ -474,7 +482,9 @@ export default function ExecutarTreino() {
   const allSetsDone = doneCount === sets.length && sets.length > 0;
   const color = TYPE_COLORS[plan?.type] || '#6B7280';
   const pct = (currentIdx / exercises.length) * 100;
-  const hasVideo = !!(ex.video_url && (getYouTubeId(ex.video_url) || ex.video_url.includes('youtube.com')));
+  const effectiveVideoUrl = ex.video_url || autoVideoUrls[ex.id];
+  const videoFetching = !ex.video_url && autoVideoUrls[ex.id] === undefined;
+  const hasVideo = !!(effectiveVideoUrl && getYouTubeId(effectiveVideoUrl));
   const isLastExercise = currentIdx === exercises.length - 1;
 
   // Superset context
@@ -547,8 +557,14 @@ export default function ExecutarTreino() {
           </div>
 
           {/* Thumbnail YouTube inline — toca para reproduzir sem sair do app */}
-          {hasVideo && (() => {
-            const ytId = getYouTubeId(ex.video_url);
+          {(hasVideo || videoFetching) && (() => {
+            const ytId = effectiveVideoUrl ? getYouTubeId(effectiveVideoUrl) : null;
+            if (videoFetching) return (
+              <div style={{ margin: '12px 0 0', borderRadius: 12, background: '#F3F4F6', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                <Loader size={16} color="#9CA3AF" style={{ animation: 'spin 1s linear infinite' }} />
+                <span style={{ fontSize: 12, color: '#9CA3AF', fontWeight: 600 }}>Buscando demonstração...</span>
+              </div>
+            );
             if (ytId) return (
               <div onClick={() => setVideoModal(true)} style={{ margin: '12px 0 0', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', position: 'relative', background: '#000', lineHeight: 0 }}>
                 <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={ex.name} style={{ width: '100%', display: 'block' }} onError={e => { e.currentTarget.style.display = 'none'; }} />
@@ -562,11 +578,7 @@ export default function ExecutarTreino() {
                 </div>
               </div>
             );
-            return (
-              <button onClick={() => setVideoModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#EFF6FF', color: '#3B82F6', borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', margin: '10px 0 0', width: '100%', justifyContent: 'center' }}>
-                <Play size={14} fill="#3B82F6" /> Ver demonstração
-              </button>
-            );
+            return null;
           })()}
 
           {ex.obs && (
@@ -575,7 +587,7 @@ export default function ExecutarTreino() {
               <p style={{ margin: 0, fontSize: 12, color: '#92400E', lineHeight: 1.5 }}>{ex.obs}</p>
             </div>
           )}
-          {videoModal && <VideoModal videoUrl={ex.video_url} title={ex.name} onClose={() => setVideoModal(false)} />}
+          {videoModal && <VideoModal videoUrl={effectiveVideoUrl} title={ex.name} onClose={() => setVideoModal(false)} />}
           </div>{/* /padding wrapper */}
         </div>{/* /exercise card */}
 

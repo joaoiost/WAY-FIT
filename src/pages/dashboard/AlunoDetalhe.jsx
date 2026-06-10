@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Dumbbell, DollarSign, TrendingUp, MessageCircle, Check, X, Phone, Mail, Edit2, Clock, BarChart2, Activity, Star, FileText, Flame, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Calendar, Dumbbell, DollarSign, TrendingUp, MessageCircle, Check, X, Phone, Mail, Edit2, Clock, BarChart2, Activity, Star, FileText, Flame, ChevronDown, ChevronUp, Utensils } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import Modal from '../../components/UI/Modal';
@@ -220,6 +220,20 @@ export default function AlunoDetalhe() {
           )}
           <button onClick={() => navigate(`/dashboard/chat`)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#1E40AF' }}>
             <MessageCircle size={15} /> Chat
+          </button>
+          <button
+            onClick={() => navigate(`/dashboard/alunos/${id}/avaliacao`)}
+            className="btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: 13 }}
+          >
+            <Activity size={15} /> Avaliação Física
+          </button>
+          <button
+            onClick={() => navigate(`/dashboard/alunos/${id}/alimentacao`)}
+            className="btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: 13, color: '#059669', borderColor: '#BBF7D0', background: '#F0FDF4' }}
+          >
+            <Utensils size={15} /> Plano Alimentar
           </button>
           <button
             onClick={() => window.open(`/dashboard/alunos/${id}/relatorio`, '_blank')}

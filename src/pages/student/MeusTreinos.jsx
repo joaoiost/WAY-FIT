@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dumbbell, ChevronDown, ChevronUp, Play, X, Star, Loader, CheckCircle } from 'lucide-react';
+import { Dumbbell, ChevronDown, ChevronUp, Play, X, Star, Loader, CheckCircle, FileText } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { trainingPlans } from '../../data/mockData';
@@ -207,6 +209,60 @@ export default function MeusTreinos() {
   const getDoneCount = (plan) => getExercises(plan).filter(ex => doneMap[ex.id]).length;
   const isAllDone = (plan) => { const exs = getExercises(plan); return exs.length > 0 && getDoneCount(plan) === exs.length; };
 
+  const generatePDF = (plan) => {
+    const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+    const exercises = getExercises(plan);
+    const days = getPlanDays(plan).map(d => DAYS_FULL[d]).join(', ') || '—';
+    const color = [59, 130, 246]; // blue
+
+    // Header
+    doc.setFillColor(...color);
+    doc.rect(0, 0, 210, 28, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(18);
+    doc.setFont('helvetica', 'bold');
+    doc.text('WAY FIT', 14, 12);
+    doc.setFontSize(13);
+    doc.text(plan.name || 'Plano de Treino', 14, 21);
+
+    doc.setTextColor(180, 210, 255);
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`${plan.type || ''} · ${days} · ${exercises.length} exercícios`, 14, 26.5);
+
+    // Student name + date
+    doc.setTextColor(100, 100, 100);
+    doc.setFontSize(9);
+    doc.text(`Gerado em ${new Date().toLocaleDateString('pt-BR')}`, 196, 35, { align: 'right' });
+
+    // Exercise table
+    autoTable(doc, {
+      startY: 36,
+      head: [['#', 'Exercício', 'Séries', 'Reps', 'Carga', 'Descanso', 'Observações']],
+      body: exercises.map((ex, i) => [
+        i + 1,
+        ex.name || '—',
+        ex.sets || '—',
+        ex.reps || '—',
+        ex.load ? `${ex.load} kg` : '—',
+        ex.rest ? `${ex.rest}s` : '—',
+        ex.obs || '',
+      ]),
+      headStyles: { fillColor: color, fontStyle: 'bold', fontSize: 9 },
+      bodyStyles: { fontSize: 9 },
+      alternateRowStyles: { fillColor: [245, 248, 255] },
+      columnStyles: { 0: { cellWidth: 8 }, 6: { cellWidth: 35 } },
+      margin: { left: 14, right: 14 },
+    });
+
+    const finalY = doc.lastAutoTable.finalY + 8;
+    doc.setTextColor(150, 150, 150);
+    doc.setFontSize(8);
+    doc.text('Gerado pelo WAY FIT — seu app de treino personalizado', 105, finalY, { align: 'center' });
+
+    doc.save(`treino_${(plan.name || 'plano').replace(/\s+/g, '_').toLowerCase()}.pdf`);
+  };
+
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 80 }}>
       <Loader size={28} color="#3B82F6" style={{ animation: 'spin 1s linear infinite' }} />
@@ -267,6 +323,11 @@ export default function MeusTreinos() {
                 {Math.round((doneCount / exercises.length) * 100)}%
               </div>
             )}
+            <button onClick={e => { e.stopPropagation(); generatePDF(plan); }}
+              title="Baixar PDF do treino"
+              style={{ width: 34, height: 34, borderRadius: 9, background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <FileText size={16} color="#6B7280" />
+            </button>
             {isOpen ? <ChevronUp size={18} color="#9CA3AF" /> : <ChevronDown size={18} color="#9CA3AF" />}
           </div>
         </button>

@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Plus, Dumbbell, Trash2, X, Play, Loader, Save, Check, ChevronDown, Copy, HelpCircle, ChevronRight, ExternalLink, BookMarked, FolderOpen, Lightbulb, User, Calendar, Zap } from 'lucide-react';
+import { Plus, Dumbbell, Trash2, X, Play, Loader, Save, Check, ChevronDown, Copy, HelpCircle, ChevronRight, ExternalLink, BookMarked, FolderOpen, Lightbulb, User, Calendar, Zap, Layers, Share2, Library, Users, Search } from 'lucide-react';
 import { trainingPlans as mockPlans, students as mockStudents } from '../../data/mockData';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
-import { searchExercises } from '../../data/exerciseLibrary';
+import { searchExercises, EXERCISE_LIBRARY } from '../../data/exerciseLibrary';
 import { fetchExerciseImage } from '../../lib/exerciseImages';
 import { fetchExerciseVideo } from '../../lib/youtubeVideo';
 
@@ -286,6 +286,119 @@ function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColo
   );
 }
 
+/* ─── ExerciseCatalogModal ──────────────────────────────────── */
+const CATALOG_GROUPS = ['Peito','Costas','Pernas','Glúteos','Ombro','Braços','Abdômen','Full Body','Cardio','Calistenia','CrossFit','Mobilidade'];
+
+function ExerciseCatalogModal({ defaultGroup, onSelect, onClose }) {
+  const [activeGroup, setActiveGroup] = useState(defaultGroup || 'Peito');
+  const [search, setSearch] = useState('');
+
+  const filtered = search.trim().length >= 2
+    ? EXERCISE_LIBRARY.filter(e => e.name.toLowerCase().includes(search.toLowerCase().trim()))
+    : EXERCISE_LIBRARY.filter(e => e.group === activeGroup);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 680, margin: '0 auto', background: 'white', borderRadius: '24px 24px 0 0', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
+
+        {/* Header */}
+        <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
+          <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E5E7EB', margin: '0 auto 14px' }} />
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>Biblioteca de Exercícios</h3>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>{EXERCISE_LIBRARY.length} exercícios — toque para adicionar</p>
+            </div>
+            <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <X size={16} color="#6B7280" />
+            </button>
+          </div>
+
+          {/* Busca */}
+          <div style={{ position: 'relative', marginBottom: 12 }}>
+            <Search size={15} color="#9CA3AF" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Buscar exercício..."
+              autoFocus
+              style={{ paddingLeft: 36, background: '#F9FAFB', borderRadius: 12 }}
+            />
+            {search && (
+              <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 2 }}>
+                <X size={14} color="#9CA3AF" />
+              </button>
+            )}
+          </div>
+
+          {/* Filtro de grupos */}
+          {!search && (
+            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 12, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              {CATALOG_GROUPS.map(g => {
+                const c = GROUP_COLORS[g] || '#6B7280';
+                const active = activeGroup === g;
+                return (
+                  <button key={g} onClick={() => setActiveGroup(g)}
+                    style={{ padding: '5px 14px', borderRadius: 20, border: 'none', background: active ? c : '#F3F4F6', color: active ? 'white' : '#6B7280', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.12s' }}>
+                    {g}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
+          {search && (
+            <p style={{ margin: '0 0 10px', fontSize: 12, color: '#9CA3AF' }}>
+              {filtered.length} resultado{filtered.length !== 1 ? 's' : ''} para "{search}"
+            </p>
+          )}
+        </div>
+
+        {/* Grid de exercícios */}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 4px' }}>
+          {filtered.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '32px 0', color: '#9CA3AF' }}>
+              <Dumbbell size={32} color="#E5E7EB" style={{ marginBottom: 10 }} />
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Nenhum exercício encontrado</p>
+              <p style={{ margin: '4px 0 0 0', fontSize: 12, marginBottom: 20 }}>Mas você pode adicionar com esse nome mesmo:</p>
+              <button onClick={() => onSelect({ name: search.trim(), group: null, videoSearch: search.trim() + ' execução academia' })}
+                style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+                <Plus size={16} /> Adicionar "{search.trim()}"
+              </button>
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {filtered.map((ex, i) => {
+                const c = GROUP_COLORS[ex.group] || '#6B7280';
+                return (
+                  <button key={i} onClick={() => onSelect(ex)}
+                    style={{ padding: '13px 14px 11px', background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 14, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.12s', minHeight: 72 }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = c; e.currentTarget.style.background = c + '0D'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = 'white'; }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: '#111827', lineHeight: 1.3, flex: 1 }}>{ex.name}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      {search
+                        ? <span style={{ fontSize: 10, fontWeight: 700, color: c, background: c + '18', padding: '2px 7px', borderRadius: 20 }}>{ex.group}</span>
+                        : <span style={{ fontSize: 10, color: '#C4C9D4', fontWeight: 600 }}>toque para add</span>
+                      }
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: c + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <Plus size={12} color={c} />
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+          <div style={{ height: 12 }} />
+        </div>
+
+        <div style={{ height: 32, flexShrink: 0 }} />
+      </div>
+    </div>
+  );
+}
+
 /* ─── TemplateModal ─────────────────────────────────────────── */
 function TemplateModal({ mode, templates, exercises, planType, group, onSave, onLoad, onDelete, onClose }) {
   const [name, setName] = useState('');
@@ -473,9 +586,226 @@ function CopyPlanModal({ students, currentStudentId, onConfirm, onClose }) {
   );
 }
 
+/* ─── SaveProgramModal ──────────────────────────────────────── */
+function SaveProgramModal({ plans, onSave, onClose }) {
+  const [name, setName] = useState('');
+  const [level, setLevel] = useState('Intermediário');
+  const totalExercises = plans.reduce((acc, p) => acc + (p.exercises || []).filter(e => e.name?.trim()).length, 0);
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 480, padding: '24px 24px 40px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 19, fontWeight: 900, color: '#111827' }}>Salvar programa</h3>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>
+              {plans.length} dia{plans.length !== 1 ? 's' : ''} · {totalExercises} exercícios no total
+            </p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} color="#6B7280" />
+          </button>
+        </div>
+
+        {/* Preview das divisões */}
+        <div style={{ marginBottom: 16, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          {plans.map((p, i) => {
+            const gc = GROUP_COLORS[p.name] || '#6B7280';
+            const day = DAYS.find(d => (p.days || []).includes(d.value));
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 20, background: gc + '15', border: `1.5px solid ${gc}40` }}>
+                {day && <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF' }}>{day.label}</span>}
+                <span style={{ fontSize: 12, fontWeight: 700, color: gc }}>{p.name}</span>
+                <span style={{ fontSize: 10, color: '#9CA3AF' }}>({(p.exercises || []).length})</span>
+              </div>
+            );
+          })}
+        </div>
+
+        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Nome do programa</label>
+        <input value={name} onChange={e => setName(e.target.value)}
+          placeholder={`Ex: Hipertrofia ${plans.length}x — Intermediário`}
+          autoFocus style={{ marginBottom: 16 }} />
+
+        <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nível</p>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          {['Iniciante', 'Intermediário', 'Avançado'].map(l => (
+            <button key={l} onClick={() => setLevel(l)}
+              style={{ flex: 1, padding: '10px 4px', borderRadius: 12, border: `2px solid ${level === l ? '#3B82F6' : '#E5E7EB'}`, background: level === l ? '#EFF6FF' : 'white', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: level === l ? '#1D4ED8' : '#6B7280' }}>
+              {l}
+            </button>
+          ))}
+        </div>
+
+        <button disabled={!name.trim()} onClick={() => { onSave(name.trim(), level); onClose(); }}
+          style={{ width: '100%', padding: '15px', background: name.trim() ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#E5E7EB', border: 'none', borderRadius: 12, color: name.trim() ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: name.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <Layers size={16} /> Salvar na biblioteca
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ─── ProgramLibraryModal ────────────────────────────────────── */
+function ProgramLibraryModal({ programs, students, onApply, onDelete, onClose }) {
+  const [selected, setSelected] = useState(null);
+  const [targetStudent, setTargetStudent] = useState('');
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
+
+  const handleApply = async () => {
+    if (!selected || !targetStudent) return;
+    setApplying(true);
+    await onApply(selected, targetStudent);
+    setApplying(false);
+    setApplied(true);
+    setTimeout(() => { setApplied(false); setSelected(null); setTargetStudent(''); }, 1800);
+  };
+
+  if (selected) return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setSelected(null)}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 480, padding: '24px 24px 40px', maxHeight: '88vh', overflowY: 'auto' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div style={{ flex: 1 }}>
+            <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3B82F6', fontSize: 13, fontWeight: 700, padding: '0 0 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
+              ← Voltar
+            </button>
+            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#111827' }}>{selected.name}</h3>
+            <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9CA3AF' }}>
+              {selected.level} · {selected.days.length}x por semana · {selected.days.reduce((a, d) => a + (d.exercises || []).length, 0)} exercícios
+            </p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <X size={16} color="#6B7280" />
+          </button>
+        </div>
+
+        {/* Dias do programa */}
+        <div style={{ marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {selected.days.map((d, i) => {
+            const gc = GROUP_COLORS[d.name] || '#6B7280';
+            const dayLabel = DAYS.find(dd => (d.days || []).includes(dd.value))?.label;
+            return (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: `1.5px solid ${gc}30`, background: gc + '08' }}>
+                {dayLabel && <span style={{ width: 26, fontSize: 11, fontWeight: 800, color: '#9CA3AF' }}>{dayLabel}</span>}
+                <div style={{ width: 8, height: 8, borderRadius: '50%', background: gc, flexShrink: 0 }} />
+                <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: '#111827' }}>{d.name}</span>
+                <span style={{ fontSize: 11, color: '#9CA3AF', background: '#F3F4F6', padding: '2px 8px', borderRadius: 20 }}>
+                  {(d.exercises || []).length} exerc.
+                </span>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Selecionar aluno */}
+        <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Aplicar para qual aluno?</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 18 }}>
+          {students.map(s => (
+            <button key={s.id} onClick={() => setTargetStudent(String(s.id))}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 12, border: `2px solid ${targetStudent === String(s.id) ? '#3B82F6' : '#E5E7EB'}`, background: targetStudent === String(s.id) ? '#EFF6FF' : 'white', cursor: 'pointer' }}>
+              <div style={{ width: 34, height: 34, borderRadius: '50%', background: s.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: 'white', flexShrink: 0 }}>
+                {(s.initials || s.name?.slice(0, 2)).toUpperCase()}
+              </div>
+              <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: targetStudent === String(s.id) ? '#1D4ED8' : '#374151', textAlign: 'left' }}>{s.name}</span>
+              {targetStudent === String(s.id) && <Check size={16} color="#3B82F6" />}
+            </button>
+          ))}
+        </div>
+
+        <button disabled={!targetStudent || applying} onClick={handleApply}
+          style={{ width: '100%', padding: '15px', background: applied ? '#10B981' : (targetStudent && !applying ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#E5E7EB'), border: 'none', borderRadius: 12, color: (targetStudent && !applying) || applied ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: (targetStudent && !applying) ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          {applying
+            ? <><Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> Aplicando...</>
+            : applied
+            ? <><Check size={18} /> Programa aplicado!</>
+            : <><Share2 size={16} /> Aplicar programa</>}
+        </button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 480, padding: '24px 24px 40px', maxHeight: '82vh', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexShrink: 0 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: '#111827' }}>Biblioteca de Programas</h3>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>
+              {programs.length} programa{programs.length !== 1 ? 's' : ''} salvo{programs.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <X size={16} color="#6B7280" />
+          </button>
+        </div>
+
+        {programs.length === 0 ? (
+          <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CA3AF' }}>
+            <Layers size={40} color="#E5E7EB" style={{ marginBottom: 12 }} />
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#374151' }}>Nenhum programa salvo</p>
+            <p style={{ margin: '6px 0 0', fontSize: 13, lineHeight: 1.5 }}>
+              Monte a semana de um aluno e clique em<br />"Salvar programa" para criar sua biblioteca
+            </p>
+          </div>
+        ) : (
+          <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {[...programs].reverse().map(prog => {
+              const groups = [...new Set(prog.days.map(d => d.name))];
+              const totalExs = prog.days.reduce((acc, d) => acc + (d.exercises || []).length, 0);
+              const levelColor = prog.level === 'Avançado' ? '#EF4444' : prog.level === 'Intermediário' ? '#F59E0B' : '#10B981';
+              return (
+                <div key={prog.id} style={{ borderRadius: 14, border: '1.5px solid #E5E7EB', background: 'white', overflow: 'hidden' }}>
+                  <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Layers size={20} color="white" />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4, flexWrap: 'wrap' }}>
+                        <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827' }}>{prog.name}</p>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: levelColor, background: levelColor + '18', padding: '2px 7px', borderRadius: 20 }}>{prog.level}</span>
+                        {(prog.useCount || 0) > 0 && (
+                          <span style={{ fontSize: 10, color: '#6B7280', background: '#F3F4F6', padding: '2px 7px', borderRadius: 20 }}>
+                            {prog.useCount}× aplicado
+                          </span>
+                        )}
+                      </div>
+                      <p style={{ margin: '0 0 6px', fontSize: 12, color: '#9CA3AF' }}>
+                        {prog.days.length}x/semana · {totalExs} exercícios
+                      </p>
+                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+                        {groups.slice(0, 5).map(g => {
+                          const gc = GROUP_COLORS[g] || '#6B7280';
+                          return <span key={g} style={{ fontSize: 10, fontWeight: 700, color: gc, background: gc + '15', padding: '2px 7px', borderRadius: 20 }}>{g}</span>;
+                        })}
+                        {groups.length > 5 && <span style={{ fontSize: 10, color: '#9CA3AF' }}>+{groups.length - 5}</span>}
+                      </div>
+                    </div>
+                    <button onClick={() => onDelete(prog.id)} style={{ width: 30, height: 30, borderRadius: 8, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Trash2 size={13} color="#EF4444" />
+                    </button>
+                  </div>
+                  <div style={{ padding: '0 16px 14px' }}>
+                    <button onClick={() => setSelected(prog)}
+                      style={{ width: '100%', padding: '11px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
+                      <Share2 size={14} /> Aplicar para aluno
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 /* ─── DayEditorSheet ────────────────────────────────────────── */
-function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, planType, setPlanType, exercises, onUpdate, onDelete, onMove, onAdd, onSave, onDelete2, onClose, saving, saved, existing, onOpenTemplate }) {
+function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, planType, setPlanType, exercises, onUpdate, onDelete, onMove, onAdd, onSave, onDelete2, onClose, saving, saved, existing, onOpenTemplate, onOpenAI }) {
   const gc = GROUP_COLORS[group] || '#3B82F6';
+  const [showCatalog, setShowCatalog] = useState(false);
 
   // Compute which superset letters are already in use
   const usedLetters = [...new Set(exercises.map(e => e.supersetGroup).filter(Boolean))];
@@ -586,16 +916,175 @@ function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, 
         </div>
 
         {/* Footer */}
-        <div style={{ padding: '12px 20px 32px', flexShrink: 0, borderTop: '1px solid #F3F4F6', display: 'flex', gap: 10 }}>
-          <button onClick={onAdd} style={{ flex: 1, padding: '14px', border: `2px dashed ${gc}60`, borderRadius: 14, background: gc + '06', color: gc, cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            <Plus size={17} /> Adicionar exercício
-          </button>
-          <button onClick={() => onOpenTemplate('save')}
-            style={{ padding: '14px 16px', border: '2px dashed #7C3AED60', borderRadius: 14, background: '#F5F3FF', color: '#7C3AED', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}
-            title="Salvar como template para reutilizar">
-            <BookMarked size={16} />
+        <div style={{ padding: '12px 20px 32px', flexShrink: 0, borderTop: '1px solid #F3F4F6', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => setShowCatalog(true)} style={{ flex: 1, padding: '13px', border: `2px dashed ${gc}60`, borderRadius: 14, background: gc + '06', color: gc, cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Plus size={17} /> Adicionar exercício
+            </button>
+            <button onClick={() => onOpenTemplate('save')}
+              style={{ padding: '13px 14px', border: '2px dashed #7C3AED60', borderRadius: 14, background: '#F5F3FF', color: '#7C3AED', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}
+              title="Salvar como template para reutilizar">
+              <BookMarked size={16} />
+            </button>
+          </div>
+          {/* Compartilhar treino via WhatsApp */}
+          {exercises.filter(e => e.name?.trim()).length > 0 && (() => {
+            const student = null; // acesso via prop não disponível aqui — botão gera texto genérico
+            const lines = exercises.filter(e => e.name?.trim()).map((e, i) =>
+              `${i + 1}. ${e.name}${e.sets && e.reps ? ` — ${e.sets}x${e.reps}` : ''}${e.load ? ` · ${e.load}kg` : ''}${e.rest ? ` · ${e.rest} desc.` : ''}${e.obs ? `\n   💡 ${e.obs}` : ''}`
+            ).join('\n');
+            const text = `🏋️ *${planName || 'Treino'} — ${group}*\n\n${lines}\n\n_Gerado pelo WAY FIT 💪_`;
+            return (
+              <a href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer"
+                style={{ width: '100%', padding: '11px', border: '1.5px solid #25D36660', borderRadius: 14, background: '#F0FDF4', color: '#15803D', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, textDecoration: 'none' }}>
+                <Share2 size={15} /> Compartilhar treino
+              </a>
+            );
+          })()}
+
+          {onOpenAI && (
+            <button onClick={onOpenAI}
+              style={{ width: '100%', padding: '13px', border: 'none', borderRadius: 14, background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 14px rgba(59,130,246,0.3)' }}>
+              <Zap size={16} fill="white" /> Gerar treino com IA
+            </button>
+          )}
+        </div>
+      </div>
+
+      {showCatalog && (
+        <ExerciseCatalogModal
+          defaultGroup={group}
+          onSelect={(libEx) => {
+            onAdd(libEx);
+            setShowCatalog(false);
+          }}
+          onClose={() => setShowCatalog(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ─── AIWorkoutModal ────────────────────────────────────────── */
+function AIWorkoutModal({ group, planType, studentName, onClose, onApply }) {
+  const [level, setLevel] = useState('Intermediário');
+  const [equipment, setEquipment] = useState('Academia completa');
+  const [numExercises, setNumExercises] = useState(6);
+  const [restrictions, setRestrictions] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const generate = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const res = await fetch('/api/generate-workout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ group, planType, level, equipment, numExercises, restrictions, studentName }),
+      });
+      const data = await res.json();
+      if (!data?.ok) throw new Error(data?.error || 'Erro ao gerar treino');
+      onApply(data.exercises);
+      onClose();
+    } catch (e) {
+      setError(e.message || 'Falha ao gerar treino. Verifique se a ANTHROPIC_API_KEY está configurada no Vercel.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const LEVELS = ['Iniciante', 'Intermediário', 'Avançado'];
+  const EQUIPMENTS = ['Academia completa', 'Academia básica', 'Em casa (halteres)', 'Em casa (sem equipamento)', 'Funcional/calistenia'];
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 480, padding: '28px 24px 40px', maxHeight: '90vh', overflowY: 'auto' }}>
+        {/* Header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Zap size={16} color="white" fill="white" />
+              </div>
+              <h3 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: '#111827' }}>Gerar treino com IA</h3>
+            </div>
+            <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF' }}>
+              IA gera {numExercises} exercícios de <strong style={{ color: '#374151' }}>{group}</strong> para <strong style={{ color: '#374151' }}>{studentName || 'o aluno'}</strong>
+            </p>
+          </div>
+          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <X size={16} color="#6B7280" />
           </button>
         </div>
+
+        {/* Nível */}
+        <div style={{ marginBottom: 18 }}>
+          <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nível do aluno</p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            {LEVELS.map(l => (
+              <button key={l} onClick={() => setLevel(l)}
+                style={{ flex: 1, padding: '10px 4px', borderRadius: 12, border: `2px solid ${level === l ? '#3B82F6' : '#E5E7EB'}`, background: level === l ? '#EFF6FF' : 'white', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: level === l ? '#1D4ED8' : '#6B7280' }}>
+                {l}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Equipamento */}
+        <div style={{ marginBottom: 18 }}>
+          <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Equipamentos disponíveis</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {EQUIPMENTS.map(eq => (
+              <button key={eq} onClick={() => setEquipment(eq)}
+                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: `2px solid ${equipment === eq ? '#3B82F6' : '#E5E7EB'}`, background: equipment === eq ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'left' }}>
+                <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${equipment === eq ? '#3B82F6' : '#D1D5DB'}`, background: equipment === eq ? '#3B82F6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  {equipment === eq && <Check size={10} color="white" strokeWidth={3} />}
+                </div>
+                <span style={{ fontSize: 14, fontWeight: 600, color: equipment === eq ? '#1D4ED8' : '#374151' }}>{eq}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Quantidade de exercícios */}
+        <div style={{ marginBottom: 18 }}>
+          <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Quantidade de exercícios</p>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {[4, 5, 6, 7, 8].map(n => (
+              <button key={n} onClick={() => setNumExercises(n)}
+                style={{ flex: 1, padding: '10px 4px', borderRadius: 12, border: `2px solid ${numExercises === n ? '#3B82F6' : '#E5E7EB'}`, background: numExercises === n ? '#EFF6FF' : 'white', cursor: 'pointer', fontSize: 16, fontWeight: 800, color: numExercises === n ? '#1D4ED8' : '#6B7280' }}>
+                {n}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Restrições */}
+        <div style={{ marginBottom: 20 }}>
+          <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Restrições / observações (opcional)</p>
+          <textarea value={restrictions} onChange={e => setRestrictions(e.target.value)}
+            placeholder="Ex: lesão no joelho, evitar agachamento livre, preferir máquinas..."
+            rows={3}
+            style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', fontSize: 14, color: '#374151', resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+        </div>
+
+        {/* Erro */}
+        {error && (
+          <div style={{ marginBottom: 14, padding: '12px 14px', background: '#FEF2F2', borderRadius: 12, border: '1px solid #FECACA' }}>
+            <p style={{ margin: 0, fontSize: 13, color: '#EF4444', lineHeight: 1.5 }}>{error}</p>
+          </div>
+        )}
+
+        {/* Botão Gerar */}
+        <button onClick={generate} disabled={loading}
+          style={{ width: '100%', padding: '16px', background: loading ? '#9CA3AF' : 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', borderRadius: 14, color: 'white', fontSize: 16, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: loading ? 'none' : '0 4px 16px rgba(59,130,246,0.35)' }}>
+          {loading
+            ? <><Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> Gerando com IA...</>
+            : <><Zap size={18} fill="white" /> Gerar {numExercises} exercícios</>
+          }
+        </button>
+        {loading && <p style={{ textAlign: 'center', fontSize: 12, color: '#9CA3AF', margin: '10px 0 0' }}>A IA está montando o treino ideal para {studentName || 'o aluno'}...</p>}
       </div>
     </div>
   );
@@ -671,6 +1160,9 @@ export default function Treinos() {
   const [showTutorial, setShowTutorial] = useState(true);
   const [templateModal, setTemplateModal] = useState(null); // null | 'save' | 'load'
   const [templates, setTemplates] = useState([]);
+  const [aiModal, setAiModal] = useState(false);
+  const [programs, setPrograms] = useState([]);
+  const [programModal, setProgramModal] = useState(null); // null | 'save' | 'library'
 
   useEffect(() => {
     if (localStorage.getItem('treinos_tutorial_dismissed')) setShowTutorial(false);
@@ -683,6 +1175,15 @@ export default function Treinos() {
       const saved = JSON.parse(localStorage.getItem(`wf_templates_${user.id}`)) || [];
       setTemplates(saved);
     } catch { setTemplates([]); }
+  }, [user?.id]);
+
+  // Load programs from localStorage
+  useEffect(() => {
+    if (!user?.id) return;
+    try {
+      const saved = JSON.parse(localStorage.getItem(`wf_programs_${user.id}`)) || [];
+      setPrograms(saved);
+    } catch { setPrograms([]); }
   }, [user?.id]);
 
   const dismissTutorial = () => {
@@ -765,6 +1266,94 @@ export default function Treinos() {
     const updated = templates.filter(t => t.id !== id);
     setTemplates(updated);
     localStorage.setItem(`wf_templates_${user.id}`, JSON.stringify(updated));
+  };
+
+  const saveProgram = (name, level) => {
+    const program = {
+      id: `prog_${Date.now()}`,
+      name,
+      level,
+      days: myPlans.map(p => ({
+        name: p.name,
+        type: p.type || 'Hipertrofia',
+        days: p.days || [],
+        exercises: (p.exercises || [])
+          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
+          .map(e => ({
+            name: e.name,
+            sets: e.sets || 4,
+            reps: e.reps || '10',
+            rest: e.rest || '60s',
+            load: e.load || '',
+            videoUrl: e.video_url || e.videoUrl || '',
+            obs: e.obs || '',
+            supersetGroup: e.superset_group || e.supersetGroup || null,
+          })),
+      })),
+      savedAt: new Date().toISOString(),
+      useCount: 0,
+    };
+    const updated = [...programs, program];
+    setPrograms(updated);
+    localStorage.setItem(`wf_programs_${user.id}`, JSON.stringify(updated));
+  };
+
+  const deleteProgram = (id) => {
+    const updated = programs.filter(p => p.id !== id);
+    setPrograms(updated);
+    localStorage.setItem(`wf_programs_${user.id}`, JSON.stringify(updated));
+  };
+
+  const applyProgram = async (program, targetStudentId) => {
+    const target = students.find(s => String(s.id) === targetStudentId);
+    if (!target) return;
+
+    // Increment use count
+    const updatedProgs = programs.map(p => p.id === program.id ? { ...p, useCount: (p.useCount || 0) + 1 } : p);
+    setPrograms(updatedProgs);
+    localStorage.setItem(`wf_programs_${user.id}`, JSON.stringify(updatedProgs));
+
+    if (!hasSupabase) return;
+
+    for (const planData of program.days) {
+      // Delete any existing plans for this student on these days
+      const existingForDays = plans.filter(p =>
+        String(p.student_id) === targetStudentId &&
+        (planData.days || []).some(dv => (p.days || []).includes(dv))
+      );
+      for (const ex of existingForDays) {
+        await supabase.from('training_plans').delete().eq('id', ex.id);
+      }
+
+      const { data: newPlan } = await supabase.from('training_plans').insert({
+        personal_id: user.id,
+        student_id: target.id,
+        student_name: target.name,
+        name: planData.name,
+        type: planData.type || 'Hipertrofia',
+        days: planData.days || [],
+      }).select().single();
+
+      if (newPlan && (planData.exercises || []).length > 0) {
+        await supabase.from('exercises').insert(
+          planData.exercises.map((e, i) => ({
+            plan_id: newPlan.id,
+            name: e.name,
+            sets: parseInt(e.sets) || 4,
+            reps: e.reps,
+            rest: e.rest,
+            load: e.load || '',
+            video_url: e.videoUrl || '',
+            obs: e.obs || '',
+            order_index: i,
+            superset_group: e.supersetGroup || null,
+          }))
+        );
+      }
+    }
+
+    const { data: refreshed } = await supabase.from('training_plans').select('*, exercises(*)').eq('personal_id', user.id);
+    if (refreshed) setPlans(refreshed);
   };
 
   const savePlan = async () => {
@@ -880,10 +1469,15 @@ export default function Treinos() {
         <div style={{ minWidth: 0 }}>
           <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#111827' }}>Treinos</h2>
           <p style={{ margin: '4px 0 0', fontSize: 14, color: '#9CA3AF' }}>
-            Monte o programa semanal de cada aluno · {templates.length > 0 ? `${templates.length} template${templates.length !== 1 ? 's' : ''} salvos` : 'sem templates ainda'}
+            Monte o programa semanal de cada aluno
+            {programs.length > 0 && ` · ${programs.length} programa${programs.length !== 1 ? 's' : ''} na biblioteca`}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+          <button onClick={() => setProgramModal('library')}
+            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 13px', borderRadius: 20, background: programs.length > 0 ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#F1F5F9', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: programs.length > 0 ? 'white' : '#6B7280', boxShadow: programs.length > 0 ? '0 2px 8px rgba(59,130,246,0.3)' : 'none' }}>
+            <Library size={14} /> {programs.length > 0 ? `Programas (${programs.length})` : 'Programas'}
+          </button>
           {templates.length > 0 && (
             <button onClick={() => setTemplateModal('load')}
               style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 20, background: '#F5F3FF', border: '1px solid #DDD6FE', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#7C3AED' }}>
@@ -934,12 +1528,18 @@ export default function Treinos() {
         <div style={{ background: 'white', borderRadius: 16, padding: '18px 20px', border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 10, flexWrap: 'wrap' }}>
             <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Semana de treinos</p>
-            <div style={{ display: 'flex', gap: 8 }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {myPlans.length > 0 && (
-                <button onClick={() => setCopyModal(true)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 14px', borderRadius: 20, background: '#F3F4F6', color: '#374151', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
-                  <Copy size={13} /> Copiar para...
-                </button>
+                <>
+                  <button onClick={() => setProgramModal('save')}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 14px', borderRadius: 20, background: '#EFF6FF', color: '#3B82F6', border: '1.5px solid #BFDBFE', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                    <Layers size={13} /> Salvar programa
+                  </button>
+                  <button onClick={() => setCopyModal(true)}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 14px', borderRadius: 20, background: '#F3F4F6', color: '#374151', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
+                    <Copy size={13} /> Copiar para...
+                  </button>
+                </>
               )}
               <button onClick={() => setConfigModal(true)}
                 style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 20, background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
@@ -985,11 +1585,19 @@ export default function Treinos() {
           </div>
 
           {myPlans.length === 0 && (
-            <div style={{ marginTop: 14, padding: '14px 16px', background: '#EFF6FF', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-              <Lightbulb size={18} color="#3B82F6" style={{ flexShrink: 0 }} />
-              <p style={{ margin: 0, fontSize: 13, color: '#1D4ED8', lineHeight: 1.5 }}>
-                Clique em <strong>"Configurar semana"</strong> para montar a divisão automaticamente, ou clique em qualquer dia para começar do zero.
-              </p>
+            <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ padding: '14px 16px', background: '#EFF6FF', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Lightbulb size={18} color="#3B82F6" style={{ flexShrink: 0 }} />
+                <p style={{ margin: 0, fontSize: 13, color: '#1D4ED8', lineHeight: 1.5 }}>
+                  Clique em <strong>"Configurar semana"</strong> para montar a divisão automaticamente, ou clique em qualquer dia para começar do zero.
+                </p>
+              </div>
+              {programs.length > 0 && (
+                <button onClick={() => setProgramModal('library')}
+                  style={{ padding: '13px 16px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', borderRadius: 12, color: 'white', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 3px 10px rgba(59,130,246,0.25)' }}>
+                  <Share2 size={15} /> Aplicar programa da biblioteca ({programs.length} disponíveis)
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -1002,15 +1610,52 @@ export default function Treinos() {
           planName={planName} setPlanName={setPlanName} planType={planType} setPlanType={setPlanType}
           exercises={exercises}
           onUpdate={updateEx} onDelete={deleteEx} onMove={moveEx}
-          onAdd={() => setExercises(prev => [...prev, newExercise()])}
+          onAdd={(libEx) => {
+            const insertIdx = exercises.length;
+            setExercises(prev => [...prev, { ...newExercise(), ...(libEx ? { name: libEx.name } : {}) }]);
+            if (libEx?.videoSearch) {
+              fetchExerciseVideo(libEx.name, libEx.videoSearch).then(url => {
+                if (url) setExercises(prev => prev.map((e, i) => i === insertIdx ? { ...e, videoUrl: url } : e));
+              }).catch(() => {});
+            }
+          }}
           onSave={savePlan} onDelete2={deleteDay} onClose={() => setDay(null)}
           saving={saving} saved={saved} existing={!!planForDay(day)}
           onOpenTemplate={(mode) => setTemplateModal(mode)}
+          onOpenAI={() => setAiModal(true)}
         />
       )}
 
+      {aiModal && day !== null && (
+        <AIWorkoutModal
+          group={group}
+          planType={planType}
+          studentName={students.find(s => String(s.id) === studentId)?.name || ''}
+          onClose={() => setAiModal(false)}
+          onApply={(generated) => {
+            setExercises(generated.map(e => ({ ...newExercise(), ...e })));
+            setAiModal(false);
+          }}
+        />
+      )}
       {configModal && studentId && <ConfigWeekModal onConfirm={handleConfigWeek} onClose={() => setConfigModal(false)} />}
       {copyModal && studentId && <CopyPlanModal students={students} currentStudentId={studentId} onConfirm={handleCopyPlan} onClose={() => setCopyModal(false)} />}
+      {programModal === 'save' && studentId && (
+        <SaveProgramModal
+          plans={myPlans}
+          onSave={saveProgram}
+          onClose={() => setProgramModal(null)}
+        />
+      )}
+      {programModal === 'library' && (
+        <ProgramLibraryModal
+          programs={programs}
+          students={students}
+          onApply={applyProgram}
+          onDelete={deleteProgram}
+          onClose={() => setProgramModal(null)}
+        />
+      )}
       {templateModal && (
         <TemplateModal
           mode={templateModal}

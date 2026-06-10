@@ -50,14 +50,15 @@ function ApptCard({ appt, onClick, isSelected }) {
       </p>
       {appt.status === 'done' && <span style={{ fontSize: 9, color: isSelected ? 'white' : '#10B981', fontWeight: 700 }}>✓ FEITA</span>}
       {appt.status === 'cancelled' && <span style={{ fontSize: 9, color: isSelected ? 'rgba(255,255,255,0.7)' : '#EF4444', fontWeight: 700 }}>✗ CANCEL.</span>}
+      {appt.status === 'pending_student' && <span style={{ fontSize: 9, color: isSelected ? 'white' : '#3B82F6', fontWeight: 700 }}>★ SOLICITADO</span>}
     </div>
   );
 }
 
 function MobileApptCard({ appt, onClick, isSelected }) {
-  const statusLabel = appt.status === 'done' ? '✓ Realizada' : appt.status === 'cancelled' ? '✗ Cancelada' : '● Pendente';
-  const statusColor = appt.status === 'done' ? '#10B981' : appt.status === 'cancelled' ? '#EF4444' : '#F59E0B';
-  const statusBg = appt.status === 'done' ? '#ECFDF5' : appt.status === 'cancelled' ? '#FEF2F2' : '#FFFBEB';
+  const statusLabel = appt.status === 'done' ? '✓ Realizada' : appt.status === 'cancelled' ? '✗ Cancelada' : appt.status === 'pending_student' ? '★ Solicitado' : '● Pendente';
+  const statusColor = appt.status === 'done' ? '#10B981' : appt.status === 'cancelled' ? '#EF4444' : appt.status === 'pending_student' ? '#3B82F6' : '#F59E0B';
+  const statusBg = appt.status === 'done' ? '#ECFDF5' : appt.status === 'cancelled' ? '#FEF2F2' : appt.status === 'pending_student' ? '#EFF6FF' : '#FFFBEB';
 
   return (
     <div

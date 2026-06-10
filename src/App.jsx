@@ -20,6 +20,8 @@ import Perfil from './pages/dashboard/Perfil';
 import Frequencia from './pages/dashboard/Frequencia';
 import Chat from './pages/dashboard/Chat';
 import RelatorioAluno from './pages/dashboard/RelatorioAluno';
+import AvaliacaoFisica from './pages/dashboard/AvaliacaoFisica';
+import PlanoAlimentar from './pages/dashboard/PlanoAlimentar';
 
 import PublicProfile from './pages/PublicProfile';
 import Termos from './pages/Termos';
@@ -37,6 +39,8 @@ import Historico from './pages/student/Historico';
 import ChatAluno from './pages/student/ChatAluno';
 import FotosProgresso from './pages/student/FotosProgresso';
 import Anamnese from './pages/student/Anamnese';
+import MeuPlanoAlimentar from './pages/student/MeuPlanoAlimentar';
+import MinhaAvaliacao from './pages/student/MinhaAvaliacao';
 
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
@@ -142,6 +146,8 @@ export default function App() {
             <Route path="/dashboard/frequencia" element={<Frequencia />} />
             <Route path="/dashboard/chat" element={<Chat />} />
             <Route path="/dashboard/alunos/:id" element={<AlunoDetalhe />} />
+            <Route path="/dashboard/alunos/:id/avaliacao" element={<AvaliacaoFisica />} />
+            <Route path="/dashboard/alunos/:id/alimentacao" element={<PlanoAlimentar />} />
           </Route>
 
           <Route element={<PersonalRouteClean />}>
@@ -158,6 +164,8 @@ export default function App() {
             <Route path="/aluno/chat" element={<ChatAluno />} />
             <Route path="/aluno/fotos" element={<FotosProgresso />} />
             <Route path="/aluno/saude" element={<Anamnese />} />
+            <Route path="/aluno/alimentacao" element={<MeuPlanoAlimentar />} />
+            <Route path="/aluno/avaliacao" element={<MinhaAvaliacao />} />
           </Route>
 
           <Route element={<StudentRouteClean />}>

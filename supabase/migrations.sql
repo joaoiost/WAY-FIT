@@ -324,3 +324,25 @@ ALTER TABLE exercises ADD COLUMN IF NOT EXISTS superset_group TEXT;
 -- Feature: Onboarding do aluno persistido no banco
 -- ============================================================
 ALTER TABLE students ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMPTZ;
+
+-- ============================================================
+-- Feature: Avaliação Física (AvaliacaoFisica.jsx)
+-- Execute no Supabase > SQL Editor se a tabela ainda não existe
+-- ============================================================
+CREATE TABLE IF NOT EXISTS physical_assessments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  date DATE NOT NULL,
+  data JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE physical_assessments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Personal gerencia avaliacoes" ON physical_assessments;
+CREATE POLICY "Personal gerencia avaliacoes" ON physical_assessments
+  FOR ALL USING (personal_id = auth.uid());
+DROP POLICY IF EXISTS "Aluno ve proprias avaliacoes" ON physical_assessments;
+CREATE POLICY "Aluno ve proprias avaliacoes" ON physical_assessments
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM students s WHERE s.id = physical_assessments.student_id AND s.user_id = auth.uid())
+  );

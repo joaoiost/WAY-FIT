@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, Download, Copy, Check, ExternalLink, Calendar, UserCheck, Smartphone, X } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { Search, Plus, Edit2, Trash2, Download, Copy, Check, ExternalLink, Calendar, UserCheck, Smartphone, X, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/UI/Avatar';
 import Badge from '../../components/UI/Badge';
@@ -67,57 +67,98 @@ function StudentForm({ form, onChange, onSubmit, onClose, isEdit }) {
   );
 }
 
-function InviteSheet({ student, inviteUrl, onClose }) {
+function InviteSheet({ student, sendInvite, onClose }) {
+  const [tokenUrl, setTokenUrl] = useState('');
+  const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
+  const generated = useRef(false);
+
   const name = student?.name?.split(' ')[0] || 'aluno';
-  const waMsg = encodeURIComponent(`Olá ${name}! 👋\nSou seu personal trainer no WAY FIT.\nCrie sua conta e acesse seus treinos, agenda e muito mais:\n👉 ${inviteUrl}`);
+
+  useEffect(() => {
+    if (!student?.email || !sendInvite || generated.current) return;
+    generated.current = true;
+    setGenerating(true);
+    sendInvite({ email: student.email, studentName: student.name }).then(result => {
+      setGenerating(false);
+      if (result?.success) setTokenUrl(result.inviteUrl);
+    });
+  }, [student?.id]);
 
   const copy = () => {
-    navigator.clipboard.writeText(inviteUrl);
+    if (!tokenUrl) return;
+    navigator.clipboard.writeText(tokenUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
+  const waText = `Olá ${name}! 👋\nSou seu personal trainer e criei sua área exclusiva no *WAY FIT*.\n\n✅ Treinos personalizados\n📅 Agenda de aulas\n💬 Chat direto comigo\n\n👉 Crie sua conta agora:\n${tokenUrl || '...'}`;
+  const waMsg = encodeURIComponent(waText);
+
   return (
     <div style={{ padding: '4px 0' }}>
-      {student && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#F9FAFB', borderRadius: 12, marginBottom: 20 }}>
-          <div style={{ width: 42, height: 42, borderRadius: '50%', background: student.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 800, color: 'white', flexShrink: 0 }}>
-            {student.initials || getInitials(student.name)}
-          </div>
-          <div>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>{student.name}</p>
-            <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>{student.phone || student.email || 'Sem contato'}</p>
-          </div>
+      {/* Student card */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#F9FAFB', borderRadius: 12, marginBottom: 20 }}>
+        <div style={{ width: 44, height: 44, borderRadius: '50%', background: student?.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: 'white', flexShrink: 0 }}>
+          {student?.initials || getInitials(student?.name || '')}
         </div>
-      )}
-
-      <p style={{ margin: '0 0 8px', fontSize: 13, color: '#374151', fontWeight: 600 }}>Link de cadastro</p>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        <input value={inviteUrl} readOnly style={{ flex: 1, fontSize: 12, background: '#F9FAFB', color: '#374151' }} />
-        <button onClick={copy}
-          style={{ padding: '0 14px', background: copied ? '#10B981' : '#3B82F6', color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, flexShrink: 0, height: 42 }}>
-          {copied ? <Check size={15} /> : <Copy size={15} />}
-          {copied ? 'Copiado!' : 'Copiar'}
-        </button>
-      </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
-        <a href={`https://wa.me/${(student?.phone || '').replace(/\D/g, '')}?text=${waMsg}`}
-          target="_blank" rel="noopener noreferrer"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '12px', background: '#DCFCE7', color: '#15803D', border: '1px solid #BBF7D0', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 700 }}>
-          <ExternalLink size={16} /> WhatsApp
-        </a>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>{student?.name}</p>
+          <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>{student?.email || student?.phone || 'Sem contato'}</p>
+        </div>
         {student?.email && (
-          <a href={`mailto:${student.email}?subject=Acesse o WAY FIT&body=${encodeURIComponent(`Olá ${name}!\n\nSeu personal criou seu acesso no WAY FIT. Crie sua conta pelo link:\n${inviteUrl}`)}`}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '12px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 700 }}>
-            ✉️ Email
-          </a>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#3B82F6', background: '#EFF6FF', padding: '3px 9px', borderRadius: 20 }}>
+            {generating ? 'Gerando...' : tokenUrl ? 'Link pronto' : '—'}
+          </span>
         )}
       </div>
 
-      <p style={{ margin: '0 0 4px', fontSize: 12, color: '#9CA3AF', textAlign: 'center' }}>
-        O aluno usa esse link para criar a conta e acessar treinos, agenda e chat.
+      {!student?.email ? (
+        <div style={{ background: '#FEF3C7', border: '1px solid #FDE68A', borderRadius: 12, padding: '14px 16px', marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <AlertCircle size={18} color="#D97706" style={{ flexShrink: 0, marginTop: 1 }} />
+          <p style={{ margin: 0, fontSize: 13, color: '#92400E', lineHeight: 1.5 }}>
+            Sem email cadastrado. Edite o aluno e adicione um email para gerar o link de convite personalizado.
+          </p>
+        </div>
+      ) : (
+        <>
+          <p style={{ margin: '0 0 8px', fontSize: 13, color: '#374151', fontWeight: 600 }}>Link de convite personalizado</p>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <input
+              value={generating ? 'Gerando link...' : tokenUrl}
+              readOnly
+              style={{ flex: 1, fontSize: 12, background: '#F9FAFB', color: tokenUrl ? '#374151' : '#9CA3AF' }}
+            />
+            <button onClick={copy} disabled={!tokenUrl}
+              style={{ padding: '0 14px', background: copied ? '#10B981' : (tokenUrl ? '#3B82F6' : '#E5E7EB'), color: tokenUrl ? 'white' : '#9CA3AF', border: 'none', borderRadius: 10, cursor: tokenUrl ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, flexShrink: 0, height: 42 }}>
+              {copied ? <Check size={15} /> : <Copy size={15} />}
+              {copied ? 'Copiado!' : 'Copiar'}
+            </button>
+          </div>
+        </>
+      )}
+
+      {/* WhatsApp — ação principal */}
+      {student?.phone && (
+        <a
+          href={`https://wa.me/${(student.phone || '').replace(/\D/g, '')}?text=${waMsg}`}
+          target="_blank" rel="noopener noreferrer"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, padding: '15px', background: '#25D366', color: 'white', border: 'none', borderRadius: 14, textDecoration: 'none', fontSize: 15, fontWeight: 800, marginBottom: 10, boxShadow: '0 3px 10px rgba(37,211,102,0.3)' }}>
+          <ExternalLink size={18} /> Enviar convite no WhatsApp
+        </a>
+      )}
+
+      {/* Email */}
+      {student?.email && tokenUrl && (
+        <a
+          href={`mailto:${student.email}?subject=Seu acesso ao WAY FIT&body=${encodeURIComponent(`Olá ${name}!\n\nSeu personal trainer criou sua área exclusiva no WAY FIT.\n\nCrie sua conta pelo link abaixo:\n${tokenUrl}\n\nAbsolutamente qualquer dúvida é só responder este email!`)}`}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '12px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 700, marginBottom: 10 }}>
+          ✉️ Enviar por email
+        </a>
+      )}
+
+      <p style={{ margin: '8px 0 0', fontSize: 12, color: '#9CA3AF', textAlign: 'center', lineHeight: 1.5 }}>
+        O aluno clica no link, cria a senha e já entra direto — sem confirmar email.
       </p>
       <button className="btn-secondary" style={{ width: '100%', justifyContent: 'center', marginTop: 12 }} onClick={onClose}>Fechar</button>
     </div>
@@ -168,10 +209,10 @@ function WeekDots({ sessionDates }) {
 }
 
 export default function Alunos() {
-  const { user } = useAuth();
+  const { user, sendInvite } = useAuth();
   const navigate = useNavigate();
   const [students, setStudents] = useState([]);
-  const [personalSlug, setPersonalSlug] = useState('');
+  // personalSlug removido — convite agora usa token gerado pelo InviteSheet
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('todos');
   const [modal, setModal] = useState(null);
@@ -188,8 +229,6 @@ export default function Alunos() {
     if (hasSupabase) {
       supabase.from('students').select('*').eq('personal_id', user.id)
         .then(({ data }) => setStudents(data || []));
-      supabase.from('profiles').select('slug').eq('id', user.id).single()
-        .then(({ data }) => { if (data?.slug) setPersonalSlug(data.slug); });
 
       // Carrega sessões da semana atual para todos os alunos de uma só query
       const today = new Date();
@@ -212,11 +251,10 @@ export default function Alunos() {
         });
     } else {
       setStudents(mockStudents);
-      setPersonalSlug('demo');
     }
   }, [user?.id]);
 
-  const inviteUrl = personalSlug ? `${window.location.origin}/p/${personalSlug}` : '';
+  // inviteUrl removido — InviteSheet gera o token automaticamente via sendInvite
 
   const filtered = students.filter(s => {
     const q = search.toLowerCase();
@@ -454,7 +492,7 @@ export default function Alunos() {
 
       {/* Invite sheet — aparece após adicionar ou clicando em "Convidar" */}
       <Modal isOpen={!!inviteSheet} onClose={() => setInviteSheet(null)} title="Convidar para o app" maxWidth="420px">
-        <InviteSheet student={inviteSheet} inviteUrl={inviteUrl} onClose={() => setInviteSheet(null)} />
+        <InviteSheet student={inviteSheet} sendInvite={sendInvite} onClose={() => setInviteSheet(null)} />
       </Modal>
 
       {/* Delete Modal */}

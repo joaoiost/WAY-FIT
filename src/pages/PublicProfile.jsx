@@ -45,23 +45,22 @@ export default function PublicProfile() {
     setSubmitting(true);
     setError('');
 
-    const { data: authData, error: authErr } = await supabase.auth.signUp({
-      email: form.email,
-      password: form.password,
-      options: { data: { name: form.name, role: 'student', phone: form.phone } },
-    });
+    try {
+      // Cria usuário sem confirmação de email
+      const resp = await fetch('/api/create-student-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: form.email, password: form.password, name: form.name }),
+      });
+      const data = await resp.json();
+      if (!data.ok) { setError(data.error || 'Erro ao criar conta'); setSubmitting(false); return; }
 
-    if (authErr) { setError(authErr.message); setSubmitting(false); return; }
-
-    const userId = authData.user?.id;
-    const emailConfRequired = !authData.session;
-
-    if (userId) {
+      const userId = data.userId;
       const initials = form.name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
       const colors = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899'];
       const color = colors[Math.floor(Math.random() * colors.length)];
 
-      // Se já existe um registro deste aluno (adicionado manualmente pelo personal), só linka o user_id
+      // Vincula ao personal — se já existe aluno com email, só linka; senão cria
       const { data: existing } = await supabase.from('students')
         .select('id').eq('email', form.email).eq('personal_id', profile.id).maybeSingle();
 
@@ -79,11 +78,16 @@ export default function PublicProfile() {
           join_date: new Date().toISOString().slice(0, 10),
         });
       }
-    }
 
-    setNeedsEmailConf(emailConfRequired);
-    setSubmitting(false);
-    setStage('done');
+      // Login automático
+      await supabase.auth.signInWithPassword({ email: form.email, password: form.password });
+      setNeedsEmailConf(false);
+      setStage('done');
+    } catch (err) {
+      setError('Erro de conexão. Tente novamente.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (loading) return (

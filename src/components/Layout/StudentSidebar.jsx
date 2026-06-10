@@ -1,19 +1,21 @@
 import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Zap, LayoutDashboard, Dumbbell, Calendar, TrendingUp, History, MessageCircle, Camera, Heart, LogOut, X } from 'lucide-react';
+import { Zap, LayoutDashboard, Dumbbell, Calendar, TrendingUp, History, MessageCircle, Camera, Heart, LogOut, X, Utensils, Activity } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
 const navItems = [
-  { to: '/aluno/dashboard', icon: LayoutDashboard, label: 'Início', end: true },
-  { to: '/aluno/treinos',   icon: Dumbbell,         label: 'Meus Treinos' },
-  { to: '/aluno/agenda',    icon: Calendar,          label: 'Agenda' },
-  { to: '/aluno/progresso', icon: TrendingUp,        label: 'Progresso' },
-  { to: '/aluno/historico', icon: History,           label: 'Histórico' },
-  { to: '/aluno/chat',      icon: MessageCircle,     label: 'Chat' },
-  { to: '/aluno/fotos',     icon: Camera,            label: 'Fotos' },
-  { to: '/aluno/saude',     icon: Heart,             label: 'Saúde' },
+  { to: '/aluno/dashboard',    icon: LayoutDashboard, label: 'Início', end: true },
+  { to: '/aluno/treinos',      icon: Dumbbell,         label: 'Meus Treinos' },
+  { to: '/aluno/alimentacao',  icon: Utensils,         label: 'Alimentação' },
+  { to: '/aluno/agenda',       icon: Calendar,         label: 'Agenda' },
+  { to: '/aluno/progresso',    icon: TrendingUp,       label: 'Progresso' },
+  { to: '/aluno/avaliacao',    icon: Activity,         label: 'Avaliação' },
+  { to: '/aluno/historico',    icon: History,          label: 'Histórico' },
+  { to: '/aluno/chat',         icon: MessageCircle,    label: 'Chat' },
+  { to: '/aluno/fotos',        icon: Camera,           label: 'Fotos' },
+  { to: '/aluno/saude',        icon: Heart,            label: 'Saúde' },
 ];
 
 export default function StudentSidebar() {

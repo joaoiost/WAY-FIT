@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Loader } from 'lucide-react';
+import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Loader, Plus, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { appointments as mockAppts } from '../../data/mockData';
@@ -7,6 +7,7 @@ import { appointments as mockAppts } from '../../data/mockData';
 const STATUS_MAP = {
   confirmed: { label: 'Confirmado', color: '#10B981', bg: '#D1FAE5', icon: CheckCircle },
   pending: { label: 'Aguardando', color: '#F59E0B', bg: '#FEF3C7', icon: AlertCircle },
+  pending_student: { label: 'Solicitado', color: '#3B82F6', bg: '#EFF6FF', icon: AlertCircle },
   cancelled: { label: 'Cancelado', color: '#EF4444', bg: '#FEE2E2', icon: XCircle },
   done: { label: 'Realizado', color: '#6B7280', bg: '#F3F4F6', icon: CheckCircle },
 };
@@ -18,6 +19,11 @@ export default function AgendaAluno() {
   const [loading, setLoading] = useState(true);
   const [confirmModal, setConfirmModal] = useState(null);
   const [cancelModal, setCancelModal] = useState(null);
+  const [requestModal, setRequestModal] = useState(false);
+  const [reqForm, setReqForm] = useState({ date: '', time: '08:00', type: 'Musculação', notes: '' });
+  const [reqSaving, setReqSaving] = useState(false);
+  const [reqDone, setReqDone] = useState(false);
+  const [studentData, setStudentData] = useState(null);
 
   const now = new Date();
   const todayStr = now.toISOString().slice(0, 10);
@@ -27,7 +33,8 @@ export default function AgendaAluno() {
     if (hasSupabase) {
       (async () => {
         const { data: student } = await supabase
-          .from('students').select('id, personal_id').eq('user_id', user.id).maybeSingle();
+          .from('students').select('id, personal_id, name').eq('user_id', user.id).maybeSingle();
+        if (student) setStudentData(student);
 
         if (student) {
           const [{ data: appts }, { data: profile }] = await Promise.all([
@@ -54,6 +61,28 @@ export default function AgendaAluno() {
     if (d === todayStr) return 'Hoje';
     if (d === tomorrow) return 'Amanhã';
     return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });
+  };
+
+  const handleRequest = async () => {
+    if (!reqForm.date || !studentData) return;
+    setReqSaving(true);
+    await supabase.from('appointments').insert({
+      personal_id: studentData.personal_id,
+      student_id: studentData.id,
+      student_name: studentData.name || user.name || 'Aluno',
+      date: reqForm.date,
+      time: reqForm.time,
+      type: reqForm.type,
+      notes: reqForm.notes,
+      status: 'pending_student',
+    });
+    setReqSaving(false);
+    setReqDone(true);
+    setRequestModal(false);
+    setTimeout(() => setReqDone(false), 3000);
+    // Reload
+    const { data: appts } = await supabase.from('appointments').select('*').eq('student_id', studentData.id).order('date');
+    setAppointments(appts || []);
   };
 
   const updateStatus = async (appt, newStatus) => {
@@ -125,11 +154,20 @@ export default function AgendaAluno() {
 
   return (
     <div className="page-padding" style={{ flex: 1 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Minha Agenda</h2>
-        <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>
-          {upcoming.length} aula{upcoming.length !== 1 ? 's' : ''} agendada{upcoming.length !== 1 ? 's' : ''}
-        </p>
+      <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Minha Agenda</h2>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>
+            {upcoming.length} aula{upcoming.length !== 1 ? 's' : ''} agendada{upcoming.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        {reqDone && <span style={{ fontSize: 12, fontWeight: 700, color: '#10B981', background: '#D1FAE5', padding: '6px 14px', borderRadius: 20 }}>✓ Solicitação enviada!</span>}
+        {studentData?.personal_id && (
+          <button onClick={() => setRequestModal(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 16px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', borderRadius: 12, color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+            <Plus size={15} /> Solicitar aula
+          </button>
+        )}
       </div>
 
       {upcoming.length > 0 ? (
@@ -187,6 +225,52 @@ export default function AgendaAluno() {
               <button className="btn-secondary" onClick={() => setCancelModal(null)}>Voltar</button>
               <button onClick={() => { updateStatus(cancelModal, 'cancelled'); setCancelModal(null); }} style={{ padding: '10px 20px', background: '#EF4444', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontWeight: 600, fontSize: 14 }}>
                 Cancelar aula
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: solicitar aula */}
+      {requestModal && (
+        <div className="modal-overlay" onClick={() => setRequestModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ padding: 24, maxWidth: 380 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Solicitar aula</h3>
+              <button onClick={() => setRequestModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={20} /></button>
+            </div>
+            <p style={{ margin: '0 0 16px', fontSize: 13, color: '#6B7280' }}>Informe a data e horário desejados. Seu personal receberá a solicitação.</p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div>
+                <p style={{ margin: '0 0 5px', fontSize: 12, fontWeight: 700, color: '#374151' }}>Data</p>
+                <input type="date" value={reqForm.date} min={todayStr} onChange={e => setReqForm(f => ({ ...f, date: e.target.value }))}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <p style={{ margin: '0 0 5px', fontSize: 12, fontWeight: 700, color: '#374151' }}>Horário preferido</p>
+                <input type="time" value={reqForm.time} onChange={e => setReqForm(f => ({ ...f, time: e.target.value }))}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <p style={{ margin: '0 0 5px', fontSize: 12, fontWeight: 700, color: '#374151' }}>Tipo</p>
+                <select value={reqForm.type} onChange={e => setReqForm(f => ({ ...f, type: e.target.value }))}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 14, outline: 'none', background: 'white', boxSizing: 'border-box' }}>
+                  {['Musculação', 'Funcional', 'Cardio', 'Avaliação física', 'Outro'].map(t => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+              <div>
+                <p style={{ margin: '0 0 5px', fontSize: 12, fontWeight: 700, color: '#374151' }}>Observações (opcional)</p>
+                <textarea value={reqForm.notes} onChange={e => setReqForm(f => ({ ...f, notes: e.target.value }))} rows={2} placeholder="Alguma preferência ou observação..."
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, outline: 'none', resize: 'vertical', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20 }}>
+              <button className="btn-secondary" onClick={() => setRequestModal(false)}>Cancelar</button>
+              <button onClick={handleRequest} disabled={!reqForm.date || reqSaving}
+                className="btn-primary" style={{ opacity: (!reqForm.date || reqSaving) ? 0.6 : 1, cursor: (!reqForm.date || reqSaving) ? 'not-allowed' : 'pointer' }}>
+                {reqSaving ? 'Enviando...' : 'Enviar solicitação'}
               </button>
             </div>
           </div>

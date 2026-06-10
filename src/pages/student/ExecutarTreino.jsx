@@ -43,6 +43,7 @@ function getYouTubeId(url) {
 
 function VideoModal({ videoUrl, title, onClose }) {
   const id = getYouTubeId(videoUrl);
+  const searchUrl = videoUrl?.includes('results') ? videoUrl : `https://www.youtube.com/results?search_query=${encodeURIComponent(title + ' execução correta')}`;
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.92)', zIndex: 200, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
       <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 680, background: '#000', borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
@@ -62,7 +63,17 @@ function VideoModal({ videoUrl, title, onClose }) {
               allowFullScreen style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 'none' }} />
           </div>
         ) : (
-          <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>URL de vídeo inválida</div>
+          <div style={{ padding: '40px 24px', textAlign: 'center', background: '#0A0A0A' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: 'rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+              <Play size={26} color="rgba(255,255,255,0.25)" />
+            </div>
+            <p style={{ margin: '0 0 6px', color: 'white', fontWeight: 700, fontSize: 15 }}>{title}</p>
+            <p style={{ margin: '0 0 24px', color: 'rgba(255,255,255,0.4)', fontSize: 13 }}>Nenhum vídeo vinculado. Busque no YouTube:</p>
+            <a href={searchUrl} target="_blank" rel="noopener noreferrer"
+              style={{ background: '#EF4444', color: 'white', padding: '12px 28px', borderRadius: 12, textDecoration: 'none', fontWeight: 700, fontSize: 14, display: 'inline-flex', alignItems: 'center', gap: 8 }}>
+              <Play size={15} fill="white" /> Buscar no YouTube
+            </a>
+          </div>
         )}
       </div>
     </div>
@@ -161,6 +172,7 @@ export default function ExecutarTreino() {
   const [currentIdx, setCurrentIdx] = useState(0);
   const [setsData, setSetsData] = useState({});
   const [lastLoads, setLastLoads] = useState({});
+  const [loadHistory, setLoadHistory] = useState({}); // { exId: [{load, done, date}] }
 
   const [restTimer, setRestTimer] = useState(null);
   const restRef = useRef(null);
@@ -194,9 +206,9 @@ export default function ExecutarTreino() {
         supabase.from('workout_sessions')
           .select('id, exercise_logs(exercise_id, done, sets_data, load_actual)')
           .eq('student_id', student.id).eq('plan_id', planId).eq('date', todayDate).maybeSingle(),
-        supabase.from('exercise_logs').select('exercise_id, load_actual')
+        supabase.from('exercise_logs').select('exercise_id, load_actual, done, created_at')
           .eq('student_id', student.id).not('load_actual', 'is', null)
-          .order('created_at', { ascending: false }).limit(300),
+          .order('created_at', { ascending: false }).limit(500),
         supabase.from('session_ratings').select('id').eq('student_id', student.id).eq('date', todayDate).maybeSingle(),
       ]);
 
@@ -208,10 +220,16 @@ export default function ExecutarTreino() {
       setRatedToday(!!rating);
 
       const hints = {};
+      const hist = {};
       (lastLogRows || []).forEach(log => {
         if (!hints[log.exercise_id]) hints[log.exercise_id] = log.load_actual;
+        if (!hist[log.exercise_id]) hist[log.exercise_id] = [];
+        if (hist[log.exercise_id].length < 5) {
+          hist[log.exercise_id].push({ load: log.load_actual, done: log.done, date: log.created_at });
+        }
       });
       setLastLoads(hints);
+      setLoadHistory(hist);
 
       const initSets = {};
       if (existingSession) {
@@ -526,18 +544,31 @@ export default function ExecutarTreino() {
                 {ex.rest ? ` · ${ex.rest} desc.` : ''}
               </p>
             </div>
-            {hasVideo && (
-              <button
-                onClick={() => {
-                  const isSearch = !getYouTubeId(ex.video_url) && ex.video_url?.includes('youtube.com/results');
-                  if (isSearch) window.open(ex.video_url, '_blank');
-                  else setVideoModal(true);
-                }}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#EFF6FF', color: '#3B82F6', borderRadius: 8, padding: '8px 12px', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', flexShrink: 0 }}>
-                <Play size={13} fill="#3B82F6" /> Ver vídeo
-              </button>
-            )}
           </div>
+
+          {/* Thumbnail YouTube inline — toca para reproduzir sem sair do app */}
+          {hasVideo && (() => {
+            const ytId = getYouTubeId(ex.video_url);
+            if (ytId) return (
+              <div onClick={() => setVideoModal(true)} style={{ margin: '12px 0 0', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', position: 'relative', background: '#000', lineHeight: 0 }}>
+                <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={ex.name} style={{ width: '100%', display: 'block' }} onError={e => { e.currentTarget.style.display = 'none'; }} />
+                <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.22)' }}>
+                  <div style={{ width: 54, height: 54, borderRadius: '50%', background: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+                    <Play size={22} color="white" fill="white" style={{ marginLeft: 3 }} />
+                  </div>
+                </div>
+                <div style={{ position: 'absolute', bottom: 8, right: 10, background: 'rgba(0,0,0,0.65)', borderRadius: 6, padding: '3px 8px' }}>
+                  <span style={{ fontSize: 10, color: 'white', fontWeight: 800, letterSpacing: '0.06em' }}>DEMONSTRAÇÃO</span>
+                </div>
+              </div>
+            );
+            return (
+              <button onClick={() => setVideoModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#EFF6FF', color: '#3B82F6', borderRadius: 10, padding: '10px', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer', margin: '10px 0 0', width: '100%', justifyContent: 'center' }}>
+                <Play size={14} fill="#3B82F6" /> Ver demonstração
+              </button>
+            );
+          })()}
+
           {ex.obs && (
             <div style={{ marginTop: 12, background: '#FFFBEB', borderRadius: 8, padding: '8px 12px', border: '1px solid #FDE68A', display: 'flex', gap: 7, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 15, flexShrink: 0, marginTop: 1 }}>💡</span>
@@ -574,38 +605,73 @@ export default function ExecutarTreino() {
             </span>
           </div>
 
-          {/* Sugestão de carga progressiva */}
+          {/* Sugestão de carga progressiva inteligente */}
           {(() => {
             const lastRaw = lastLoads[ex.id];
             const last = parseFloat(lastRaw);
             if (!lastRaw || isNaN(last)) return null;
+
+            const hist = loadHistory[ex.id] || [];
+            const lastWasDone = hist[0]?.done !== false;
+            const stableCount = hist.filter(h => parseFloat(h.load) === last).length;
+            const shouldIncrease = lastWasDone && stableCount >= 2;
+
             const sug = Math.round((last + 2.5) * 4) / 4;
             const sugStr = sug % 1 === 0 ? String(sug) : sug.toFixed(1);
             const allPending = sets.every(s => !s.done);
-            const applySuggestion = () => {
+
+            const applySuggestion = (load) => {
               setSetsData(prev => ({
                 ...prev,
-                [ex.id]: (prev[ex.id] || []).map(s => s.done ? s : { ...s, load: sugStr }),
+                [ex.id]: (prev[ex.id] || []).map(s => s.done ? s : { ...s, load }),
               }));
             };
+
+            const bg = shouldIncrease
+              ? 'linear-gradient(135deg,#ECFDF5,#D1FAE5)'
+              : lastWasDone ? 'linear-gradient(135deg,#EFF6FF,#F5F3FF)' : '#FFFBEB';
+            const borderColor = shouldIncrease ? '#86EFAC' : lastWasDone ? '#BFDBFE' : '#FDE68A';
+            const iconColor = shouldIncrease ? '#10B981' : lastWasDone ? '#3B82F6' : '#D97706';
+
+            const message = shouldIncrease
+              ? `Carga estável há ${stableCount}x — hora de progredir!`
+              : lastWasDone
+                ? `Boa execução na última sessão`
+                : `Última sessão incompleta — mantenha o peso`;
+
             return (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', borderRadius: 10, marginBottom: 14, border: '1px solid #BFDBFE' }}>
-                <TrendingUp size={16} color="#3B82F6" style={{ flexShrink: 0 }} />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>
-                    Última sessão: <strong style={{ color: '#374151' }}>{lastRaw}</strong>
-                  </p>
-                  <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 900, color: '#1D4ED8', lineHeight: 1 }}>
-                    Sugestão: {sugStr}kg
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#10B981', marginLeft: 6 }}>+2,5kg ↑</span>
-                  </p>
+              <div style={{ padding: '10px 12px', background: bg, borderRadius: 10, marginBottom: 14, border: `1px solid ${borderColor}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <TrendingUp size={15} color={iconColor} style={{ flexShrink: 0 }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: '0 0 1px', fontSize: 11, fontWeight: 700, color: iconColor }}>{message}</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                      <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>
+                        Última: <strong style={{ color: '#374151' }}>{lastRaw}kg</strong>
+                      </p>
+                      {shouldIncrease && (
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: '#059669' }}>
+                          Sugestão: {sugStr}kg <span style={{ fontSize: 11, color: '#10B981' }}>↑ +2,5kg</span>
+                        </p>
+                      )}
+                    </div>
+                    {hist.length > 1 && (
+                      <div style={{ display: 'flex', gap: 4, marginTop: 5 }}>
+                        {hist.slice(0, 4).reverse().map((h, i) => (
+                          <span key={i} style={{ fontSize: 10, padding: '1px 6px', borderRadius: 20, background: h.done ? '#D1FAE5' : '#FEE2E2', color: h.done ? '#059669' : '#DC2626', fontWeight: 700 }}>
+                            {h.load}kg
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {allPending && (
+                    <button onClick={() => applySuggestion(shouldIncrease ? sugStr : lastRaw)}
+                      style={{ padding: '7px 12px', background: iconColor, color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 12, fontWeight: 700, flexShrink: 0 }}>
+                      Usar
+                    </button>
+                  )}
                 </div>
-                {allPending && (
-                  <button onClick={applySuggestion}
-                    style={{ padding: '7px 14px', background: '#3B82F6', color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, flexShrink: 0 }}>
-                    Usar
-                  </button>
-                )}
               </div>
             );
           })()}

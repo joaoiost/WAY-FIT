@@ -16,7 +16,7 @@ const GOALS = [
 export default function InviteAccept() {
   const [params] = useSearchParams();
   const token = params.get('invite');
-  const { validateInvite, register } = useAuth();
+  const { validateInvite } = useAuth();
   const navigate = useNavigate();
 
   const [invite, setInvite] = useState(null);
@@ -50,17 +50,35 @@ export default function InviteAccept() {
     if (form.password.length < 6) { setError('Mínimo 6 caracteres'); return; }
     setSubmitting(true);
     setError('');
-    const result = await register({ name: form.name, email: invite.email, password: form.password, role: 'student', inviteToken: token });
-    setSubmitting(false);
-    if (result.success) {
-      setUserId(result.userId);
-      if (result.needsEmailConfirmation) {
-        setStage('emailconf');
+    try {
+      // Cria via API servidor — sem confirmação de email
+      const resp = await fetch('/api/create-student-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: invite.email, password: form.password, name: form.name, inviteToken: token }),
+      });
+      const data = await resp.json();
+      if (!data.ok) { setError(data.error || 'Erro ao criar conta'); return; }
+
+      // Login automático — usuário já está confirmado
+      if (hasSupabase) {
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email: invite.email,
+          password: form.password,
+        });
+        if (signInErr) {
+          setError('Conta criada! Entre agora em Acesso Aluno para continuar.');
+          return;
+        }
+        setUserId(signInData.user?.id);
       } else {
-        setStage('onboarding');
+        setUserId(data.userId);
       }
-    } else {
-      setError(result.error);
+      setStage('onboarding');
+    } catch (e) {
+      setError('Erro de conexão. Tente novamente.');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -265,7 +283,7 @@ export default function InviteAccept() {
                 😈 Vai arrasar! Ela já vai estar se arrependendo.
               </div>
             )}
-            <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: 13, fontSize: 15 }} onClick={() => navigate('/aluno/login')}>
+            <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: 13, fontSize: 15 }} onClick={() => navigate('/aluno')}>
               Acessar minha área
             </button>
           </div>

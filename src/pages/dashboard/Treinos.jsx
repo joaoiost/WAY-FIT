@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import {
   Plus, Dumbbell, X, Save, Trash2, Sparkles, Check, Send,
-  ChevronDown, ChevronUp, Search, Edit3, Users, BookOpen,
-  Copy, AlertCircle,
+  Search, Edit3, Users, BookOpen,
+  Copy, AlertCircle, MessageSquare,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -100,12 +100,30 @@ function Toasts({ toasts, dismiss }) {
   );
 }
 
-// ─── ExerciseRowEditor ────────────────────────────────────────────────────────
+// ─── ExerciseRow (modo planilha) ──────────────────────────────────────────────
 
-function ExerciseRowEditor({ ex, index, planType, onChange, onDelete, onDuplicate }) {
+const ROW_COLS = '22px 1fr 38px 60px 54px 50px 60px';
+
+function ExerciseTableHeader() {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: ROW_COLS, gap: 6, padding: '0 0 7px', borderBottom: '2px solid #F1F5F9', marginBottom: 2 }}>
+      <span />
+      <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exercício</span>
+      <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>Sér.</span>
+      <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>Reps</span>
+      <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>Desc.</span>
+      <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em', textAlign: 'center' }}>Carga</span>
+      <span />
+    </div>
+  );
+}
+
+function ExerciseRow({ ex, index, onChange, onDelete, onDuplicate }) {
   const [showSugg, setShowSugg] = useState(false);
   const [suggs,    setSuggs]    = useState([]);
-  const [open,     setOpen]     = useState(!ex.name);
+  const [showObs,  setShowObs]  = useState(!!ex.obs);
+  const [repsOpen, setRepsOpen] = useState(false);
+  const [restOpen, setRestOpen] = useState(false);
   const setsRef = useRef(null);
 
   const handleName = (val) => {
@@ -117,76 +135,116 @@ function ExerciseRowEditor({ ex, index, planType, onChange, onDelete, onDuplicat
   const pick = (s) => {
     onChange({ ...ex, name: s.name });
     setSuggs([]); setShowSugg(false);
-    setOpen(true);
-    setTimeout(() => setsRef.current?.focus(), 60);
+    setTimeout(() => setsRef.current?.select(), 50);
   };
 
+  const inp = (extra = {}) => ({
+    border: '1.5px solid #E5E7EB', borderRadius: 7, outline: 'none',
+    fontSize: 12, fontWeight: 700, textAlign: 'center',
+    padding: '5px 3px', width: '100%', boxSizing: 'border-box', background: 'white',
+    ...extra,
+  });
+
   return (
-    <div style={{ background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 12, marginBottom: 8 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px' }}>
-        <span style={{ width: 22, height: 22, borderRadius: 7, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#3B82F6', flexShrink: 0 }}>{index + 1}</span>
-        <div style={{ flex: 1, position: 'relative' }}>
+    <div style={{ borderBottom: '1px solid #F3F4F6' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: ROW_COLS, gap: 6, alignItems: 'center', padding: '5px 0' }}>
+
+        {/* Número */}
+        <span style={{ fontSize: 11, fontWeight: 700, color: '#CBD5E1', textAlign: 'center' }}>{index + 1}</span>
+
+        {/* Nome com autocomplete */}
+        <div style={{ position: 'relative' }}>
           <input value={ex.name} onChange={e => handleName(e.target.value)}
             onBlur={() => setTimeout(() => setShowSugg(false), 150)}
             onKeyDown={e => { if (e.key === 'Enter' && suggs.length) { e.preventDefault(); pick(suggs[0]); } }}
-            placeholder="Nome do exercício..."
-            style={{ width: '100%', border: 'none', outline: 'none', fontSize: 14, fontWeight: 600, color: '#111827', background: 'transparent' }} />
+            placeholder={`Exercício ${index + 1}...`}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: 13, fontWeight: ex.name ? 600 : 400, color: ex.name ? '#111827' : '#9CA3AF', background: 'transparent' }} />
           {showSugg && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 60, maxHeight: 220, overflowY: 'auto' }}>
+            <div style={{ position: 'absolute', top: '100%', left: 0, background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 60, maxHeight: 210, overflowY: 'auto', minWidth: 270, right: 0 }}>
               {suggs.slice(0, 8).map((s, i) => (
                 <button key={i} onMouseDown={() => pick(s)}
                   style={{ width: '100%', padding: '8px 12px', background: i === 0 ? '#F9FAFB' : 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, display: 'flex', gap: 8, alignItems: 'center', borderBottom: '1px solid #F3F4F6' }}>
                   <span style={{ fontSize: 10, background: gc(s.group) + '20', color: gc(s.group), padding: '2px 6px', borderRadius: 20, fontWeight: 700, flexShrink: 0 }}>{s.group}</span>
-                  <span style={{ color: '#111827', flex: 1 }}>{s.name}</span>
-                  {i === 0 && <span style={{ fontSize: 10, color: '#C4C9D4', fontWeight: 700 }}>↵</span>}
+                  <span style={{ flex: 1, color: '#111827' }}>{s.name}</span>
+                  {i === 0 && <span style={{ fontSize: 10, color: '#D1D5DB' }}>↵</span>}
                 </button>
               ))}
             </div>
           )}
         </div>
-        {!open && ex.name && <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, flexShrink: 0 }}>{ex.sets}×{ex.reps}</span>}
-        <button onClick={() => setOpen(v => !v)} style={{ padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex' }}>
-          {open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-        </button>
-        <button onClick={onDuplicate} title="Duplicar exercício" style={{ padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: '#C4C9D4', display: 'flex', transition: 'color 0.1s' }}
-          onMouseEnter={e => e.currentTarget.style.color = '#3B82F6'}
-          onMouseLeave={e => e.currentTarget.style.color = '#C4C9D4'}>
-          <Copy size={13} />
-        </button>
-        <button onClick={onDelete} style={{ padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: '#EF4444', display: 'flex' }}><Trash2 size={14} /></button>
+
+        {/* Séries */}
+        <input ref={setsRef} type="number" value={ex.sets} min={1} max={10}
+          onChange={e => onChange({ ...ex, sets: e.target.value })}
+          style={inp()} />
+
+        {/* Reps */}
+        <div style={{ position: 'relative' }}>
+          <input value={ex.reps} onChange={e => onChange({ ...ex, reps: e.target.value })}
+            onFocus={() => setRepsOpen(true)} onBlur={() => setTimeout(() => setRepsOpen(false), 150)}
+            style={inp()} />
+          {repsOpen && (
+            <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 20px rgba(0,0,0,0.12)', zIndex: 70, display: 'flex', flexWrap: 'wrap', gap: 4, padding: 8, width: 190 }}>
+              {REPS_Q.map(r => (
+                <button key={r} onMouseDown={() => { onChange({ ...ex, reps: r }); setRepsOpen(false); }}
+                  style={{ padding: '4px 9px', borderRadius: 16, fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer', background: ex.reps === r ? '#EFF6FF' : '#F3F4F6', color: ex.reps === r ? '#3B82F6' : '#6B7280' }}>
+                  {r}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Descanso */}
+        <div style={{ position: 'relative' }}>
+          <input value={ex.rest} onChange={e => onChange({ ...ex, rest: e.target.value })}
+            onFocus={() => setRestOpen(true)} onBlur={() => setTimeout(() => setRestOpen(false), 150)}
+            style={inp({ color: '#10B981', fontSize: 11 })} />
+          {restOpen && (
+            <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 20px rgba(0,0,0,0.12)', zIndex: 70, display: 'flex', flexWrap: 'wrap', gap: 4, padding: 8, width: 210 }}>
+              {REST_Q.map(r => (
+                <button key={r} onMouseDown={() => { onChange({ ...ex, rest: r }); setRestOpen(false); }}
+                  style={{ padding: '4px 9px', borderRadius: 16, fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer', background: ex.rest === r ? '#F0FDF4' : '#F3F4F6', color: ex.rest === r ? '#10B981' : '#6B7280' }}>
+                  {r}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Carga */}
+        <input value={ex.load} onChange={e => onChange({ ...ex, load: e.target.value })}
+          placeholder="—" style={inp({ color: '#374151' })} />
+
+        {/* Ações */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 1 }}>
+          <button onClick={() => { setShowObs(v => !v); }} title="Observação"
+            style={{ padding: 4, border: 'none', background: 'none', cursor: 'pointer', color: (showObs || ex.obs) ? '#F59E0B' : '#D1D5DB', borderRadius: 5, display: 'flex' }}
+            onMouseEnter={e => { if (!showObs && !ex.obs) e.currentTarget.style.color = '#F59E0B'; }}
+            onMouseLeave={e => { if (!showObs && !ex.obs) e.currentTarget.style.color = '#D1D5DB'; }}>
+            <MessageSquare size={11} />
+          </button>
+          <button onClick={onDuplicate} title="Duplicar"
+            style={{ padding: 4, border: 'none', background: 'none', cursor: 'pointer', color: '#D1D5DB', borderRadius: 5, display: 'flex' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#3B82F6'}
+            onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}>
+            <Copy size={11} />
+          </button>
+          <button onClick={onDelete}
+            style={{ padding: 4, border: 'none', background: 'none', cursor: 'pointer', color: '#D1D5DB', borderRadius: 5, display: 'flex' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
+            onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}>
+            <Trash2 size={11} />
+          </button>
+        </div>
       </div>
-      {open && (
-        <div style={{ padding: '4px 12px 14px', borderTop: '1px solid #F3F4F6' }}>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
-            {[['SÉRIES', 'sets', 'number'], ['REPS', 'reps', 'text'], ['CARGA', 'load', 'text']].map(([lbl, field, type], fi) => (
-              <div key={field}>
-                <label style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 3 }}>{lbl}</label>
-                <input ref={fi === 0 ? setsRef : undefined}
-                  type={type} value={ex[field]} onChange={e => onChange({ ...ex, [field]: e.target.value })}
-                  placeholder={field === 'load' ? '—' : ''} min={type === 'number' ? 1 : undefined}
-                  style={{ width: '100%', padding: '7px 8px', border: '1.5px solid #E5E7EB', borderRadius: 8, fontSize: 14, fontWeight: 700, textAlign: 'center', boxSizing: 'border-box' }} />
-              </div>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
-            {REPS_Q.map(r => (
-              <button key={r} onClick={() => onChange({ ...ex, reps: r })}
-                style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none', background: ex.reps === r ? '#EFF6FF' : '#F3F4F6', color: ex.reps === r ? '#3B82F6' : '#6B7280' }}>
-                {r}
-              </button>
-            ))}
-          </div>
-          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF' }}>DESCANSO</span>
-            {REST_Q.map(r => (
-              <button key={r} onClick={() => onChange({ ...ex, rest: r })}
-                style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none', background: ex.rest === r ? '#F0FDF4' : '#F3F4F6', color: ex.rest === r ? '#10B981' : '#6B7280' }}>
-                {r}
-              </button>
-            ))}
-          </div>
-          <input value={ex.obs} onChange={e => onChange({ ...ex, obs: e.target.value })} placeholder="Observação (opcional)..."
-            style={{ width: '100%', padding: '7px 10px', border: '1.5px solid #E5E7EB', borderRadius: 8, fontSize: 12, color: '#6B7280', boxSizing: 'border-box' }} />
+
+      {/* Observação (expansível) */}
+      {showObs && (
+        <div style={{ padding: '2px 0 6px 28px' }}>
+          <input value={ex.obs} onChange={e => onChange({ ...ex, obs: e.target.value })}
+            autoFocus placeholder="Observação do exercício..."
+            style={{ width: '100%', border: 'none', borderBottom: '1.5px solid #FDE68A', outline: 'none', fontSize: 12, color: '#92400E', padding: '3px 0', background: 'transparent', boxSizing: 'border-box' }} />
         </div>
       )}
     </div>
@@ -343,9 +401,11 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
             )}
           </div>
 
-          <div ref={exsListRef}>
+          {/* Tabela de exercícios */}
+          <div ref={exsListRef} style={{ background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 12, padding: '10px 12px', marginBottom: 8 }}>
+            <ExerciseTableHeader />
             {exs.map((ex, i) => (
-              <ExerciseRowEditor key={ex.id || i} ex={ex} index={i} planType={type}
+              <ExerciseRow key={ex.id || i} ex={ex} index={i}
                 onChange={upd => updateEx(i, upd)}
                 onDelete={() => deleteEx(i)}
                 onDuplicate={() => dupEx(i)} />
@@ -353,7 +413,7 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
           </div>
 
           <button onClick={addEx}
-            style={{ width: '100%', padding: '11px', borderRadius: 10, border: '2px dashed #D1D5DB', background: 'none', fontSize: 13, fontWeight: 700, color: '#9CA3AF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 4 }}>
+            style={{ width: '100%', padding: '10px', borderRadius: 10, border: '2px dashed #D1D5DB', background: 'none', fontSize: 13, fontWeight: 700, color: '#9CA3AF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             <Plus size={15} /> Adicionar exercício
           </button>
           <div style={{ height: 24 }} />

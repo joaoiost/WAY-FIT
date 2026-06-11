@@ -170,8 +170,8 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, onSav
     const valid = exs.filter(e => e.name?.trim());
     if (!valid.length) return;
     setSaving(true);
-    await onSave({ id: item?.id, name: name.trim(), type, days, exercises: valid, studentId: mode === 'plan' ? studentId : null });
-    setSaving(false);
+    const ok = await onSave({ id: item?.id, name: name.trim(), type, days, exercises: valid, studentId: mode === 'plan' ? studentId : null });
+    if (ok === false) setSaving(false); // mantém editor aberto se falhou
   };
 
   const panelTitle = mode === 'template'
@@ -540,31 +540,38 @@ export default function Treinos() {
   }, [user?.id]);
 
   const saveItem = async ({ id, name, type, days, exercises, studentId }) => {
-    if (!hasSupabase) return;
+    if (!hasSupabase) return false;
     const isTemplate = studentId === null || studentId === undefined;
 
-    if (id) {
-      await supabase.from('training_plans').update({ name, type, days }).eq('id', id);
-      await supabase.from('exercises').delete().eq('plan_id', id);
-      if (exercises.length) {
-        await supabase.from('exercises').insert(exercises.map((e, i) => ({ plan_id: id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps, rest: e.rest, load: e.load || '', obs: e.obs || '', order_index: i })));
-      }
-      const { data: up } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', id).single();
-      if (up) {
-        if (isTemplate) setTemplates(prev => prev.map(t => t.id === id ? up : t));
-        else setPlans(prev => prev.map(p => p.id === id ? up : p));
-      }
-    } else {
-      const stud = !isTemplate ? students.find(s => s.id === studentId) : null;
-      const { data: plan } = await supabase.from('training_plans').insert({
-        personal_id: user.id,
-        student_id: isTemplate ? null : studentId,
-        student_name: stud?.name || null,
-        name, type, days,
-      }).select().single();
-      if (plan) {
+    try {
+      if (id) {
+        const { error: upErr } = await supabase.from('training_plans').update({ name, type, days }).eq('id', id);
+        if (upErr) throw upErr;
+        await supabase.from('exercises').delete().eq('plan_id', id);
         if (exercises.length) {
-          await supabase.from('exercises').insert(exercises.map((e, i) => ({ plan_id: plan.id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps, rest: e.rest, load: e.load || '', obs: e.obs || '', order_index: i })));
+          const { error: exErr } = await supabase.from('exercises').insert(
+            exercises.map((e, i) => ({ plan_id: id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps, rest: e.rest, load: e.load || '', obs: e.obs || '', order_index: i }))
+          );
+          if (exErr) throw exErr;
+        }
+        const { data: up } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', id).single();
+        if (up) {
+          if (isTemplate) setTemplates(prev => prev.map(t => t.id === id ? up : t));
+          else setPlans(prev => prev.map(p => p.id === id ? up : p));
+        }
+      } else {
+        const { data: plan, error: insErr } = await supabase.from('training_plans').insert({
+          personal_id: user.id,
+          student_id: isTemplate ? null : studentId,
+          name, type, days,
+        }).select().single();
+        if (insErr) throw insErr;
+        if (!plan) throw new Error('Nenhum dado retornado após salvar');
+        if (exercises.length) {
+          const { error: exErr } = await supabase.from('exercises').insert(
+            exercises.map((e, i) => ({ plan_id: plan.id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps, rest: e.rest, load: e.load || '', obs: e.obs || '', order_index: i }))
+          );
+          if (exErr) throw exErr;
         }
         const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', plan.id).single();
         if (full) {
@@ -572,8 +579,13 @@ export default function Treinos() {
           else setPlans(prev => [full, ...prev]);
         }
       }
+    } catch (err) {
+      alert('Erro ao salvar: ' + (err?.message || 'Tente novamente'));
+      return false;
     }
+
     setEditor(null);
+    return true;
   };
 
   const deleteItem = async (item, isTemplate) => {
@@ -592,7 +604,7 @@ export default function Treinos() {
       for (const op of overlapping) await supabase.from('training_plans').delete().eq('id', op.id);
       setPlans(prev => prev.filter(p => !overlapping.find(o => o.id === p.id)));
       const { data: plan } = await supabase.from('training_plans').insert({
-        personal_id: user.id, student_id: sid, student_name: stud?.name || null,
+        personal_id: user.id, student_id: sid,
         name: tpl.name, type: tpl.type, days: selectedDays,
       }).select().single();
       if (plan) {

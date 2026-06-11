@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Plus, Dumbbell, X, Save, Trash2, Sparkles, Check, Send,
-  BookOpen, Users, ChevronDown, ChevronUp, Search, Edit3
+  ChevronDown, ChevronUp, Search, Edit3, Users, BookOpen
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -51,8 +51,8 @@ function genAI(groups, level) {
 
 function ExerciseRowEditor({ ex, index, onChange, onDelete }) {
   const [showSugg, setShowSugg] = useState(false);
-  const [suggs, setSuggs]       = useState([]);
-  const [open, setOpen]         = useState(!ex.name);
+  const [suggs,    setSuggs]    = useState([]);
+  const [open,     setOpen]     = useState(!ex.name);
 
   const handleName = (val) => {
     onChange({ ...ex, name: val });
@@ -86,7 +86,6 @@ function ExerciseRowEditor({ ex, index, onChange, onDelete }) {
         <button onClick={() => setOpen(v => !v)} style={{ padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex' }}>{open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button>
         <button onClick={onDelete} style={{ padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: '#EF4444', display: 'flex' }}><Trash2 size={14} /></button>
       </div>
-
       {open && (
         <div style={{ padding: '4px 12px 14px', borderTop: '1px solid #F3F4F6' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
@@ -118,7 +117,7 @@ function ExerciseRowEditor({ ex, index, onChange, onDelete }) {
 
 function AIModal({ onApply, onClose }) {
   const [groups, setGroups] = useState([]);
-  const [level, setLevel]   = useState('Intermediário');
+  const [level,  setLevel]  = useState('Intermediário');
   const toggle = (g) => setGroups(p => p.includes(g) ? p.filter(x => x !== g) : [...p, g]);
 
   return (
@@ -151,14 +150,14 @@ function AIModal({ onApply, onClose }) {
   );
 }
 
-// ─── TemplateEditor ───────────────────────────────────────────────────────────
+// ─── TemplateEditor (painel lateral) ─────────────────────────────────────────
 
 function TemplateEditor({ item, mode = 'template', studentId, studentName, defaultDays, onSave, onClose }) {
   const isNew = !item?.id;
-  const [name,  setName]  = useState(item?.name  || '');
-  const [type,  setType]  = useState(item?.type  || 'Hipertrofia');
-  const [days,  setDays]  = useState(item?.days  || defaultDays || []);
-  const [exs,   setExs]   = useState(() => {
+  const [name,   setName]  = useState(item?.name  || '');
+  const [type,   setType]  = useState(item?.type  || 'Hipertrofia');
+  const [days,   setDays]  = useState(item?.days  || defaultDays || []);
+  const [exs,    setExs]   = useState(() => {
     const src = item?.exercises || [];
     const sorted = [...src].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
     return sorted.length ? sorted.map((e, i) => ({ ...e, id: e.id || Date.now() + i })) : [newEx(0)];
@@ -166,9 +165,9 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
   const [saving, setSaving] = useState(false);
   const [showAI, setShowAI] = useState(false);
 
-  const toggleDay = (d) => setDays(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d]);
-  const updateEx  = (i, upd) => setExs(p => p.map((e, j) => j === i ? upd : e));
-  const deleteEx  = (i) => setExs(p => p.filter((_, j) => j !== i));
+  const toggleDay = (d)       => setDays(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d]);
+  const updateEx  = (i, upd)  => setExs(p => p.map((e, j) => j === i ? upd : e));
+  const deleteEx  = (i)       => setExs(p => p.filter((_, j) => j !== i));
 
   const handleSave = async () => {
     if (!name.trim() || saving) return;
@@ -179,9 +178,9 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
     if (ok === false) setSaving(false);
   };
 
-  const panelTitle = mode === 'template'
+  const title = mode === 'template'
     ? (isNew ? 'Nova cartilha' : 'Editar cartilha')
-    : (isNew ? `Novo treino — ${studentName || ''}` : `Editar — ${studentName || ''}`);
+    : (isNew ? `Novo treino — ${studentName}` : `Editar treino — ${studentName}`);
 
   const color = tc(type);
 
@@ -189,13 +188,9 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }} />
       <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 520, background: 'white', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)' }}>
-
         <div style={{ padding: '18px 22px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', padding: 4 }}><X size={20} /></button>
-          <div style={{ flex: 1 }}>
-            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{panelTitle}</h2>
-            {mode === 'plan' && <p style={{ margin: '1px 0 0', fontSize: 11, color: '#9CA3AF' }}>Treino específico do aluno</p>}
-          </div>
+          <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800, flex: 1 }}>{title}</h2>
           <button onClick={() => setShowAI(true)}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
             <Sparkles size={13} /> IA
@@ -203,35 +198,29 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
         </div>
 
         <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px' }}>
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nome</label>
-            <input value={name} onChange={e => setName(e.target.value)} placeholder="ex: Treino A — Peito e Tríceps"
-              style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 15, fontWeight: 600, boxSizing: 'border-box', outline: 'none' }} />
-          </div>
+          <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nome</label>
+          <input value={name} onChange={e => setName(e.target.value)} placeholder="ex: Treino A — Peito e Tríceps"
+            style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 15, fontWeight: 600, boxSizing: 'border-box', outline: 'none', marginBottom: 16 }} />
 
-          <div style={{ marginBottom: 14 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tipo</label>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-              {PLAN_TYPES.map(t => { const c = tc(t); const sel = type === t; return (
-                <button key={t} onClick={() => setType(t)} style={{ padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? c : '#E5E7EB'}`, background: sel ? c + '18' : 'white', color: sel ? c : '#6B7280' }}>{t}</button>
-              ); })}
-            </div>
+          <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tipo</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 16 }}>
+            {PLAN_TYPES.map(t => { const c = tc(t); const sel = type === t; return (
+              <button key={t} onClick={() => setType(t)} style={{ padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? c : '#E5E7EB'}`, background: sel ? c + '18' : 'white', color: sel ? c : '#6B7280' }}>{t}</button>
+            ); })}
           </div>
 
           {mode === 'template' && (
-            <div style={{ marginBottom: 20 }}>
+            <>
               <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Dias sugeridos</label>
-              <div style={{ display: 'flex', gap: 5 }}>
+              <div style={{ display: 'flex', gap: 5, marginBottom: 20 }}>
                 {DAYS.map(d => { const sel = days.includes(d.v); return (
                   <button key={d.v} onClick={() => toggleDay(d.v)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? color : '#E5E7EB'}`, background: sel ? color + '18' : 'white', color: sel ? color : '#9CA3AF' }}>{d.s}</button>
                 ); })}
               </div>
-            </div>
+            </>
           )}
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
-            <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exercícios ({exs.filter(e => e.name).length})</label>
-          </div>
+          <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exercícios ({exs.filter(e => e.name).length})</label>
           {exs.map((ex, i) => (
             <ExerciseRowEditor key={ex.id || i} ex={ex} index={i} onChange={upd => updateEx(i, upd)} onDelete={() => deleteEx(i)} />
           ))}
@@ -242,7 +231,7 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
           <div style={{ height: 24 }} />
         </div>
 
-        <div style={{ padding: '16px 22px', borderTop: '1px solid #F1F5F9', background: 'white' }}>
+        <div style={{ padding: '16px 22px', borderTop: '1px solid #F1F5F9' }}>
           <button onClick={handleSave} disabled={!name.trim() || saving}
             style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: name.trim() ? `linear-gradient(135deg, ${color}, ${color}99)` : '#E5E7EB', color: name.trim() ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: name.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             {saving ? 'Salvando...' : <><Save size={16} /> {isNew ? (mode === 'template' ? 'Criar cartilha' : 'Salvar treino') : 'Salvar alterações'}</>}
@@ -254,76 +243,116 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
   );
 }
 
-// ─── TemplateCard ─────────────────────────────────────────────────────────────
+// ─── DayCell ──────────────────────────────────────────────────────────────────
 
-function TemplateCard({ tpl, onEdit, onAssign, onDelete }) {
-  const exs     = [...(tpl.exercises || [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
-  const color   = tc(tpl.type);
-  const dayLbls = (tpl.days || []).map(d => DAYS.find(x => x.v === d)?.s).filter(Boolean);
-  const preview = exs.slice(0, 5);
-  const extra   = exs.length - 5;
+function DayCell({ plan, isTarget, onAdd, onEdit, onRemove }) {
+  const [hov, setHov] = useState(false);
+
+  if (!plan) {
+    const active = isTarget || hov;
+    return (
+      <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={onAdd}
+        style={{ minHeight: 130, border: `2px ${isTarget ? 'solid #3B82F6' : `dashed ${hov ? '#93C5FD' : '#E5E7EB'}`}`, borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: isTarget ? '#EFF6FF' : hov ? '#F8FBFF' : 'transparent', boxShadow: isTarget ? '0 0 0 3px rgba(59,130,246,0.15)' : 'none', transition: 'all 0.15s', gap: 6 }}>
+        <div style={{ width: 32, height: 32, borderRadius: '50%', background: active ? '#DBEAFE' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
+          <Plus size={16} color={active ? '#3B82F6' : '#9CA3AF'} />
+        </div>
+        <span style={{ fontSize: 10, fontWeight: 700, color: active ? '#3B82F6' : '#D1D5DB', letterSpacing: '0.04em' }}>{isTarget ? 'Selecionado' : 'Adicionar'}</span>
+      </div>
+    );
+  }
+
+  const color   = tc(plan.type);
+  const exCount = (plan.exercises || []).length;
 
   return (
-    <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)`, padding: '14px 16px' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
-              <Dumbbell size={12} color="rgba(255,255,255,0.75)" />
-              <span style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{tpl.type}</span>
-            </div>
-            <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 900, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tpl.name || 'Sem nome'}</h3>
-            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-              {dayLbls.length ? dayLbls.map(d => (
-                <span key={d} style={{ fontSize: 10, fontWeight: 700, color: 'white', background: 'rgba(255,255,255,0.2)', padding: '2px 7px', borderRadius: 20 }}>{d}</span>
-              )) : <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>Sem dia sugerido</span>}
-            </div>
-          </div>
-          <button onClick={() => onDelete(tpl)} style={{ background: 'rgba(255,255,255,0.18)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: 'white', display: 'flex' }}><Trash2 size={13} /></button>
-        </div>
+    <div style={{ borderRadius: 12, overflow: 'hidden', border: '1.5px solid #F1F5F9', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', background: 'white', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: 5, background: `linear-gradient(90deg, ${color}, ${color}99)` }} />
+      <div style={{ padding: '10px 10px 8px', flex: 1 }}>
+        <span style={{ fontSize: 9, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: 3 }}>{plan.type}</span>
+        <p style={{ margin: '0 0 5px', fontSize: 12, fontWeight: 700, color: '#111827', lineHeight: 1.3, wordBreak: 'break-word' }}>{plan.name}</p>
+        <span style={{ fontSize: 10, color: '#9CA3AF' }}>{exCount} ex.</span>
       </div>
-
-      <div style={{ flex: 1, padding: '12px 16px 0' }}>
-        {exs.length === 0 ? (
-          <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF', textAlign: 'center', padding: '18px 0' }}>Sem exercícios</p>
-        ) : (
-          <>
-            {preview.map((ex, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 7, padding: '4px 0', borderBottom: i < preview.length - 1 || extra > 0 ? '1px solid #F9FAFB' : 'none' }}>
-                <span style={{ width: 16, fontSize: 10, fontWeight: 800, color: '#D1D5DB', flexShrink: 0, textAlign: 'right' }}>{i + 1}</span>
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name || '—'}</span>
-                <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, flexShrink: 0 }}>{ex.sets}×{ex.reps}</span>
-              </div>
-            ))}
-            {extra > 0 && <p style={{ margin: '5px 0 0', fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>+{extra} mais</p>}
-          </>
-        )}
-      </div>
-
-      <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F3F4F6', marginTop: 12 }}>
-        <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{exs.length} exercício{exs.length !== 1 ? 's' : ''}</span>
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button onClick={() => onEdit(tpl)} style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Edit3 size={12} /> Editar
-          </button>
-          <button onClick={() => onAssign(tpl)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg, ${color}, ${color}bb)`, fontSize: 12, fontWeight: 700, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <Send size={11} /> Atribuir
-          </button>
-        </div>
+      <div style={{ display: 'flex', borderTop: '1px solid #F9FAFB' }}>
+        <button onClick={e => { e.stopPropagation(); onEdit(); }} style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', color: '#6B7280', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+          <Edit3 size={11} /> Editar
+        </button>
+        <div style={{ width: 1, background: '#F3F4F6' }} />
+        <button onClick={e => { e.stopPropagation(); onRemove(); }} style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', color: '#EF4444', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+          <Trash2 size={11} /> Remover
+        </button>
       </div>
     </div>
   );
 }
 
-// ─── AssignModal (atribuir cartilha para vários alunos) ───────────────────────
+// ─── TemplateCard (biblioteca) ────────────────────────────────────────────────
+
+function TemplateCard({ tpl, targeting, onSelect, onEdit, onAssignMultiple, onDelete }) {
+  const [hov, setHov] = useState(false);
+  const color   = tc(tpl.type);
+  const exs     = [...(tpl.exercises || [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+  const preview = exs.slice(0, 4);
+  const extra   = exs.length - 4;
+
+  return (
+    <div
+      onMouseEnter={() => setHov(true)}
+      onMouseLeave={() => setHov(false)}
+      onClick={targeting ? onSelect : undefined}
+      style={{ background: targeting && hov ? color + '08' : 'white', borderRadius: 14, overflow: 'hidden', border: targeting ? `2px solid ${hov ? color : '#E5E7EB'}` : '1.5px solid #F1F5F9', boxShadow: targeting && hov ? `0 6px 20px ${color}25` : '0 2px 8px rgba(0,0,0,0.06)', cursor: targeting ? 'pointer' : 'default', transition: 'all 0.15s', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ height: 5, background: `linear-gradient(90deg, ${color}, ${color}99)` }} />
+      <div style={{ padding: '12px 14px 10px', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 8 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <span style={{ fontSize: 9, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: 2 }}>{tpl.type}</span>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tpl.name || 'Sem nome'}</p>
+          </div>
+          <button onClick={e => { e.stopPropagation(); onDelete(); }}
+            style={{ flexShrink: 0, background: 'none', border: 'none', cursor: 'pointer', color: '#E5E7EB', padding: 3, display: 'flex', transition: 'color 0.1s' }}
+            onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
+            onMouseLeave={e => e.currentTarget.style.color = '#E5E7EB'}>
+            <Trash2 size={13} />
+          </button>
+        </div>
+        {preview.map((ex, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, padding: '2px 0' }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#D1D5DB', width: 14, textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
+            <span style={{ fontSize: 11, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{ex.name}</span>
+            <span style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 600, flexShrink: 0 }}>{ex.sets}×{ex.reps}</span>
+          </div>
+        ))}
+        {extra > 0 && <p style={{ margin: '3px 0 0', fontSize: 10, color: '#C4C9D4', fontStyle: 'italic' }}>+{extra} mais</p>}
+      </div>
+      <div style={{ padding: '8px 14px 12px', borderTop: '1px solid #F9FAFB' }}>
+        {targeting ? (
+          <button onClick={onSelect}
+            style={{ width: '100%', padding: '9px', borderRadius: 9, border: 'none', background: hov ? `linear-gradient(135deg, ${color}, ${color}cc)` : '#F3F4F6', color: hov ? 'white' : '#9CA3AF', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
+            <Check size={13} /> Usar neste dia
+          </button>
+        ) : (
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button onClick={e => { e.stopPropagation(); onEdit(); }}
+              style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <Edit3 size={12} /> Editar
+            </button>
+            <button onClick={e => { e.stopPropagation(); onAssignMultiple(); }}
+              style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg, ${color}, ${color}cc)`, fontSize: 12, fontWeight: 700, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <Send size={11} /> Atribuir
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── AssignModal (atribuir para múltiplos alunos) ─────────────────────────────
 
 function AssignModal({ tpl, students, onAssign, onClose }) {
   const [picked, setPicked] = useState([]);
   const [days,   setDays]   = useState(tpl.days || []);
   const [saving, setSaving] = useState(false);
   const [done,   setDone]   = useState(false);
-  const toggle    = (id) => setPicked(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
-  const toggleDay = (d)  => setDays(p => p.includes(d)  ? p.filter(x => x !== d)  : [...p, d]);
 
   const handle = async () => {
     if (!picked.length || !days.length || saving) return;
@@ -338,30 +367,26 @@ function AssignModal({ tpl, students, onAssign, onClose }) {
         {done ? (
           <div style={{ textAlign: 'center', padding: '24px 0' }}>
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}><Check size={26} color="#10B981" strokeWidth={3} /></div>
-            <p style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Treino atribuído!</p>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6B7280' }}>Os alunos já podem ver no app</p>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Atribuído!</p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6B7280' }}>Alunos já podem ver no app</p>
           </div>
         ) : (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Atribuir para alunos</h3>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6B7280' }}>{tpl.name}</p>
-              </div>
+              <div><h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Atribuir para alunos</h3><p style={{ margin: '2px 0 0', fontSize: 12, color: '#6B7280' }}>{tpl.name}</p></div>
               <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
             </div>
             <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Dias da semana</label>
             <div style={{ display: 'flex', gap: 5, marginBottom: 18 }}>
               {DAYS.map(d => { const sel = days.includes(d.v); return (
-                <button key={d.v} onClick={() => toggleDay(d.v)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', color: sel ? '#3B82F6' : '#9CA3AF' }}>{d.s}</button>
+                <button key={d.v} onClick={() => setDays(p => p.includes(d.v) ? p.filter(x => x !== d.v) : [...p, d.v])} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', color: sel ? '#3B82F6' : '#9CA3AF' }}>{d.s}</button>
               ); })}
             </div>
             <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Alunos</label>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto', marginBottom: 18 }}>
-              {students.length === 0 ? (
-                <p style={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', padding: 20 }}>Nenhum aluno ativo</p>
-              ) : students.map(s => { const sel = picked.includes(s.id); return (
-                <button key={s.id} onClick={() => toggle(s.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'left' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 220, overflowY: 'auto', marginBottom: 18 }}>
+              {students.length === 0 ? <p style={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', padding: 20 }}>Nenhum aluno ativo</p>
+                : students.map(s => { const sel = picked.includes(s.id); return (
+                <button key={s.id} onClick={() => setPicked(p => p.includes(s.id) ? p.filter(x => x !== s.id) : [...p, s.id])} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'left' }}>
                   <div style={{ width: 30, height: 30, borderRadius: '50%', background: s.color || '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><span style={{ fontSize: 11, fontWeight: 800, color: 'white' }}>{s.initials || s.name?.[0]}</span></div>
                   <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#111827' }}>{s.name}</span>
                   {sel && <Check size={15} color="#3B82F6" strokeWidth={3} />}
@@ -379,160 +404,22 @@ function AssignModal({ tpl, students, onAssign, onClose }) {
   );
 }
 
-// ─── DayCell — célula interativa do grid semanal ──────────────────────────────
-
-function DayCell({ plan, onAdd, onEdit, onRemove }) {
-  const [hov, setHov] = useState(false);
-
-  if (!plan) {
-    return (
-      <div
-        onMouseEnter={() => setHov(true)}
-        onMouseLeave={() => setHov(false)}
-        onClick={onAdd}
-        style={{
-          minHeight: 130,
-          border: `2px dashed ${hov ? '#93C5FD' : '#E5E7EB'}`,
-          borderRadius: 12,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          background: hov ? '#F0F9FF' : 'transparent',
-          transition: 'all 0.15s',
-          gap: 6,
-        }}
-      >
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: hov ? '#DBEAFE' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
-          <Plus size={16} color={hov ? '#3B82F6' : '#9CA3AF'} />
-        </div>
-        <span style={{ fontSize: 10, fontWeight: 700, color: hov ? '#3B82F6' : '#C4C9D4', letterSpacing: '0.04em' }}>Adicionar</span>
-      </div>
-    );
-  }
-
-  const color   = tc(plan.type);
-  const exCount = (plan.exercises || []).length;
-
-  return (
-    <div style={{ borderRadius: 12, overflow: 'hidden', border: '1px solid #F1F5F9', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', background: 'white', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ height: 5, background: `linear-gradient(90deg, ${color}, ${color}99)`, flexShrink: 0 }} />
-      <div style={{ padding: '10px 10px 8px', flex: 1 }}>
-        <span style={{ fontSize: 9, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: 4 }}>{plan.type}</span>
-        <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: '#111827', lineHeight: 1.3, wordBreak: 'break-word' }}>{plan.name}</p>
-        <span style={{ fontSize: 10, color: '#9CA3AF' }}>{exCount} exercício{exCount !== 1 ? 's' : ''}</span>
-      </div>
-      <div style={{ display: 'flex', borderTop: '1px solid #F9FAFB' }}>
-        <button onClick={e => { e.stopPropagation(); onEdit(); }}
-          style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', color: '#6B7280', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-          <Edit3 size={11} /> Editar
-        </button>
-        <div style={{ width: 1, background: '#F3F4F6' }} />
-        <button onClick={e => { e.stopPropagation(); onRemove(); }}
-          style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', color: '#EF4444', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
-          <Trash2 size={11} /> Remover
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// ─── AddDayModal — escolhe treino para um dia específico ─────────────────────
-
-function AddDayModal({ day, templates, student, onAssign, onCreateNew, onClose }) {
-  const [saving, setSaving] = useState(false);
-  const [done,   setDone]   = useState(false);
-
-  const handle = async (tpl) => {
-    if (saving) return;
-    setSaving(true);
-    await onAssign(tpl, [student.id], [day.v]);
-    setSaving(false); setDone(true); setTimeout(onClose, 900);
-  };
-
-  return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 350, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', padding: '8px 24px 32px', width: '100%', maxWidth: 500, maxHeight: '82vh', overflowY: 'auto' }}>
-        {done ? (
-          <div style={{ textAlign: 'center', padding: '32px 0' }}>
-            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}><Check size={26} color="#10B981" strokeWidth={3} /></div>
-            <p style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Adicionado!</p>
-          </div>
-        ) : (
-          <>
-            {/* Handle bar */}
-            <div style={{ width: 40, height: 4, background: '#E5E7EB', borderRadius: 2, margin: '12px auto 22px' }} />
-
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-              <div>
-                <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>{day.full}</h3>
-                <p style={{ margin: '3px 0 0', fontSize: 13, color: '#6B7280' }}>Para <strong>{student.name}</strong></p>
-              </div>
-              <button onClick={onClose} style={{ background: '#F3F4F6', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6B7280' }}><X size={16} /></button>
-            </div>
-
-            {templates.length > 0 && (
-              <>
-                <p style={{ fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>Suas cartilhas</p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
-                  {templates.map(t => {
-                    const c = tc(t.type);
-                    const exCount = (t.exercises || []).length;
-                    return (
-                      <button key={t.id} onClick={() => handle(t)} disabled={saving}
-                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px', borderRadius: 14, border: '1.5px solid #E5E7EB', background: 'white', cursor: saving ? 'wait' : 'pointer', textAlign: 'left', transition: 'all 0.15s', opacity: saving ? 0.7 : 1 }}
-                        onMouseEnter={e => { if (!saving) { e.currentTarget.style.borderColor = c; e.currentTarget.style.background = c + '08'; } }}
-                        onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = 'white'; }}>
-                        <div style={{ width: 40, height: 40, borderRadius: 11, background: c + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                          <Dumbbell size={18} color={c} />
-                        </div>
-                        <div style={{ flex: 1 }}>
-                          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>{t.name}</p>
-                          <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9CA3AF' }}>{t.type} · {exCount} exercício{exCount !== 1 ? 's' : ''}</p>
-                        </div>
-                        <ChevronDown size={15} color="#D1D5DB" style={{ transform: 'rotate(-90deg)', flexShrink: 0 }} />
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '18px 0' }}>
-                  <div style={{ flex: 1, height: 1, background: '#F3F4F6' }} />
-                  <span style={{ fontSize: 11, color: '#C4C9D4', fontWeight: 600 }}>ou</span>
-                  <div style={{ flex: 1, height: 1, background: '#F3F4F6' }} />
-                </div>
-              </>
-            )}
-
-            <button onClick={() => { onCreateNew(day.v); onClose(); }}
-              style={{ width: '100%', padding: '14px', borderRadius: 12, border: '1.5px dashed #D1D5DB', background: 'none', fontSize: 13, fontWeight: 700, color: '#6B7280', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Plus size={15} /> Criar treino personalizado
-            </button>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}
-
 // ─── Página principal ─────────────────────────────────────────────────────────
 
 export default function Treinos() {
   const { user } = useAuth();
-  const [tab,        setTab]        = useState('cartilhas');
-  const [templates,  setTemplates]  = useState([]);
-  const [students,   setStudents]   = useState([]);
-  const [plans,      setPlans]      = useState([]);
-  const [loading,    setLoading]    = useState(true);
+  const [templates,   setTemplates]   = useState([]);
+  const [students,    setStudents]    = useState([]);
+  const [plans,       setPlans]       = useState([]);
+  const [loading,     setLoading]     = useState(true);
+  const [selStudent,  setSelStudent]  = useState(null);
+  const [targetDay,   setTargetDay]   = useState(null);
+  const [editor,      setEditor]      = useState(null);
+  const [assignModal, setAssignModal] = useState(null);
+  const [search,      setSearch]      = useState('');
 
-  const [search,       setSearch]       = useState('');
-  const [editor,       setEditor]       = useState(null);
-  const [assignTpl,    setAssignTpl]    = useState(null);
-  const [selStudent,   setSelStudent]   = useState(null);
-  const [addDayTarget, setAddDayTarget] = useState(null); // day obj when "+" clicked
-
-  const todayDow = new Date().getDay();
+  const templatesRef = useRef(null);
+  const todayDow     = new Date().getDay();
 
   useEffect(() => {
     if (!user || !hasSupabase) { setLoading(false); return; }
@@ -556,8 +443,8 @@ export default function Treinos() {
     const isTemplate = studentId === null || studentId === undefined;
     try {
       if (id) {
-        const { error: upErr } = await supabase.from('training_plans').update({ name, type, days }).eq('id', id);
-        if (upErr) throw upErr;
+        const { error } = await supabase.from('training_plans').update({ name, type, days }).eq('id', id);
+        if (error) throw error;
         await supabase.from('exercises').delete().eq('plan_id', id);
         if (exercises.length) {
           const { error: exErr } = await supabase.from('exercises').insert(
@@ -571,12 +458,10 @@ export default function Treinos() {
           else setPlans(prev => prev.map(p => p.id === id ? up : p));
         }
       } else {
-        const { data: plan, error: insErr } = await supabase.from('training_plans').insert({
-          personal_id: user.id,
-          student_id: isTemplate ? null : studentId,
-          name, type, days,
+        const { data: plan, error } = await supabase.from('training_plans').insert({
+          personal_id: user.id, student_id: isTemplate ? null : studentId, name, type, days,
         }).select().single();
-        if (insErr) throw insErr;
+        if (error) throw error;
         if (!plan) throw new Error('Nenhum dado retornado');
         if (exercises.length) {
           const { error: exErr } = await supabase.from('exercises').insert(
@@ -609,39 +494,47 @@ export default function Treinos() {
     if (!hasSupabase) return;
     const exs = [...(tpl.exercises || [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
     for (const sid of studentIds) {
-      // Remove planos existentes nos mesmos dias para este aluno
       const overlapping = plans.filter(p => p.student_id === sid && (p.days || []).some(d => selectedDays.includes(d)));
       for (const op of overlapping) await supabase.from('training_plans').delete().eq('id', op.id);
       setPlans(prev => prev.filter(p => !overlapping.find(o => o.id === p.id)));
-
       const { data: plan, error } = await supabase.from('training_plans').insert({
-        personal_id: user.id, student_id: sid,
-        name: tpl.name, type: tpl.type, days: selectedDays,
+        personal_id: user.id, student_id: sid, name: tpl.name, type: tpl.type, days: selectedDays,
       }).select().single();
       if (error || !plan) continue;
       if (exs.length) {
-        await supabase.from('exercises').insert(
-          exs.map((e, i) => ({ plan_id: plan.id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps, rest: e.rest, load: e.load || '', obs: e.obs || '', order_index: i }))
-        );
+        await supabase.from('exercises').insert(exs.map((e, i) => ({
+          plan_id: plan.id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps, rest: e.rest, load: e.load || '', obs: e.obs || '', order_index: i,
+        })));
       }
       const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', plan.id).single();
       if (full) setPlans(prev => [full, ...prev]);
     }
   };
 
+  // ── Handlers ─────────────────────────────────────────────────────────────────
+
+  const handleDayClick = (day) => {
+    setTargetDay(prev => prev?.v === day.v ? null : day);
+    setTimeout(() => templatesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
+  };
+
+  const handleTemplateSelect = async (tpl) => {
+    if (!targetDay || !selStudent) return;
+    await assignTemplate(tpl, [selStudent], [targetDay.v]);
+    setTargetDay(null);
+  };
+
   // ── Dados computados ─────────────────────────────────────────────────────────
 
-  const selectedStudent   = students.find(s => s.id === selStudent);
-  const studentPlans      = plans.filter(p => p.student_id === selStudent);
-  const filteredTemplates = templates.filter(t =>
+  const selectedStudent  = students.find(s => s.id === selStudent);
+  const studentPlans     = plans.filter(p => p.student_id === selStudent);
+  const byDay            = {};
+  studentPlans.forEach(p => (p.days || []).forEach(d => { byDay[d] = p; }));
+  const activeDays       = Object.keys(byDay).length;
+
+  const filtered = templates.filter(t =>
     !search || t.name?.toLowerCase().includes(search.toLowerCase()) || t.type?.toLowerCase().includes(search.toLowerCase())
   );
-
-  // byDay: mapeia dia da semana → plano do aluno selecionado
-  const byDay = {};
-  studentPlans.forEach(p => (p.days || []).forEach(d => { byDay[d] = p; }));
-
-  const activeDays = Object.keys(byDay).length;
 
   if (loading) return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
@@ -653,157 +546,145 @@ export default function Treinos() {
     <div className="page-padding" style={{ flex: 1 }}>
 
       {/* ── Header ─────────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
           <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Treinos</h2>
           <p style={{ margin: '3px 0 0', fontSize: 13, color: '#9CA3AF' }}>
-            {tab === 'cartilhas' ? `${templates.length} cartilha${templates.length !== 1 ? 's' : ''}` : `${students.length} aluno${students.length !== 1 ? 's' : ''}`}
+            {students.length} aluno{students.length !== 1 ? 's' : ''} · {templates.length} cartilha{templates.length !== 1 ? 's' : ''}
           </p>
         </div>
-        {tab === 'cartilhas' && (
-          <button onClick={() => setEditor({ item: null, mode: 'template' })}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(59,130,246,0.3)' }}>
-            <Plus size={16} /> Nova cartilha
-          </button>
-        )}
+        <button onClick={() => setEditor({ item: null, mode: 'template' })}
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(59,130,246,0.3)' }}>
+          <Plus size={16} /> Nova cartilha
+        </button>
       </div>
 
-      {/* ── Tab switcher ───────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 12, padding: 4, marginBottom: 24, width: 'fit-content' }}>
-        {[
-          { id: 'cartilhas', icon: BookOpen, label: 'Cartilhas' },
-          { id: 'alunos',    icon: Users,    label: 'Por Aluno'  },
-        ].map(({ id, icon: Icon, label }) => {
-          const active = tab === id;
-          return (
-            <button key={id} onClick={() => setTab(id)}
-              style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: active ? 'white' : 'transparent', color: active ? '#111827' : '#9CA3AF', boxShadow: active ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
-              <Icon size={15} /> {label}
-            </button>
-          );
-        })}
-      </div>
-
-      {/* ══════════════════════════════════════════════════════════════════════
-           TAB 1 — CARTILHAS
-         ══════════════════════════════════════════════════════════════════════ */}
-      {tab === 'cartilhas' && (
+      {students.length === 0 ? (
+        <div style={{ background: 'white', borderRadius: 16, padding: '60px 24px', textAlign: 'center', border: '2px dashed #E5E7EB', marginBottom: 32 }}>
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: '#F0FFF4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}><Users size={26} color="#10B981" /></div>
+          <h3 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 800 }}>Sem alunos ativos</h3>
+          <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF' }}>Cadastre alunos para montar a semana de treino deles</p>
+        </div>
+      ) : (
         <>
-          {templates.length > 4 && (
-            <div style={{ position: 'relative', marginBottom: 16 }}>
-              <Search size={15} color="#9CA3AF" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)' }} />
-              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar cartilha..."
-                style={{ width: '100%', padding: '9px 14px 9px 38px', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
-            </div>
-          )}
+          {/* ── Seletor de aluno ─────────────────────────────────────────── */}
+          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
+            {students.map(s => {
+              const sel = selStudent === s.id;
+              const cnt = plans.filter(p => p.student_id === s.id).length;
+              return (
+                <button key={s.id} onClick={() => { setSelStudent(s.id); setTargetDay(null); }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px 7px 8px', borderRadius: 40, border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s' }}>
+                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: s.color || '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <span style={{ fontSize: 10, fontWeight: 800, color: 'white' }}>{s.initials || s.name?.[0]}</span>
+                  </div>
+                  <div style={{ textAlign: 'left' }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: sel ? 700 : 500, color: sel ? '#1D4ED8' : '#374151', whiteSpace: 'nowrap' }}>{s.name}</p>
+                    {cnt > 0 && <p style={{ margin: 0, fontSize: 10, color: '#9CA3AF' }}>{cnt} treino{cnt !== 1 ? 's' : ''}/sem</p>}
+                  </div>
+                </button>
+              );
+            })}
+          </div>
 
-          {templates.length === 0 && (
-            <div style={{ background: 'white', borderRadius: 16, padding: '60px 24px', textAlign: 'center', border: '2px dashed #E5E7EB' }}>
-              <div style={{ width: 60, height: 60, borderRadius: 16, background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}><BookOpen size={26} color="#8B5CF6" /></div>
-              <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800 }}>Nenhuma cartilha ainda</h3>
-              <p style={{ margin: '0 0 24px', fontSize: 14, color: '#6B7280', maxWidth: 300, marginLeft: 'auto', marginRight: 'auto' }}>Crie uma cartilha e use a IA para sugerir exercícios. Depois arraste para a semana de cada aluno.</p>
-              <button onClick={() => setEditor({ item: null, mode: 'template' })}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
-                <Plus size={16} /> Criar primeira cartilha
-              </button>
-            </div>
-          )}
-
-          {filteredTemplates.length > 0 && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 14 }}>
-              {filteredTemplates.map(t => (
-                <TemplateCard key={t.id} tpl={t}
-                  onEdit={tpl => setEditor({ item: tpl, mode: 'template' })}
-                  onAssign={tpl => setAssignTpl(tpl)}
-                  onDelete={tpl => deleteItem(tpl, true)} />
-              ))}
-            </div>
-          )}
-        </>
-      )}
-
-      {/* ══════════════════════════════════════════════════════════════════════
-           TAB 2 — POR ALUNO (GRID SEMANAL)
-         ══════════════════════════════════════════════════════════════════════ */}
-      {tab === 'alunos' && (
-        <>
-          {students.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '60px 0', color: '#9CA3AF', fontSize: 14 }}>Nenhum aluno ativo cadastrado</div>
-          ) : (
+          {/* ── Grid semanal ─────────────────────────────────────────────── */}
+          {selectedStudent && (
             <>
-              {/* Seletor de aluno */}
-              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 28, paddingBottom: 4 }}>
-                {students.map(s => {
-                  const sel  = selStudent === s.id;
-                  const cnt  = plans.filter(p => p.student_id === s.id).length;
-                  return (
-                    <button key={s.id} onClick={() => setSelStudent(s.id)}
-                      style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '8px 14px 8px 8px', borderRadius: 40, border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s' }}>
-                      <div style={{ width: 30, height: 30, borderRadius: '50%', background: s.color || '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <span style={{ fontSize: 11, fontWeight: 800, color: 'white' }}>{s.initials || s.name?.[0]}</span>
-                      </div>
-                      <div style={{ textAlign: 'left' }}>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: sel ? 700 : 500, color: sel ? '#1D4ED8' : '#374151', whiteSpace: 'nowrap' }}>{s.name}</p>
-                        {cnt > 0 && <p style={{ margin: 0, fontSize: 10, color: '#9CA3AF' }}>{cnt} treino{cnt !== 1 ? 's' : ''}/sem</p>}
-                      </div>
-                    </button>
-                  );
-                })}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>Semana de {selectedStudent.name}</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>
+                    {activeDays === 0 ? 'Clique em um dia para adicionar treino' : `${activeDays} dia${activeDays !== 1 ? 's' : ''} com treino`}
+                  </p>
+                </div>
+                <button onClick={() => setEditor({ item: null, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name })}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 9, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }}>
+                  <Plus size={13} /> Do zero
+                </button>
               </div>
 
-              {selectedStudent && (
-                <>
-                  {/* Subtítulo da semana */}
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-                    <div>
-                      <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Semana de {selectedStudent.name}</p>
-                      <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>
-                        {activeDays === 0 ? 'Nenhum treino atribuído — clique em um dia para começar' : `${activeDays} dia${activeDays !== 1 ? 's' : ''} com treino`}
-                      </p>
-                    </div>
-                    <button onClick={() => setEditor({ item: null, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name })}
-                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }}>
-                      <Plus size={13} /> Personalizado
-                    </button>
-                  </div>
-
-                  {/* Grid semanal */}
-                  <div style={{ overflowX: 'auto', marginBottom: 8 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(110px, 1fr))', gap: 10, minWidth: 810 }}>
-                      {DAYS.map(d => {
-                        const plan    = byDay[d.v];
-                        const isToday = d.v === todayDow;
-                        return (
-                          <div key={d.v}>
-                            {/* Cabeçalho do dia */}
-                            <div style={{ textAlign: 'center', marginBottom: 8, padding: '6px 4px', borderRadius: 8, background: isToday ? '#EFF6FF' : 'transparent' }}>
-                              <span style={{ fontSize: 11, fontWeight: 800, color: isToday ? '#3B82F6' : plan ? '#374151' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.s}</span>
-                              {isToday && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#3B82F6', margin: '3px auto 0' }} />}
-                            </div>
-                            {/* Célula interativa */}
-                            <DayCell
-                              plan={plan}
-                              onAdd={() => setAddDayTarget(d)}
-                              onEdit={() => setEditor({ item: plan, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name })}
-                              onRemove={() => deleteItem(plan, false)}
-                            />
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* Dica para mobile */}
-                  <p style={{ fontSize: 11, color: '#C4C9D4', textAlign: 'center', marginTop: 8 }}>← deslize para ver todos os dias →</p>
-                </>
-              )}
+              <div style={{ overflowX: 'auto', marginBottom: 32 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(108px, 1fr))', gap: 10, minWidth: 790 }}>
+                  {DAYS.map(d => {
+                    const plan    = byDay[d.v];
+                    const isToday = d.v === todayDow;
+                    const isTgt   = targetDay?.v === d.v;
+                    return (
+                      <div key={d.v}>
+                        <div style={{ textAlign: 'center', marginBottom: 7, padding: '5px 4px', borderRadius: 8, background: isToday ? '#EFF6FF' : 'transparent' }}>
+                          <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: isToday ? '#3B82F6' : plan ? '#374151' : '#9CA3AF' }}>{d.s}</span>
+                          {isToday && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#3B82F6', margin: '2px auto 0' }} />}
+                        </div>
+                        <DayCell
+                          plan={plan}
+                          isTarget={!plan && isTgt}
+                          onAdd={() => handleDayClick(d)}
+                          onEdit={() => setEditor({ item: plan, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name })}
+                          onRemove={() => deleteItem(plan, false)}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
             </>
           )}
         </>
       )}
 
-      {/* ── Modais ─────────────────────────────────────────────────────────── */}
+      {/* ── Biblioteca de cartilhas ───────────────────────────────────────── */}
+      <div ref={templatesRef}>
+        {/* Banner de seleção */}
+        {targetDay && selectedStudent && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: '#EFF6FF', border: '1.5px solid #BFDBFE', marginBottom: 16 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3B82F6', flexShrink: 0, animation: 'pulse 1.5s infinite' }} />
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1D4ED8', flex: 1 }}>
+              Escolha uma cartilha para <strong>{targetDay.full}</strong> de {selectedStudent.name}
+            </p>
+            <button onClick={() => setTargetDay(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#93C5FD', display: 'flex', padding: 2 }}><X size={16} /></button>
+          </div>
+        )}
 
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 14, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <BookOpen size={16} color="#8B5CF6" />
+            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827' }}>
+              {targetDay ? 'Suas cartilhas — clique para atribuir' : 'Suas cartilhas'}
+            </h3>
+            {templates.length > 0 && <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', background: '#F3F4F6', padding: '2px 8px', borderRadius: 20 }}>{templates.length}</span>}
+          </div>
+          <div style={{ position: 'relative' }}>
+            <Search size={13} color="#9CA3AF" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar..."
+              style={{ padding: '7px 12px 7px 30px', border: '1.5px solid #E5E7EB', borderRadius: 9, fontSize: 13, outline: 'none', width: 160 }} />
+          </div>
+        </div>
+
+        {templates.length === 0 ? (
+          <div style={{ background: 'white', borderRadius: 16, padding: '48px 24px', textAlign: 'center', border: '2px dashed #E5E7EB' }}>
+            <div style={{ width: 54, height: 54, borderRadius: 14, background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}><BookOpen size={24} color="#8B5CF6" /></div>
+            <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 800 }}>Nenhuma cartilha ainda</h3>
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: '#6B7280' }}>Crie cartilhas de treino e use a IA para sugerir exercícios</p>
+            <button onClick={() => setEditor({ item: null, mode: 'template' })}
+              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 22px', borderRadius: 11, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <Plus size={15} /> Criar primeira cartilha
+            </button>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
+            {filtered.map(t => (
+              <TemplateCard key={t.id} tpl={t}
+                targeting={!!targetDay}
+                onSelect={() => handleTemplateSelect(t)}
+                onEdit={() => setEditor({ item: t, mode: 'template' })}
+                onAssignMultiple={() => setAssignModal(t)}
+                onDelete={() => deleteItem(t, true)} />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Modais ─────────────────────────────────────────────────────────── */}
       {editor !== null && (
         <TemplateEditor
           item={editor.item}
@@ -814,19 +695,8 @@ export default function Treinos() {
           onSave={saveItem}
           onClose={() => setEditor(null)} />
       )}
-
-      {assignTpl && (
-        <AssignModal tpl={assignTpl} students={students} onAssign={assignTemplate} onClose={() => setAssignTpl(null)} />
-      )}
-
-      {addDayTarget && selectedStudent && (
-        <AddDayModal
-          day={addDayTarget}
-          templates={templates}
-          student={selectedStudent}
-          onAssign={assignTemplate}
-          onCreateNew={(dayV) => setEditor({ item: null, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name, defaultDays: [dayV] })}
-          onClose={() => setAddDayTarget(null)} />
+      {assignModal && (
+        <AssignModal tpl={assignModal} students={students} onAssign={assignTemplate} onClose={() => setAssignModal(null)} />
       )}
     </div>
   );

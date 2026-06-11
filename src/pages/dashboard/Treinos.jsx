@@ -460,15 +460,30 @@ function DayCell({ plan, isTarget, onAdd, onEdit, onRemove, onCopyTo }) {
   }, [copyOpen]);
 
   if (!plan) {
-    const active = isTarget || hov;
     return (
       <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)} onClick={onAdd}
-        style={{ minHeight: 120, border: `2px ${isTarget ? 'solid #3B82F6' : `dashed ${hov ? '#93C5FD' : '#E5E7EB'}`}`, borderRadius: 12, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: isTarget ? '#EFF6FF' : hov ? '#F8FBFF' : 'transparent', boxShadow: isTarget ? '0 0 0 3px rgba(59,130,246,0.15)' : 'none', transition: 'all 0.15s', gap: 6 }}>
-        <div style={{ width: 32, height: 32, borderRadius: '50%', background: active ? '#DBEAFE' : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.15s' }}>
-          <Plus size={16} color={active ? '#3B82F6' : '#9CA3AF'} />
+        style={{
+          minHeight: 148,
+          border: `2px ${isTarget ? 'solid #3B82F6' : `dashed ${hov ? '#93C5FD' : '#E5E7EB'}`}`,
+          borderRadius: 14,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          cursor: 'pointer',
+          background: isTarget ? '#EFF6FF' : hov ? '#F8FBFF' : 'white',
+          boxShadow: isTarget ? '0 0 0 4px rgba(59,130,246,0.12), 0 4px 16px rgba(59,130,246,0.08)' : hov ? '0 4px 12px rgba(0,0,0,0.06)' : 'none',
+          transition: 'all 0.2s',
+          gap: 8,
+        }}>
+        <div style={{
+          width: 36, height: 36, borderRadius: '50%',
+          background: isTarget ? '#DBEAFE' : hov ? '#F0F9FF' : '#F9FAFB',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          transition: 'all 0.2s',
+          boxShadow: isTarget ? '0 0 0 6px rgba(59,130,246,0.1)' : 'none',
+        }}>
+          <Plus size={18} color={isTarget ? '#3B82F6' : hov ? '#93C5FD' : '#D1D5DB'} />
         </div>
-        <span style={{ fontSize: 10, fontWeight: 700, color: active ? '#3B82F6' : '#D1D5DB', letterSpacing: '0.04em' }}>
-          {isTarget ? 'Selecionado' : 'Adicionar'}
+        <span style={{ fontSize: 11, fontWeight: 700, color: isTarget ? '#3B82F6' : hov ? '#93C5FD' : '#D1D5DB', letterSpacing: '0.03em' }}>
+          {isTarget ? 'Atribuir aqui' : 'Livre'}
         </span>
       </div>
     );
@@ -478,40 +493,57 @@ function DayCell({ plan, isTarget, onAdd, onEdit, onRemove, onCopyTo }) {
   const exs   = [...(plan.exercises || [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
 
   return (
-    <div style={{ borderRadius: 12, border: '1.5px solid #F1F5F9', boxShadow: '0 2px 8px rgba(0,0,0,0.06)', background: 'white', display: 'flex', flexDirection: 'column', overflow: 'visible', position: 'relative' }}>
-      <div style={{ height: 4, background: `linear-gradient(90deg, ${color}, ${color}99)`, borderRadius: '11px 11px 0 0' }} />
-      <div style={{ padding: '8px 10px 8px', flex: 1 }}>
-        <span style={{ fontSize: 9, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em', display: 'block', marginBottom: 2 }}>{plan.type}</span>
-        <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: '#111827', lineHeight: 1.3, wordBreak: 'break-word' }}>{plan.name}</p>
-        {exs.slice(0, 3).map((ex, i) => (
-          <div key={i} style={{ display: 'flex', gap: 4, alignItems: 'baseline', marginBottom: 2 }}>
-            <span style={{ fontSize: 9, fontWeight: 700, color: '#D1D5DB', width: 10, textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
-            <span style={{ fontSize: 10, color: '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{ex.name}</span>
-            <span style={{ fontSize: 9, color: '#C4C9D4', fontWeight: 600, flexShrink: 0 }}>{ex.sets}×{ex.reps}</span>
-          </div>
-        ))}
+    <div style={{
+      borderRadius: 14, border: '1.5px solid #F1F5F9',
+      boxShadow: '0 2px 10px rgba(0,0,0,0.07)',
+      background: 'white', display: 'flex', flexDirection: 'column',
+      overflow: 'visible', position: 'relative', minHeight: 148,
+      transition: 'box-shadow 0.15s',
+    }}
+      onMouseEnter={e => e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.11)'}
+      onMouseLeave={e => e.currentTarget.style.boxShadow = '0 2px 10px rgba(0,0,0,0.07)'}>
+      <div style={{ height: 5, background: `linear-gradient(90deg, ${color}, ${color}77)`, borderRadius: '13px 13px 0 0' }} />
+      <div style={{ padding: '10px 11px 8px', flex: 1 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginBottom: 4, background: color + '12', borderRadius: 20, padding: '2px 8px 2px 6px' }}>
+          <div style={{ width: 5, height: 5, borderRadius: '50%', background: color, flexShrink: 0 }} />
+          <span style={{ fontSize: 9, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{plan.type}</span>
+        </div>
+        <p style={{ margin: '0 0 7px', fontSize: 12, fontWeight: 800, color: '#111827', lineHeight: 1.35, wordBreak: 'break-word' }}>{plan.name}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+          {exs.slice(0, 3).map((ex, i) => (
+            <div key={i} style={{ display: 'flex', gap: 5, alignItems: 'center' }}>
+              <span style={{ fontSize: 9, fontWeight: 700, color: '#D1D5DB', width: 11, textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
+              <span style={{ fontSize: 10, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{ex.name}</span>
+              <span style={{ fontSize: 9, color: color, fontWeight: 700, flexShrink: 0, background: color + '10', padding: '1px 4px', borderRadius: 4 }}>{ex.sets}×{ex.reps}</span>
+            </div>
+          ))}
+        </div>
         {exs.length > 3 && (
-          <p style={{ margin: '3px 0 0', fontSize: 9, color: '#C4C9D4', fontStyle: 'italic' }}>+{exs.length - 3} mais</p>
+          <p style={{ margin: '5px 0 0', fontSize: 9, color: '#C4C9D4', fontStyle: 'italic' }}>+{exs.length - 3} exercícios</p>
         )}
       </div>
-      <div style={{ display: 'flex', borderTop: '1px solid #F9FAFB' }}>
+      <div style={{ display: 'flex', borderTop: '1px solid #F3F4F6', gap: 0 }}>
         <button onClick={e => { e.stopPropagation(); onEdit(); }}
-          style={{ flex: 1, padding: '7px 4px', border: 'none', background: 'none', cursor: 'pointer', color: '#6B7280', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+          style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', color: '#6B7280', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, borderRadius: '0 0 0 12px', transition: 'background 0.1s, color 0.1s' }}
+          onMouseEnter={e => { e.currentTarget.style.background = '#F9FAFB'; e.currentTarget.style.color = '#374151'; }}
+          onMouseLeave={e => { e.currentTarget.style.background = 'none'; e.currentTarget.style.color = '#6B7280'; }}>
           <Edit3 size={11} /> Editar
         </button>
         <div style={{ width: 1, background: '#F3F4F6' }} />
         <button ref={copyRef} onClick={e => { e.stopPropagation(); setCopyOpen(v => !v); }}
-          style={{ flex: 1, padding: '7px 4px', border: 'none', background: 'none', cursor: 'pointer', color: '#3B82F6', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, position: 'relative' }}>
+          style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', color: '#3B82F6', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, position: 'relative', transition: 'background 0.1s' }}
+          onMouseEnter={e => e.currentTarget.style.background = '#EFF6FF'}
+          onMouseLeave={e => e.currentTarget.style.background = 'none'}>
           <Copy size={11} /> Copiar
           {copyOpen && (
-            <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: 12, boxShadow: '0 8px 28px rgba(0,0,0,0.14)', border: '1.5px solid #F1F5F9', zIndex: 50, padding: '6px 0', minWidth: 148, textAlign: 'left' }}>
+            <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: 14, boxShadow: '0 12px 32px rgba(0,0,0,0.16)', border: '1.5px solid #F1F5F9', zIndex: 50, padding: '6px 0', minWidth: 160, textAlign: 'left' }}>
               <p style={{ margin: '0 0 4px', padding: '0 12px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Copiar para</p>
               {DAYS.map(d => (
                 <button key={d.v} onClick={() => { onCopyTo(d.v); setCopyOpen(false); }}
-                  style={{ width: '100%', padding: '7px 12px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: 6 }}
+                  style={{ width: '100%', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: 8 }}
                   onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
                   onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                  <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', width: 24 }}>{d.s}</span>
+                  <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', width: 26 }}>{d.s}</span>
                   {d.full}
                 </button>
               ))}
@@ -520,7 +552,9 @@ function DayCell({ plan, isTarget, onAdd, onEdit, onRemove, onCopyTo }) {
         </button>
         <div style={{ width: 1, background: '#F3F4F6' }} />
         <button onClick={e => { e.stopPropagation(); onRemove(); }}
-          style={{ flex: 1, padding: '7px 4px', border: 'none', background: 'none', cursor: 'pointer', color: '#EF4444', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3 }}>
+          style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', color: '#EF4444', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, borderRadius: '0 0 12px 0', transition: 'background 0.1s' }}
+          onMouseEnter={e => e.currentTarget.style.background = '#FEF2F2'}
+          onMouseLeave={e => e.currentTarget.style.background = 'none'}>
           <Trash2 size={11} /> Remover
         </button>
       </div>
@@ -540,57 +574,78 @@ function TemplateCard({ tpl, targeting, onSelect, onEdit, onAssignMultiple, onDe
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
       onClick={targeting ? onSelect : undefined}
-      style={{ background: targeting && hov ? color + '08' : 'white', borderRadius: 14, overflow: 'hidden', border: targeting ? `2px solid ${hov ? color : '#E5E7EB'}` : '1.5px solid #F1F5F9', boxShadow: targeting && hov ? `0 6px 20px ${color}25` : '0 2px 8px rgba(0,0,0,0.06)', cursor: targeting ? 'pointer' : 'default', transition: 'all 0.15s', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ height: 5, background: `linear-gradient(90deg, ${color}, ${color}99)` }} />
-      <div style={{ padding: '12px 14px 10px', flex: 1 }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 8 }}>
+      style={{
+        background: targeting && hov ? color + '06' : 'white',
+        borderRadius: 16, overflow: 'hidden',
+        border: targeting
+          ? `2px solid ${hov ? color : '#E5E7EB'}`
+          : '1.5px solid #F1F5F9',
+        boxShadow: targeting && hov
+          ? `0 8px 24px ${color}30`
+          : hov && !targeting
+          ? '0 8px 24px rgba(0,0,0,0.1)'
+          : '0 2px 8px rgba(0,0,0,0.05)',
+        cursor: targeting ? 'pointer' : 'default',
+        transition: 'all 0.18s',
+        display: 'flex', flexDirection: 'column',
+        transform: targeting && hov ? 'translateY(-2px)' : 'none',
+      }}>
+      <div style={{ height: 5, background: `linear-gradient(90deg, ${color}, ${color}77)` }} />
+      <div style={{ padding: '13px 15px 10px', flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 6, marginBottom: 10 }}>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 2 }}>
-              <span style={{ fontSize: 9, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{tpl.type}</span>
-              <span style={{ fontSize: 9, fontWeight: 700, background: '#F3F4F6', color: '#6B7280', padding: '1px 5px', borderRadius: 20 }}>{exs.length} ex.</span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 4 }}>
+              <span style={{ fontSize: 9, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em', background: color + '12', padding: '2px 7px', borderRadius: 20 }}>{tpl.type}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, background: '#F3F4F6', color: '#9CA3AF', padding: '2px 6px', borderRadius: 20 }}>{exs.length} ex.</span>
             </div>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tpl.name || 'Sem nome'}</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>{tpl.name || 'Sem nome'}</p>
           </div>
-          <div style={{ display: 'flex', gap: 1, flexShrink: 0 }}>
-            {!targeting && (
-              <button onClick={e => { e.stopPropagation(); onDuplicate(); }} title="Duplicar cartilha"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#D1D5DB', padding: 4, display: 'flex', transition: 'color 0.1s', borderRadius: 6 }}
+          {!targeting && (
+            <div style={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+              <button onClick={e => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#D1D5DB', padding: '4px 5px', display: 'flex', transition: 'color 0.1s', borderRadius: 6 }}
                 onMouseEnter={e => e.currentTarget.style.color = '#3B82F6'}
                 onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}>
                 <Copy size={12} />
               </button>
-            )}
-            <button onClick={e => { e.stopPropagation(); onDelete(); }}
-              style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#D1D5DB', padding: 4, display: 'flex', transition: 'color 0.1s', borderRadius: 6 }}
-              onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
-              onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}>
-              <Trash2 size={13} />
-            </button>
-          </div>
+              <button onClick={e => { e.stopPropagation(); onDelete(); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#D1D5DB', padding: '4px 5px', display: 'flex', transition: 'color 0.1s', borderRadius: 6 }}
+                onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
+                onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}>
+                <Trash2 size={13} />
+              </button>
+            </div>
+          )}
         </div>
-        {preview.map((ex, i) => (
-          <div key={i} style={{ display: 'flex', gap: 6, padding: '2px 0' }}>
-            <span style={{ fontSize: 10, fontWeight: 700, color: '#D1D5DB', width: 14, textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
-            <span style={{ fontSize: 11, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{ex.name}</span>
-            <span style={{ fontSize: 10, color: '#9CA3AF', fontWeight: 600, flexShrink: 0 }}>{ex.sets}×{ex.reps}</span>
-          </div>
-        ))}
-        {extra > 0 && <p style={{ margin: '3px 0 0', fontSize: 10, color: '#C4C9D4', fontStyle: 'italic' }}>+{extra} mais</p>}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          {preview.map((ex, i) => (
+            <div key={i} style={{ display: 'flex', gap: 7, alignItems: 'center', padding: '1px 0' }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: '#D1D5DB', width: 14, textAlign: 'right', flexShrink: 0 }}>{i + 1}</span>
+              <span style={{ fontSize: 11, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>{ex.name}</span>
+              <span style={{ fontSize: 10, color, fontWeight: 700, flexShrink: 0, background: color + '10', padding: '1px 5px', borderRadius: 4 }}>{ex.sets}×{ex.reps}</span>
+            </div>
+          ))}
+        </div>
+        {extra > 0 && <p style={{ margin: '5px 0 0', fontSize: 10, color: '#C4C9D4', fontStyle: 'italic' }}>+{extra} mais</p>}
       </div>
-      <div style={{ padding: '8px 14px 12px', borderTop: '1px solid #F9FAFB' }}>
+      <div style={{ padding: '10px 14px 13px', borderTop: '1px solid #F3F4F6' }}>
         {targeting ? (
           <button onClick={onSelect}
-            style={{ width: '100%', padding: '9px', borderRadius: 9, border: 'none', background: hov ? `linear-gradient(135deg, ${color}, ${color}cc)` : '#F3F4F6', color: hov ? 'white' : '#9CA3AF', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s' }}>
+            style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: hov ? `linear-gradient(135deg, ${color}, ${color}bb)` : '#F3F4F6', color: hov ? 'white' : '#9CA3AF', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s', boxShadow: hov ? `0 4px 14px ${color}40` : 'none' }}>
             <Check size={13} /> Usar neste dia
           </button>
         ) : (
           <div style={{ display: 'flex', gap: 6 }}>
             <button onClick={e => { e.stopPropagation(); onEdit(); }}
-              style={{ flex: 1, padding: '8px', borderRadius: 8, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              style={{ flex: 1, padding: '9px 8px', borderRadius: 9, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, transition: 'border-color 0.1s, background 0.1s' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.background = '#F9FAFB'; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = 'white'; }}>
               <Edit3 size={12} /> Editar
             </button>
             <button onClick={e => { e.stopPropagation(); onAssignMultiple(); }}
-              style={{ flex: 1, padding: '8px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg, ${color}, ${color}cc)`, fontSize: 12, fontWeight: 700, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              style={{ flex: 1, padding: '9px 8px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${color}, ${color}bb)`, fontSize: 12, fontWeight: 700, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, boxShadow: `0 3px 10px ${color}30`, transition: 'opacity 0.15s' }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
               <Send size={11} /> Atribuir
             </button>
           </div>
@@ -805,29 +860,35 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose })
       </div>
 
       {/* Biblioteca de cartilhas */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '14px 20px' }}>
-        <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-          Cartilhas disponíveis
-        </p>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>
+            Selecione uma cartilha
+          </p>
+          <span style={{ fontSize: 11, color: '#D1D5DB', fontWeight: 600 }}>Clique → depois nos dias</span>
+        </div>
 
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 14 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 16 }}>
           {/* Folga */}
           <button onClick={() => setSelected(selected === 'rest' ? null : 'rest')}
-            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '9px 14px', borderRadius: 11, border: `2px solid ${selected === 'rest' ? '#8B5CF6' : '#E5E7EB'}`, background: selected === 'rest' ? '#F5F3FF' : 'white', cursor: 'pointer', transition: 'all 0.15s' }}>
-            <span style={{ fontSize: 16 }}>🌙</span>
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, border: `2px solid ${selected === 'rest' ? '#8B5CF6' : '#E5E7EB'}`, background: selected === 'rest' ? '#F5F3FF' : 'white', cursor: 'pointer', transition: 'all 0.15s', boxShadow: selected === 'rest' ? '0 4px 14px rgba(139,92,246,0.2)' : '0 1px 4px rgba(0,0,0,0.05)' }}>
+            <span style={{ fontSize: 18 }}>🌙</span>
             <div style={{ textAlign: 'left' }}>
-              <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: selected === 'rest' ? '#7C3AED' : '#374151' }}>Folga / Descanso</p>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: selected === 'rest' ? '#7C3AED' : '#374151' }}>Folga / Descanso</p>
+              <p style={{ margin: 0, fontSize: 10, color: selected === 'rest' ? '#8B5CF6' : '#9CA3AF' }}>Dia de recuperação</p>
             </div>
-            {selected === 'rest' && <Check size={13} color="#7C3AED" strokeWidth={3} />}
+            {selected === 'rest' && <Check size={14} color="#7C3AED" strokeWidth={3} />}
           </button>
         </div>
 
         {templates.length === 0 ? (
-          <div style={{ padding: '32px 0', textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
-            Nenhuma cartilha criada ainda — crie cartilhas antes de montar a semana
+          <div style={{ padding: '40px 0', textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
+            <BookOpen size={32} color="#E5E7EB" style={{ marginBottom: 10 }} />
+            <p style={{ margin: 0 }}>Nenhuma cartilha criada ainda</p>
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: '#D1D5DB' }}>Crie cartilhas na página principal primeiro</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(190px, 1fr))', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 9 }}>
             {templates.map(t => {
               const isSel  = selected !== 'rest' && selected?.id === t.id;
               const color  = tc(t.type);
@@ -835,20 +896,25 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose })
               const usedIn = DAYS.filter(d => week[d.v]?.type === 'plan' && week[d.v]?.tpl?.id === t.id);
               return (
                 <button key={t.id} onClick={() => setSelected(isSel ? null : t)}
-                  style={{ textAlign: 'left', padding: 0, border: `2px solid ${isSel ? color : '#E5E7EB'}`, borderRadius: 12, background: isSel ? color + '0a' : 'white', cursor: 'pointer', transition: 'all 0.15s', overflow: 'hidden', boxShadow: isSel ? `0 4px 16px ${color}25` : 'none', display: 'flex', flexDirection: 'column' }}>
+                  style={{ textAlign: 'left', padding: 0, border: `2px solid ${isSel ? color : '#E5E7EB'}`, borderRadius: 13, background: isSel ? color + '07' : 'white', cursor: 'pointer', transition: 'all 0.18s', overflow: 'hidden', boxShadow: isSel ? `0 6px 20px ${color}28` : '0 1px 4px rgba(0,0,0,0.05)', display: 'flex', flexDirection: 'column', transform: isSel ? 'translateY(-1px)' : 'none' }}>
                   <div style={{ height: 4, background: `linear-gradient(90deg, ${color}, ${color}77)` }} />
-                  <div style={{ padding: '10px 12px', flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 3 }}>
-                      <span style={{ fontSize: 9, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em' }}>{t.type}</span>
-                      {isSel && <Check size={13} color={color} strokeWidth={3} />}
+                  <div style={{ padding: '11px 13px', flex: 1 }}>
+                    <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 4, marginBottom: 5 }}>
+                      <div>
+                        <span style={{ fontSize: 9, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em', background: color + '12', padding: '2px 6px', borderRadius: 20, display: 'inline-block', marginBottom: 3 }}>{t.type}</span>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>{t.name}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9CA3AF' }}>{exs.length} exercícios</p>
+                      </div>
+                      {isSel && (
+                        <div style={{ width: 22, height: 22, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+                          <Check size={12} color="white" strokeWidth={3} />
+                        </div>
+                      )}
                     </div>
-                    <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 700, color: '#111827' }}>{t.name}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>{exs.length} ex.</p>
-                    {/* Dias já atribuídos */}
                     {usedIn.length > 0 && (
-                      <div style={{ display: 'flex', gap: 3, marginTop: 6, flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', marginTop: 6 }}>
                         {usedIn.map(d => (
-                          <span key={d.v} style={{ fontSize: 9, fontWeight: 800, color, background: color + '15', padding: '2px 5px', borderRadius: 20 }}>{d.s}</span>
+                          <span key={d.v} style={{ fontSize: 9, fontWeight: 800, color, background: color + '15', padding: '2px 6px', borderRadius: 20 }}>{d.s}</span>
                         ))}
                       </div>
                     )}
@@ -1097,15 +1163,18 @@ export default function Treinos() {
       <Toasts toasts={toasts} dismiss={id => setToasts(p => p.filter(t => t.id !== id))} />
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Treinos</h2>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#111827', letterSpacing: '-0.3px' }}>Treinos</h2>
           <p style={{ margin: '3px 0 0', fontSize: 13, color: '#9CA3AF' }}>
             {students.length} aluno{students.length !== 1 ? 's' : ''} · {templates.length} cartilha{templates.length !== 1 ? 's' : ''}
+            {plans.length > 0 && ` · ${plans.length} plano${plans.length !== 1 ? 's' : ''} atribuído${plans.length !== 1 ? 's' : ''}`}
           </p>
         </div>
         <button onClick={() => setEditor({ item: null, mode: 'template' })}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(59,130,246,0.3)' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 20px', borderRadius: 13, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(59,130,246,0.35)', transition: 'opacity 0.15s' }}
+          onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+          onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
           <Plus size={16} /> Nova cartilha
         </button>
       </div>
@@ -1124,19 +1193,44 @@ export default function Treinos() {
           {/* Seletor de aluno */}
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 20, paddingBottom: 4 }}>
             {students.map(s => {
-              const sel       = selStudent === s.id;
-              const trainDays = [...new Set(plans.filter(p => p.student_id === s.id).flatMap(p => p.days || []))].length;
+              const sel         = selStudent === s.id;
+              const studentPlansForS = plans.filter(p => p.student_id === s.id);
+              const trainDays   = [...new Set(studentPlansForS.flatMap(p => p.days || []))].length;
               return (
                 <button key={s.id} onClick={() => { setSelStudent(s.id); setTargetDay(null); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '7px 14px 7px 8px', borderRadius: 40, border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s' }}>
-                  <div style={{ width: 28, height: 28, borderRadius: '50%', background: s.color || '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <span style={{ fontSize: 10, fontWeight: 800, color: 'white' }}>{s.initials || s.name?.[0]}</span>
+                  style={{
+                    display: 'flex', flexDirection: 'column', gap: 8,
+                    padding: '10px 14px 9px', borderRadius: 16,
+                    border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`,
+                    background: sel ? '#EFF6FF' : 'white',
+                    cursor: 'pointer', flexShrink: 0,
+                    transition: 'all 0.15s', minWidth: 110,
+                    boxShadow: sel ? '0 4px 16px rgba(59,130,246,0.15)' : '0 1px 4px rgba(0,0,0,0.05)',
+                  }}>
+                  {/* Nome + avatar */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <div style={{ width: 28, height: 28, borderRadius: '50%', background: s.color || '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: sel ? '0 2px 8px rgba(59,130,246,0.2)' : 'none' }}>
+                      <span style={{ fontSize: 10, fontWeight: 800, color: 'white' }}>{s.initials || s.name?.[0]}</span>
+                    </div>
+                    <div style={{ textAlign: 'left' }}>
+                      <p style={{ margin: 0, fontSize: 13, fontWeight: sel ? 700 : 500, color: sel ? '#1D4ED8' : '#374151', whiteSpace: 'nowrap' }}>{s.name}</p>
+                      <p style={{ margin: 0, fontSize: 10, color: trainDays ? (sel ? '#3B82F6' : '#9CA3AF') : '#D1D5DB', fontWeight: trainDays ? 600 : 400 }}>
+                        {trainDays ? `${trainDays}×/sem` : 'sem treino'}
+                      </p>
+                    </div>
                   </div>
-                  <div style={{ textAlign: 'left' }}>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: sel ? 700 : 500, color: sel ? '#1D4ED8' : '#374151', whiteSpace: 'nowrap' }}>{s.name}</p>
-                    <p style={{ margin: 0, fontSize: 10, color: trainDays ? '#9CA3AF' : '#D1D5DB' }}>
-                      {trainDays ? `${trainDays}×/sem` : 'sem treino'}
-                    </p>
+                  {/* 7-dot week visualization */}
+                  <div style={{ display: 'flex', gap: 2 }}>
+                    {DAYS.map(d => {
+                      const planForDay = studentPlansForS.find(p => (p.days || []).includes(d.v));
+                      const dotColor   = planForDay ? tc(planForDay.type) : null;
+                      return (
+                        <div key={d.v} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                          <div style={{ width: 7, height: 7, borderRadius: '50%', background: dotColor || '#E5E7EB', transition: 'background 0.15s' }} title={d.full} />
+                          <span style={{ fontSize: 7, fontWeight: 700, color: dotColor || '#D1D5DB', textTransform: 'uppercase', lineHeight: 1 }}>{d.s[0]}</span>
+                        </div>
+                      );
+                    })}
                   </div>
                 </button>
               );
@@ -1146,43 +1240,57 @@ export default function Treinos() {
           {/* Grade 7 dias */}
           {selectedStudent && (
             <>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                 <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>
-                    Semana de {selectedStudent.name}
-                    {activeDays > 0 && (
-                      <span style={{ marginLeft: 8, fontSize: 12, fontWeight: 600, color: '#10B981', background: '#F0FDF4', padding: '2px 8px', borderRadius: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 2 }}>
+                    <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827' }}>
+                      Semana de {selectedStudent.name}
+                    </p>
+                    {activeDays > 0 ? (
+                      <span style={{ fontSize: 11, fontWeight: 700, color: '#10B981', background: '#F0FDF4', padding: '3px 9px', borderRadius: 20, border: '1px solid #BBF7D0' }}>
                         {activeDays}×/sem
                       </span>
+                    ) : (
+                      <span style={{ fontSize: 11, fontWeight: 600, color: '#F59E0B', background: '#FFFBEB', padding: '3px 9px', borderRadius: 20, border: '1px solid #FDE68A' }}>
+                        sem treinos
+                      </span>
                     )}
-                  </p>
-                  <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>
-                    {activeDays === 0 ? 'Clique num dia para atribuir cartilha' : 'Clique num dia vazio para atribuir, ou "Copiar" para duplicar para outro dia'}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>
+                    {activeDays === 0
+                      ? 'Clique em "Montar semana" ou em um dia vazio para começar'
+                      : 'Clique num dia vazio para adicionar, ou use "Copiar" nas células para duplicar'}
                   </p>
                 </div>
-                <div style={{ display: 'flex', gap: 6 }}>
+                <div style={{ display: 'flex', gap: 7 }}>
                   <button onClick={() => setWeekBuilder(selStudent)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 9, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', fontSize: 12, fontWeight: 700, color: 'white', cursor: 'pointer', boxShadow: '0 3px 10px rgba(59,130,246,0.25)' }}>
-                    Montar semana
+                    style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 15px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', fontSize: 12, fontWeight: 700, color: 'white', cursor: 'pointer', boxShadow: '0 4px 12px rgba(59,130,246,0.28)', transition: 'opacity 0.15s' }}
+                    onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+                    onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+                    <Dumbbell size={13} /> Montar semana
                   </button>
                   <button onClick={() => setEditor({ item: null, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name, defaultDays: targetDay ? [targetDay.v] : [] })}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 9, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }}>
+                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 13px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer', transition: 'border-color 0.1s, background 0.1s' }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = '#D1D5DB'; e.currentTarget.style.background = '#F9FAFB'; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = 'white'; }}>
                     <Plus size={13} /> Do zero
                   </button>
                 </div>
               </div>
 
               <div style={{ overflowX: 'auto', marginBottom: 32 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(114px, 1fr))', gap: 10, minWidth: 820 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, minmax(120px, 1fr))', gap: 10, minWidth: 860 }}>
                   {DAYS.map(d => {
                     const plan    = byDay[d.v];
                     const isToday = d.v === todayDow;
                     const isTgt   = targetDay?.v === d.v;
                     return (
                       <div key={d.v}>
-                        <div style={{ textAlign: 'center', marginBottom: 7, padding: '5px 4px', borderRadius: 8, background: isToday ? '#EFF6FF' : 'transparent' }}>
-                          <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: isToday ? '#3B82F6' : plan ? '#374151' : '#9CA3AF' }}>{d.s}</span>
-                          {isToday && <div style={{ width: 5, height: 5, borderRadius: '50%', background: '#3B82F6', margin: '2px auto 0' }} />}
+                        <div style={{ textAlign: 'center', marginBottom: 8, padding: '6px 4px', borderRadius: 10, background: isToday ? '#EFF6FF' : 'transparent', transition: 'background 0.15s' }}>
+                          <span style={{ fontSize: 11, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.07em', color: isToday ? '#3B82F6' : plan ? '#374151' : '#9CA3AF' }}>{d.s}</span>
+                          {isToday
+                            ? <div style={{ fontSize: 9, fontWeight: 700, color: '#3B82F6', marginTop: 2 }}>Hoje</div>
+                            : <div style={{ height: 12 }} />}
                         </div>
                         <DayCell
                           plan={plan}
@@ -1206,30 +1314,45 @@ export default function Treinos() {
       <div ref={templatesRef}>
         {/* Banner de targeting */}
         {targetDay && selectedStudent && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderRadius: 12, background: '#EFF6FF', border: '1.5px solid #BFDBFE', marginBottom: 16 }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3B82F6', flexShrink: 0 }} />
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#1D4ED8', flex: 1 }}>
-              Escolha uma cartilha para <strong>{targetDay.full}</strong> de {selectedStudent.name}
-            </p>
-            <button onClick={() => setTargetDay(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#93C5FD', display: 'flex', padding: 2 }}><X size={16} /></button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderRadius: 14, background: 'linear-gradient(135deg, #EFF6FF, #F0F9FF)', border: '2px solid #BFDBFE', marginBottom: 16, boxShadow: '0 4px 16px rgba(59,130,246,0.12)' }}>
+            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 10px rgba(59,130,246,0.3)' }}>
+              <BookOpen size={17} color="white" />
+            </div>
+            <div style={{ flex: 1 }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#1D4ED8', lineHeight: 1.3 }}>
+                Escolha uma cartilha para <strong>{targetDay.full}</strong>
+              </p>
+              <p style={{ margin: '1px 0 0', fontSize: 12, color: '#3B82F6', opacity: 0.8 }}>
+                Clique em qualquer cartilha abaixo para atribuir a {selectedStudent.name}
+              </p>
+            </div>
+            <button onClick={() => setTargetDay(null)} style={{ background: '#DBEAFE', border: 'none', cursor: 'pointer', color: '#3B82F6', display: 'flex', padding: 7, borderRadius: 8 }}>
+              <X size={14} />
+            </button>
           </div>
         )}
 
         {/* Cabeçalho da biblioteca */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <BookOpen size={16} color="#8B5CF6" />
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827' }}>
-              {targetDay ? 'Cartilhas — clique para atribuir' : 'Suas cartilhas'}
-            </h3>
-            {filtered.length > 0 && (
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', background: '#F3F4F6', padding: '2px 8px', borderRadius: 20 }}>{filtered.length}</span>
-            )}
+            <div style={{ width: 30, height: 30, borderRadius: 9, background: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <BookOpen size={15} color="#8B5CF6" />
+            </div>
+            <div>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827', letterSpacing: '-0.2px' }}>
+                {targetDay ? `Atribuir para ${targetDay.full}` : 'Suas cartilhas'}
+              </h3>
+              {filtered.length > 0 && (
+                <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>{filtered.length} disponíve{filtered.length !== 1 ? 'is' : 'l'}</p>
+              )}
+            </div>
           </div>
           <div style={{ position: 'relative' }}>
-            <Search size={13} color="#9CA3AF" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)' }} />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar..."
-              style={{ padding: '7px 12px 7px 30px', border: '1.5px solid #E5E7EB', borderRadius: 9, fontSize: 13, outline: 'none', width: 160 }} />
+            <Search size={13} color="#9CA3AF" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar cartilha..."
+              style={{ padding: '8px 12px 8px 32px', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 13, outline: 'none', width: 180, transition: 'border-color 0.15s' }}
+              onFocus={e => e.target.style.borderColor = '#8B5CF6'}
+              onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
           </div>
         </div>
 

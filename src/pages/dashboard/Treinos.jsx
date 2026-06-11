@@ -1,1676 +1,784 @@
 import { useState, useEffect } from 'react';
-import { Plus, Dumbbell, Trash2, X, Play, Loader, Save, Check, ChevronDown, Copy, HelpCircle, ChevronRight, ExternalLink, BookMarked, FolderOpen, Lightbulb, User, Calendar, Zap, Layers, Share2, Library, Users, Search } from 'lucide-react';
-import { trainingPlans as mockPlans, students as mockStudents } from '../../data/mockData';
+import {
+  Plus, Dumbbell, X, Save, Trash2, Sparkles, Check, Send,
+  BookOpen, Users, ChevronDown, ChevronUp, Search, Edit3
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { searchExercises, EXERCISE_LIBRARY } from '../../data/exerciseLibrary';
-import { fetchExerciseImage } from '../../lib/exerciseImages';
-import { fetchExerciseVideo } from '../../lib/youtubeVideo';
+
+// ─── Constantes ───────────────────────────────────────────────────────────────
 
 const DAYS = [
-  { value: 1, label: 'Seg', full: 'Segunda-feira' },
-  { value: 2, label: 'Ter', full: 'Terça-feira' },
-  { value: 3, label: 'Qua', full: 'Quarta-feira' },
-  { value: 4, label: 'Qui', full: 'Quinta-feira' },
-  { value: 5, label: 'Sex', full: 'Sexta-feira' },
-  { value: 6, label: 'Sáb', full: 'Sábado' },
-  { value: 0, label: 'Dom', full: 'Domingo' },
+  { v: 1, s: 'Seg' }, { v: 2, s: 'Ter' }, { v: 3, s: 'Qua' },
+  { v: 4, s: 'Qui' }, { v: 5, s: 'Sex' }, { v: 6, s: 'Sáb' }, { v: 0, s: 'Dom' },
 ];
-
-const GROUPS = ['Peito','Costas','Pernas','Glúteos','Ombro','Braços','Abdômen','Full Body','Cardio','Descanso'];
-const GROUP_COLORS = {
-  Peito:'#EF4444', Costas:'#3B82F6', Pernas:'#8B5CF6', Glúteos:'#EC4899',
-  Ombro:'#F59E0B', Braços:'#10B981', Abdômen:'#06B6D4',
-  'Full Body':'#F97316', Cardio:'#6366F1', Descanso:'#9CA3AF',
-};
-const PLAN_TYPES = ['Hipertrofia','Força','Resistência','Funcional','Cardio','Mobilidade','Emagrecimento'];
-const REPS_QUICK = ['6','8','10','12','15','20','Falha'];
-const REST_QUICK = ['30s','45s','60s','75s','90s','2min'];
-const SUPERSET_LETTERS = ['A','B','C','D','E'];
-const SUPERSET_COLORS = { A:'#3B82F6', B:'#10B981', C:'#8B5CF6', D:'#F59E0B', E:'#EF4444' };
-const FREQ_PRESETS = {
-  3: { days: [1,3,5], groups: ['Peito','Costas','Pernas'] },
-  4: { days: [1,2,4,5], groups: ['Peito','Costas','Pernas','Ombro'] },
-  5: { days: [1,2,3,4,5], groups: ['Peito','Costas','Pernas','Ombro','Braços'] },
-  6: { days: [1,2,3,4,5,6], groups: ['Peito','Costas','Pernas','Ombro','Braços','Full Body'] },
+const PLAN_TYPES = ['Hipertrofia', 'Força', 'Resistência', 'Funcional', 'Cardio', 'Mobilidade', 'Emagrecimento'];
+const GROUPS     = ['Peito', 'Costas', 'Pernas', 'Glúteos', 'Ombro', 'Braços', 'Abdômen', 'Full Body', 'Cardio'];
+const TYPE_CLR   = { Hipertrofia: '#8B5CF6', Força: '#EF4444', Resistência: '#3B82F6', Funcional: '#10B981', Cardio: '#F59E0B', Mobilidade: '#06B6D4', Emagrecimento: '#F97316' };
+const GROUP_CLR  = { Peito: '#EF4444', Costas: '#3B82F6', Pernas: '#8B5CF6', Glúteos: '#EC4899', Ombro: '#F59E0B', Braços: '#10B981', Abdômen: '#06B6D4', 'Full Body': '#F97316', Cardio: '#6366F1' };
+const REPS_Q     = ['6', '8', '10', '12', '15', '20', 'Falha'];
+const REST_Q     = ['30s', '45s', '60s', '75s', '90s', '2min'];
+const AI_LEVELS  = {
+  'Iniciante':     { sets: '3', reps: '12', rest: '60s',  n: 5 },
+  'Intermediário': { sets: '4', reps: '10', rest: '75s',  n: 6 },
+  'Avançado':      { sets: '4', reps: '8',  rest: '90s',  n: 7 },
 };
 
-const TUTORIAL_STEPS = [
-  { Icon: User,     color: '#3B82F6', bg: '#EFF6FF', title: 'Selecione um aluno', desc: 'Escolha para qual aluno você está montando o programa. Cada aluno tem sua própria semana de treinos.' },
-  { Icon: Calendar, color: '#8B5CF6', bg: '#F5F3FF', title: 'Configure a semana', desc: 'Clique em "Configurar semana" e defina quantos dias por semana o aluno treina e quais grupos musculares.' },
-  { Icon: Dumbbell, color: '#10B981', bg: '#ECFDF5', title: 'Adicione os exercícios', desc: 'Clique em qualquer dia para abrir o editor. Digite o nome — o autocomplete vai sugerir. Configure séries, reps e carga.' },
-  { Icon: Copy,     color: '#F59E0B', bg: '#FFFBEB', title: 'Copie para outros alunos', desc: 'Montou um programa que funcionou? Use "Copiar para..." para duplicar todos os treinos para outro aluno em segundos.' },
-];
+const tc = (t) => TYPE_CLR[t]  || '#6B7280';
+const gc = (g) => GROUP_CLR[g] || '#6B7280';
+const newEx = (i = 0) => ({ id: Date.now() + i, name: '', sets: '4', reps: '10', rest: '60s', load: '', obs: '', order_index: i });
 
-/* ─── ExerciseCard ──────────────────────────────────────────── */
-function ExerciseCard({ ex, index, total, onUpdate, onDelete, onMove, accentColor, autoOpen, supersetLetters }) {
-  const [open, setOpen] = useState(autoOpen || !ex.name);
-  const [suggestions, setSuggestions] = useState([]);
+function genAI(groups, level) {
+  const p = AI_LEVELS[level] || AI_LEVELS['Intermediário'];
+  const perG = Math.ceil(p.n / Math.max(groups.length, 1));
+  const out = [];
+  groups.forEach(g => {
+    [...EXERCISE_LIBRARY].filter(e => e.group === g)
+      .sort((a, b) => a.name.length - b.name.length)
+      .slice(0, perG)
+      .forEach(e => out.push({ id: Date.now() + out.length, name: e.name, sets: p.sets, reps: p.reps, rest: p.rest, load: '', obs: '', order_index: out.length }));
+  });
+  return out.slice(0, p.n);
+}
+
+// ─── ExerciseRowEditor ────────────────────────────────────────────────────────
+
+function ExerciseRowEditor({ ex, index, onChange, onDelete }) {
   const [showSugg, setShowSugg] = useState(false);
-  const [exerciseImg, setExerciseImg] = useState(null);
-  const [imgLoading, setImgLoading] = useState(false);
-  const [videoFetching, setVideoFetching] = useState(false);
+  const [suggs, setSuggs]       = useState([]);
+  const [open, setOpen]         = useState(!ex.name);
 
-  // Auto-busca imagem quando nome do exercício muda
-  useEffect(() => {
-    if (!ex.name || ex.name.length < 3) { setExerciseImg(null); return; }
-    setImgLoading(true);
-    fetchExerciseImage(ex.name)
-      .then(url => { setExerciseImg(url); setImgLoading(false); })
-      .catch(() => setImgLoading(false));
-  }, [ex.name]);
-  const sets = parseInt(ex.sets) || 3;
-  const ac = accentColor || '#3B82F6';
-  const isCustomReps = ex.reps && !REPS_QUICK.includes(ex.reps);
-  const ssColor = ex.supersetGroup ? (SUPERSET_COLORS[ex.supersetGroup] || '#6B7280') : null;
-
-  const handleNameChange = (val) => {
-    onUpdate('name', val);
+  const handleName = (val) => {
+    onChange({ ...ex, name: val });
     const s = searchExercises(val);
-    setSuggestions(s);
-    setShowSugg(s.length > 0);
+    setSuggs(s); setShowSugg(s.length > 0 && val.length > 1);
   };
-
-  const selectSuggestion = (s) => {
-    onUpdate('name', s.name);
-    setSuggestions([]);
-    setShowSugg(false);
-    // Busca vídeo automaticamente — sempre busca ao selecionar (substitui URL de busca por URL direta)
-    const jaTemVideoReal = ex.videoUrl && (ex.videoUrl.includes('watch?v=') || ex.videoUrl.includes('youtu.be'));
-    if (!jaTemVideoReal) {
-      setVideoFetching(true);
-      fetchExerciseVideo(s.name, s.videoSearch).then(url => {
-        setVideoFetching(false);
-        if (url) onUpdate('videoUrl', url);
-        else if (s.videoSearch) onUpdate('videoUrl', `https://www.youtube.com/results?search_query=${encodeURIComponent(s.videoSearch)}`);
-      }).catch(() => {
-        setVideoFetching(false);
-        if (s.videoSearch) onUpdate('videoUrl', `https://www.youtube.com/results?search_query=${encodeURIComponent(s.videoSearch)}`);
-      });
-    }
-  };
-
-  const searchVideo = () => {
-    const q = ex.name || 'exercício academia execução';
-    const found = suggestions.find(s => s.name === ex.name) || { videoSearch: ex.name + ' execução academia' };
-    window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(found.videoSearch || q + ' execução')}`, '_blank');
-  };
-
-  const cycleSuperset = () => {
-    if (!ex.supersetGroup) {
-      const nextLetter = supersetLetters[0] || 'A';
-      onUpdate('supersetGroup', nextLetter);
-    } else {
-      const idx = SUPERSET_LETTERS.indexOf(ex.supersetGroup);
-      const next = idx < SUPERSET_LETTERS.length - 1 ? SUPERSET_LETTERS[idx + 1] : null;
-      onUpdate('supersetGroup', next);
-    }
-  };
+  const pick = (s) => { onChange({ ...ex, name: s.name }); setSuggs([]); setShowSugg(false); setOpen(false); };
 
   return (
-    <div style={{
-      background: 'white', borderRadius: 16, marginBottom: 10, overflow: 'visible',
-      border: ssColor ? `2px solid ${ssColor}40` : `1.5px solid ${open ? ac + '40' : '#E5E7EB'}`,
-      boxShadow: open ? `0 4px 16px ${ac}15` : '0 1px 4px rgba(0,0,0,0.05)',
-      transition: 'all 0.2s',
-    }}>
-      {/* Superset badge */}
-      {ssColor && (
-        <div style={{ background: ssColor, padding: '3px 12px 3px 12px', display: 'flex', alignItems: 'center', gap: 6, borderRadius: '14px 14px 0 0' }}>
-          <Zap size={10} color="white" fill="white" />
-          <span style={{ fontSize: 10, fontWeight: 800, color: 'white', letterSpacing: '0.08em' }}>
-            SUPERSET {ex.supersetGroup}
-          </span>
-        </div>
-      )}
-
-      <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', cursor: 'pointer', userSelect: 'none' }}>
-        <div style={{ width: 26, height: 26, borderRadius: '50%', background: (ssColor || ac) + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: ssColor || ac, flexShrink: 0 }}>
-          {index + 1}
-        </div>
-        <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: ex.name ? '#111827' : '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', minWidth: 0 }}>
-          {ex.name || 'Nome do exercício...'}
-        </span>
-        {!open && ex.name && (
-          <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: ac, background: ac + '12', padding: '3px 9px', borderRadius: 20 }}>{sets}×{ex.reps || '—'}</span>
-            {ex.load && <span style={{ fontSize: 11, color: '#6B7280' }}>{ex.load}kg</span>}
-          </div>
-        )}
-        <ChevronDown size={16} color="#9CA3AF" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
-      </div>
-
-      {open && (
-        <>
-          <div style={{ borderTop: '1px solid #F3F4F6', padding: '16px 16px 0' }}>
-            {/* Imagem automática do exercício */}
-            {(exerciseImg || imgLoading) && (
-              <div style={{ marginBottom: 14, borderRadius: 12, overflow: 'hidden', background: '#F9FAFB', height: imgLoading ? 120 : 'auto', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {imgLoading && !exerciseImg
-                  ? <span style={{ fontSize: 12, color: '#9CA3AF' }}>Buscando demonstração...</span>
-                  : exerciseImg
-                    ? <img src={exerciseImg} alt={ex.name} style={{ width: '100%', maxHeight: 200, objectFit: 'contain', display: 'block' }} />
-                    : null
-                }
-              </div>
-            )}
-            {/* Nome com autocomplete */}
-            <div style={{ marginBottom: 14, position: 'relative' }}>
-              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nome do exercício</p>
-              <input value={ex.name} onChange={e => handleNameChange(e.target.value)}
-                onFocus={() => { if (suggestions.length > 0) setShowSugg(true); }}
-                onBlur={() => setTimeout(() => setShowSugg(false), 150)}
-                placeholder="Digite para buscar na biblioteca..."
-                autoFocus={!ex.name}
-                style={{ fontSize: 15, fontWeight: 600, color: '#111827' }} />
-              {showSugg && suggestions.length > 0 && (
-                <div style={{ position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, background: 'white', borderRadius: 12, border: '1.5px solid #E5E7EB', zIndex: 100, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', overflow: 'hidden' }}>
-                  {suggestions.map((s, i) => (
-                    <button key={i} onMouseDown={() => selectSuggestion(s)}
-                      style={{ width: '100%', padding: '10px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, borderBottom: i < suggestions.length - 1 ? '1px solid #F9FAFB' : 'none' }}
-                      onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
-                      onMouseLeave={e => e.currentTarget.style.background = 'none'}>
-                      <span style={{ fontSize: 13, fontWeight: 600, color: '#111827' }}>{s.name}</span>
-                      <span style={{ fontSize: 10, color: '#9CA3AF', background: '#F3F4F6', padding: '2px 7px', borderRadius: 20, flexShrink: 0, fontWeight: 600 }}>{s.group}</span>
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Séries + Carga */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 14 }}>
-              <div>
-                <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Séries</p>
-                <div style={{ display: 'flex', alignItems: 'center', background: '#F9FAFB', borderRadius: 12, border: '1.5px solid #E5E7EB', overflow: 'hidden', height: 52 }}>
-                  <button onClick={() => onUpdate('sets', Math.max(1, sets - 1))} style={{ width: 48, height: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>−</button>
-                  <span style={{ flex: 1, fontSize: 24, fontWeight: 900, color: '#111827', textAlign: 'center' }}>{sets}</span>
-                  <button onClick={() => onUpdate('sets', sets + 1)} style={{ width: 48, height: '100%', background: 'none', border: 'none', cursor: 'pointer', fontSize: 24, fontWeight: 700, color: '#374151', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</button>
-                </div>
-              </div>
-              <div>
-                <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Carga (kg)</p>
-                <input value={ex.load || ''} onChange={e => onUpdate('load', e.target.value)} placeholder="0" type="number" min="0"
-                  style={{ height: 52, fontSize: 24, fontWeight: 900, textAlign: 'center', background: '#F9FAFB', borderRadius: 12 }} />
-              </div>
-            </div>
-
-            <div style={{ marginBottom: 14 }}>
-              <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Repetições</p>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', alignItems: 'center' }}>
-                {REPS_QUICK.map(r => (
-                  <button key={r} onClick={() => onUpdate('reps', r)}
-                    style={{ padding: '8px 13px', borderRadius: 22, fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 40, border: `2px solid ${ex.reps === r ? ac : '#E5E7EB'}`, background: ex.reps === r ? ac : '#F9FAFB', color: ex.reps === r ? 'white' : '#6B7280', transition: 'all 0.1s' }}>
-                    {r}
-                  </button>
-                ))}
-                <input value={isCustomReps ? ex.reps : ''} onChange={e => onUpdate('reps', e.target.value)} placeholder="outro..."
-                  style={{ width: 76, fontSize: 13, height: 40, textAlign: 'center', borderRadius: 22, border: `2px solid ${isCustomReps ? ac : '#E5E7EB'}`, background: isCustomReps ? ac + '10' : '#F9FAFB', color: isCustomReps ? ac : '#6B7280', fontWeight: 700 }} />
-              </div>
-            </div>
-
-            <div style={{ marginBottom: 14 }}>
-              <p style={{ margin: '0 0 8px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Descanso</p>
-              <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                {REST_QUICK.map(r => (
-                  <button key={r} onClick={() => onUpdate('rest', r)}
-                    style={{ padding: '8px 13px', borderRadius: 22, fontSize: 13, fontWeight: 700, cursor: 'pointer', minHeight: 40, border: `2px solid ${ex.rest === r ? ac : '#E5E7EB'}`, background: ex.rest === r ? ac : '#F9FAFB', color: ex.rest === r ? 'white' : '#6B7280', transition: 'all 0.1s' }}>
-                    {r}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Vídeo */}
-            <div style={{ marginBottom: 14 }}>
-              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
-                URL do Vídeo (YouTube)
-                {videoFetching && <span style={{ marginLeft: 8, fontSize: 10, color: '#3B82F6', fontWeight: 600 }}>⏳ buscando vídeo...</span>}
-              </p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input value={ex.videoUrl || ''} onChange={e => onUpdate('videoUrl', e.target.value)} placeholder={videoFetching ? 'Buscando vídeo automaticamente...' : 'https://youtube.com/watch?v=...'} style={{ flex: 1, fontSize: 13 }} />
-                {ex.name && (
-                  <button type="button" onClick={searchVideo}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0 12px', borderRadius: 10, background: '#FEF2F2', color: '#EF4444', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, flexShrink: 0, minHeight: 44 }}
-                    title="Buscar vídeo de demonstração no YouTube">
-                    <ExternalLink size={13} /> Buscar vídeo
-                  </button>
-                )}
-                {ex.videoUrl && (
-                  <a href={ex.videoUrl} target="_blank" rel="noopener noreferrer"
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '0 12px', borderRadius: 10, background: '#FEF3C7', color: '#D97706', textDecoration: 'none', fontSize: 13, fontWeight: 700, flexShrink: 0, minHeight: 44 }}>
-                    <Play size={13} fill="#D97706" /> Ver
-                  </a>
-                )}
-              </div>
-              {videoFetching ? (
-                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#3B82F6' }}>⏳ Buscando vídeo no YouTube...</p>
-              ) : ex.videoUrl && ex.videoUrl.includes('watch?v=') ? (
-                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#10B981' }}>✓ Vídeo encontrado — aluno verá embutido no app</p>
-              ) : ex.videoUrl && ex.videoUrl.includes('results?') ? (
-                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#F59E0B' }}>
-                  ⚠ API key não carregada — selecione o exercício de novo no autocomplete para tentar
-                </p>
-              ) : !ex.videoUrl && ex.name ? (
-                <p style={{ margin: '5px 0 0', fontSize: 11, color: '#9CA3AF' }}>
-                  Selecione o exercício pelo autocomplete para buscar o vídeo automaticamente
-                </p>
-              ) : null}
-            </div>
-
-            <div style={{ marginBottom: 14 }}>
-              <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Observações</p>
-              <input value={ex.obs || ''} onChange={e => onUpdate('obs', e.target.value)} placeholder="Dica de execução, equipamento, variação..." style={{ fontSize: 13 }} />
-            </div>
-          </div>
-
-          <div style={{ padding: '8px 16px 14px', display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'center' }}>
-            <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-              <button onClick={() => onMove(index, -1)} disabled={index === 0} style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === 0 ? 'not-allowed' : 'pointer', color: index === 0 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↑</button>
-              <button onClick={() => onMove(index, 1)} disabled={index === total - 1} style={{ padding: '7px 12px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 8, cursor: index === total - 1 ? 'not-allowed' : 'pointer', color: index === total - 1 ? '#D1D5DB' : '#374151', fontSize: 13, fontWeight: 600 }}>↓</button>
-              {/* Superset toggle */}
-              <button onClick={cycleSuperset}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', background: ssColor ? ssColor + '18' : '#F9FAFB', border: `1px solid ${ssColor || '#E5E7EB'}`, borderRadius: 8, cursor: 'pointer', color: ssColor || '#374151', fontSize: 13, fontWeight: 700 }}
-                title="Agrupar em superset (A, B, C...) — clique para ciclar">
-                <Zap size={12} />
-                {ex.supersetGroup ? `Superset ${ex.supersetGroup}` : 'Superset'}
-              </button>
-            </div>
-            <button onClick={onDelete} style={{ padding: '7px 14px', background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 8, cursor: 'pointer', color: '#EF4444', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 5 }}>
-              <Trash2 size={13} /> Remover
-            </button>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-/* ─── ExerciseCatalogModal ──────────────────────────────────── */
-const CATALOG_GROUPS = ['Peito','Costas','Pernas','Glúteos','Ombro','Braços','Abdômen','Full Body','Cardio','Calistenia','CrossFit','Mobilidade'];
-
-function ExerciseCatalogModal({ defaultGroup, onSelect, onClose }) {
-  const [activeGroup, setActiveGroup] = useState(defaultGroup || 'Peito');
-  const [search, setSearch] = useState('');
-
-  const filtered = search.trim().length >= 2
-    ? EXERCISE_LIBRARY.filter(e => e.name.toLowerCase().includes(search.toLowerCase().trim()))
-    : EXERCISE_LIBRARY.filter(e => e.group === activeGroup);
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.65)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 680, margin: '0 auto', background: 'white', borderRadius: '24px 24px 0 0', maxHeight: '88vh', display: 'flex', flexDirection: 'column' }}>
-
-        {/* Header */}
-        <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E5E7EB', margin: '0 auto 14px' }} />
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-            <div>
-              <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900 }}>Biblioteca de Exercícios</h3>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>{EXERCISE_LIBRARY.length} exercícios — toque para adicionar</p>
-            </div>
-            <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <X size={16} color="#6B7280" />
-            </button>
-          </div>
-
-          {/* Busca */}
-          <div style={{ position: 'relative', marginBottom: 12 }}>
-            <Search size={15} color="#9CA3AF" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar exercício..."
-              autoFocus
-              style={{ paddingLeft: 36, background: '#F9FAFB', borderRadius: 12 }}
-            />
-            {search && (
-              <button onClick={() => setSearch('')} style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', padding: 2 }}>
-                <X size={14} color="#9CA3AF" />
-              </button>
-            )}
-          </div>
-
-          {/* Filtro de grupos */}
-          {!search && (
-            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 12, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-              {CATALOG_GROUPS.map(g => {
-                const c = GROUP_COLORS[g] || '#6B7280';
-                const active = activeGroup === g;
-                return (
-                  <button key={g} onClick={() => setActiveGroup(g)}
-                    style={{ padding: '5px 14px', borderRadius: 20, border: 'none', background: active ? c : '#F3F4F6', color: active ? 'white' : '#6B7280', fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.12s' }}>
-                    {g}
-                  </button>
-                );
-              })}
-            </div>
-          )}
-
-          {search && (
-            <p style={{ margin: '0 0 10px', fontSize: 12, color: '#9CA3AF' }}>
-              {filtered.length} resultado{filtered.length !== 1 ? 's' : ''} para "{search}"
-            </p>
-          )}
-        </div>
-
-        {/* Grid de exercícios */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px 4px' }}>
-          {filtered.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px 0', color: '#9CA3AF' }}>
-              <Dumbbell size={32} color="#E5E7EB" style={{ marginBottom: 10 }} />
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Nenhum exercício encontrado</p>
-              <p style={{ margin: '4px 0 0 0', fontSize: 12, marginBottom: 20 }}>Mas você pode adicionar com esse nome mesmo:</p>
-              <button onClick={() => onSelect({ name: search.trim(), group: null, videoSearch: search.trim() + ' execução academia' })}
-                style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 12, padding: '12px 24px', fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 8 }}>
-                <Plus size={16} /> Adicionar "{search.trim()}"
-              </button>
-            </div>
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              {filtered.map((ex, i) => {
-                const c = GROUP_COLORS[ex.group] || '#6B7280';
-                return (
-                  <button key={i} onClick={() => onSelect(ex)}
-                    style={{ padding: '13px 14px 11px', background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 14, cursor: 'pointer', textAlign: 'left', display: 'flex', flexDirection: 'column', gap: 6, transition: 'all 0.12s', minHeight: 72 }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = c; e.currentTarget.style.background = c + '0D'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.background = 'white'; }}>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: '#111827', lineHeight: 1.3, flex: 1 }}>{ex.name}</span>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      {search
-                        ? <span style={{ fontSize: 10, fontWeight: 700, color: c, background: c + '18', padding: '2px 7px', borderRadius: 20 }}>{ex.group}</span>
-                        : <span style={{ fontSize: 10, color: '#C4C9D4', fontWeight: 600 }}>toque para add</span>
-                      }
-                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: c + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                        <Plus size={12} color={c} />
-                      </div>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          )}
-          <div style={{ height: 12 }} />
-        </div>
-
-        <div style={{ height: 32, flexShrink: 0 }} />
-      </div>
-    </div>
-  );
-}
-
-/* ─── TemplateModal ─────────────────────────────────────────── */
-function TemplateModal({ mode, templates, exercises, planType, group, onSave, onLoad, onDelete, onClose }) {
-  const [name, setName] = useState('');
-  const canSave = exercises.filter(e => e.name?.trim()).length > 0;
-
-  if (mode === 'save') return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 480, padding: '24px 24px 40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 19, fontWeight: 900 }}>Salvar como template</h3>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>
-              {canSave ? `${exercises.filter(e => e.name?.trim()).length} exercícios serão salvos` : 'Adicione exercícios antes de salvar'}
-            </p>
-          </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color="#6B7280" />
-          </button>
-        </div>
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Nome do template</label>
-        <input value={name} onChange={e => setName(e.target.value)} placeholder={`Ex: ${group} - ${planType}`} autoFocus style={{ marginBottom: 16 }} />
-        <button disabled={!canSave || !name.trim()} onClick={() => { onSave(name.trim()); onClose(); }}
-          style={{ width: '100%', padding: '15px', background: canSave && name.trim() ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#E5E7EB', border: 'none', borderRadius: 12, color: canSave && name.trim() ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: canSave && name.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          <BookMarked size={16} /> Salvar template
-        </button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 480, padding: '24px 24px 40px', maxHeight: '80vh', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexShrink: 0 }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 19, fontWeight: 900 }}>Carregar template</h3>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>{templates.length} template{templates.length !== 1 ? 's' : ''} salvos</p>
-          </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color="#6B7280" />
-          </button>
-        </div>
-        {templates.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '32px 0', color: '#9CA3AF' }}>
-            <BookMarked size={36} color="#E5E7EB" style={{ marginBottom: 10 }} />
-            <p style={{ margin: 0, fontSize: 14 }}>Nenhum template salvo ainda</p>
-            <p style={{ margin: '4px 0 0', fontSize: 12 }}>Monte um treino e clique em "Salvar template"</p>
-          </div>
-        ) : (
-          <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {[...templates].reverse().map(t => (
-              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', background: 'white' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Dumbbell size={18} color="#3B82F6" />
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.name}</p>
-                  <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>
-                    {t.exercises.length} exercício{t.exercises.length !== 1 ? 's' : ''} · {t.planType || ''}
-                    {t.exercises.some(e => e.supersetGroup) ? ' · tem supersets' : ''}
-                  </p>
-                </div>
-                <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
-                  <button onClick={() => { onLoad(t); onClose(); }}
-                    style={{ padding: '7px 14px', background: '#EFF6FF', border: 'none', borderRadius: 8, cursor: 'pointer', color: '#3B82F6', fontSize: 13, fontWeight: 700 }}>
-                    Usar
-                  </button>
-                  <button onClick={() => onDelete(t.id)}
-                    style={{ width: 32, height: 32, borderRadius: 8, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Trash2 size={13} color="#EF4444" />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ─── ConfigWeekModal ───────────────────────────────────────── */
-function ConfigWeekModal({ onConfirm, onClose }) {
-  const [freq, setFreq] = useState(4);
-  const buildDayGroups = (f) => Object.fromEntries(FREQ_PRESETS[f].days.map((d, i) => [d, FREQ_PRESETS[f].groups[i]]));
-  const [dayGroups, setDayGroups] = useState(() => buildDayGroups(4));
-  const [saving, setSaving] = useState(false);
-  const count = Object.keys(dayGroups).length;
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 620, padding: '28px 24px 40px', maxHeight: '92vh', overflowY: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24 }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#111827' }}>Configurar Semana</h3>
-            <p style={{ margin: '4px 0 0', fontSize: 14, color: '#9CA3AF' }}>Monte a divisão semanal em segundos</p>
-          </div>
-          <button onClick={onClose} style={{ width: 40, height: 40, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={18} color="#6B7280" />
-          </button>
-        </div>
-        <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Frequência semanal</p>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 10, marginBottom: 28 }}>
-          {[3,4,5,6].map(f => (
-            <button key={f} onClick={() => { setFreq(f); setDayGroups(buildDayGroups(f)); }}
-              style={{ padding: '16px 8px', borderRadius: 16, border: `2.5px solid ${freq === f ? '#3B82F6' : '#E5E7EB'}`, background: freq === f ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'center' }}>
-              <p style={{ margin: 0, fontSize: 28, fontWeight: 900, color: freq === f ? '#3B82F6' : '#374151' }}>{f}x</p>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: freq === f ? '#3B82F6' : '#9CA3AF', fontWeight: 600 }}>por semana</p>
-            </button>
-          ))}
-        </div>
-        <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Dias e grupos musculares</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 24 }}>
-          {DAYS.map(d => {
-            const on = dayGroups[d.value] !== undefined;
-            const grp = dayGroups[d.value];
-            const gc = grp ? (GROUP_COLORS[grp] || '#3B82F6') : '#E5E7EB';
-            return (
-              <div key={d.value} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 14, border: `2px solid ${on ? gc + '50' : '#F1F5F9'}`, background: on ? gc + '08' : '#F9FAFB', cursor: 'pointer' }} onClick={() => {
-                if (on) { const next = { ...dayGroups }; delete next[d.value]; setDayGroups(next); }
-                else setDayGroups(prev => ({ ...prev, [d.value]: 'Peito' }));
-              }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, border: `2.5px solid ${on ? gc : '#D1D5DB'}`, background: on ? gc : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {on && <Check size={15} color="white" strokeWidth={3} />}
-                </div>
-                <span style={{ width: 100, fontSize: 15, fontWeight: 700, color: on ? '#111827' : '#9CA3AF' }}>{d.full}</span>
-                {on ? (
-                  <select value={grp} onChange={e => { e.stopPropagation(); setDayGroups(prev => ({ ...prev, [d.value]: e.target.value })); }} onClick={e => e.stopPropagation()}
-                    style={{ flex: 1, fontSize: 15, fontWeight: 700, color: gc, border: 'none', background: 'transparent', outline: 'none', cursor: 'pointer' }}>
-                    {GROUPS.map(g => <option key={g} value={g}>{g}</option>)}
-                  </select>
-                ) : <span style={{ flex: 1, fontSize: 14, color: '#C4C4C4' }}>Descanso</span>}
-              </div>
-            );
-          })}
-        </div>
-        <button onClick={async () => { setSaving(true); await onConfirm(dayGroups); setSaving(false); onClose(); }} disabled={saving || count === 0}
-          style={{ width: '100%', padding: '18px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', border: 'none', borderRadius: 14, cursor: count === 0 ? 'not-allowed' : 'pointer', fontSize: 17, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, opacity: count === 0 ? 0.5 : 1 }}>
-          {saving ? <Loader size={20} style={{ animation: 'spin 1s linear infinite' }} /> : <Check size={20} />}
-          {saving ? 'Configurando...' : `Criar ${count} dias de treino`}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── CopyPlanModal ─────────────────────────────────────────── */
-function CopyPlanModal({ students, currentStudentId, onConfirm, onClose }) {
-  const [target, setTarget] = useState('');
-  const [copying, setCopying] = useState(false);
-  const others = students.filter(s => String(s.id) !== String(currentStudentId));
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 480, padding: '28px 24px 40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 900 }}>Copiar programa</h3>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>Todos os treinos da semana serão duplicados</p>
-          </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color="#6B7280" />
-          </button>
-        </div>
-        {others.length === 0
-          ? <p style={{ color: '#9CA3AF', textAlign: 'center', padding: '20px 0' }}>Não há outros alunos ativos.</p>
-          : <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-              {others.map(s => (
-                <button key={s.id} onClick={() => setTarget(String(s.id))}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderRadius: 12, border: `2px solid ${target === String(s.id) ? '#3B82F6' : '#E5E7EB'}`, background: target === String(s.id) ? '#EFF6FF' : 'white', cursor: 'pointer' }}>
-                  <div style={{ width: 36, height: 36, borderRadius: '50%', background: s.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'white', flexShrink: 0 }}>
-                    {(s.initials || s.name?.slice(0, 2)).toUpperCase()}
-                  </div>
-                  <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: target === String(s.id) ? '#1D4ED8' : '#374151' }}>{s.name}</span>
-                  {target === String(s.id) && <Check size={16} color="#3B82F6" />}
+    <div style={{ background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 12, marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px' }}>
+        <span style={{ width: 22, height: 22, borderRadius: 7, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: '#3B82F6', flexShrink: 0 }}>{index + 1}</span>
+        <div style={{ flex: 1, position: 'relative' }}>
+          <input value={ex.name} onChange={e => handleName(e.target.value)}
+            onBlur={() => setTimeout(() => setShowSugg(false), 150)}
+            placeholder="Nome do exercício..."
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: 14, fontWeight: 600, color: '#111827', background: 'transparent' }} />
+          {showSugg && suggs.length > 0 && (
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 60, maxHeight: 200, overflowY: 'auto' }}>
+              {suggs.slice(0, 7).map((s, i) => (
+                <button key={i} onMouseDown={() => pick(s)}
+                  style={{ width: '100%', padding: '8px 12px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, display: 'flex', gap: 8, alignItems: 'center', borderBottom: '1px solid #F3F4F6' }}>
+                  <span style={{ fontSize: 10, background: gc(s.group) + '20', color: gc(s.group), padding: '2px 6px', borderRadius: 20, fontWeight: 700, flexShrink: 0 }}>{s.group}</span>
+                  <span style={{ color: '#111827' }}>{s.name}</span>
                 </button>
               ))}
             </div>
-        }
-        <button disabled={!target || copying} onClick={async () => { setCopying(true); await onConfirm(target); setCopying(false); onClose(); }}
-          style={{ width: '100%', padding: '15px', background: target ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#E5E7EB', border: 'none', borderRadius: 12, color: target ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: target ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          {copying ? <Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> : <Copy size={16} />}
-          {copying ? 'Copiando...' : 'Copiar programa'}
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── SaveProgramModal ──────────────────────────────────────── */
-function SaveProgramModal({ plans, onSave, onClose }) {
-  const [name, setName] = useState('');
-  const [level, setLevel] = useState('Intermediário');
-  const totalExercises = plans.reduce((acc, p) => acc + (p.exercises || []).filter(e => e.name?.trim()).length, 0);
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 480, padding: '24px 24px 40px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 19, fontWeight: 900, color: '#111827' }}>Salvar programa</h3>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>
-              {plans.length} dia{plans.length !== 1 ? 's' : ''} · {totalExercises} exercícios no total
-            </p>
-          </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color="#6B7280" />
-          </button>
-        </div>
-
-        {/* Preview das divisões */}
-        <div style={{ marginBottom: 16, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-          {plans.map((p, i) => {
-            const gc = GROUP_COLORS[p.name] || '#6B7280';
-            const day = DAYS.find(d => (p.days || []).includes(d.value));
-            return (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '5px 10px', borderRadius: 20, background: gc + '15', border: `1.5px solid ${gc}40` }}>
-                {day && <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF' }}>{day.label}</span>}
-                <span style={{ fontSize: 12, fontWeight: 700, color: gc }}>{p.name}</span>
-                <span style={{ fontSize: 10, color: '#9CA3AF' }}>({(p.exercises || []).length})</span>
-              </div>
-            );
-          })}
-        </div>
-
-        <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 6 }}>Nome do programa</label>
-        <input value={name} onChange={e => setName(e.target.value)}
-          placeholder={`Ex: Hipertrofia ${plans.length}x — Intermediário`}
-          autoFocus style={{ marginBottom: 16 }} />
-
-        <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nível</p>
-        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
-          {['Iniciante', 'Intermediário', 'Avançado'].map(l => (
-            <button key={l} onClick={() => setLevel(l)}
-              style={{ flex: 1, padding: '10px 4px', borderRadius: 12, border: `2px solid ${level === l ? '#3B82F6' : '#E5E7EB'}`, background: level === l ? '#EFF6FF' : 'white', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: level === l ? '#1D4ED8' : '#6B7280' }}>
-              {l}
-            </button>
-          ))}
-        </div>
-
-        <button disabled={!name.trim()} onClick={() => { onSave(name.trim(), level); onClose(); }}
-          style={{ width: '100%', padding: '15px', background: name.trim() ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#E5E7EB', border: 'none', borderRadius: 12, color: name.trim() ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: name.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          <Layers size={16} /> Salvar na biblioteca
-        </button>
-      </div>
-    </div>
-  );
-}
-
-/* ─── ProgramLibraryModal ────────────────────────────────────── */
-function ProgramLibraryModal({ programs, students, onApply, onDelete, onClose }) {
-  const [selected, setSelected] = useState(null);
-  const [targetStudent, setTargetStudent] = useState('');
-  const [applying, setApplying] = useState(false);
-  const [applied, setApplied] = useState(false);
-
-  const handleApply = async () => {
-    if (!selected || !targetStudent) return;
-    setApplying(true);
-    await onApply(selected, targetStudent);
-    setApplying(false);
-    setApplied(true);
-    setTimeout(() => { setApplied(false); setSelected(null); setTargetStudent(''); }, 1800);
-  };
-
-  if (selected) return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={() => setSelected(null)}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 480, padding: '24px 24px 40px', maxHeight: '88vh', overflowY: 'auto' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
-          <div style={{ flex: 1 }}>
-            <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3B82F6', fontSize: 13, fontWeight: 700, padding: '0 0 6px', display: 'flex', alignItems: 'center', gap: 4 }}>
-              ← Voltar
-            </button>
-            <h3 style={{ margin: 0, fontSize: 18, fontWeight: 900, color: '#111827' }}>{selected.name}</h3>
-            <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9CA3AF' }}>
-              {selected.level} · {selected.days.length}x por semana · {selected.days.reduce((a, d) => a + (d.exercises || []).length, 0)} exercícios
-            </p>
-          </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <X size={16} color="#6B7280" />
-          </button>
-        </div>
-
-        {/* Dias do programa */}
-        <div style={{ marginBottom: 20, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {selected.days.map((d, i) => {
-            const gc = GROUP_COLORS[d.name] || '#6B7280';
-            const dayLabel = DAYS.find(dd => (d.days || []).includes(dd.value))?.label;
-            return (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: `1.5px solid ${gc}30`, background: gc + '08' }}>
-                {dayLabel && <span style={{ width: 26, fontSize: 11, fontWeight: 800, color: '#9CA3AF' }}>{dayLabel}</span>}
-                <div style={{ width: 8, height: 8, borderRadius: '50%', background: gc, flexShrink: 0 }} />
-                <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: '#111827' }}>{d.name}</span>
-                <span style={{ fontSize: 11, color: '#9CA3AF', background: '#F3F4F6', padding: '2px 8px', borderRadius: 20 }}>
-                  {(d.exercises || []).length} exerc.
-                </span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Selecionar aluno */}
-        <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Aplicar para qual aluno?</p>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginBottom: 18 }}>
-          {students.map(s => (
-            <button key={s.id} onClick={() => setTargetStudent(String(s.id))}
-              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 14px', borderRadius: 12, border: `2px solid ${targetStudent === String(s.id) ? '#3B82F6' : '#E5E7EB'}`, background: targetStudent === String(s.id) ? '#EFF6FF' : 'white', cursor: 'pointer' }}>
-              <div style={{ width: 34, height: 34, borderRadius: '50%', background: s.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: 'white', flexShrink: 0 }}>
-                {(s.initials || s.name?.slice(0, 2)).toUpperCase()}
-              </div>
-              <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: targetStudent === String(s.id) ? '#1D4ED8' : '#374151', textAlign: 'left' }}>{s.name}</span>
-              {targetStudent === String(s.id) && <Check size={16} color="#3B82F6" />}
-            </button>
-          ))}
-        </div>
-
-        <button disabled={!targetStudent || applying} onClick={handleApply}
-          style={{ width: '100%', padding: '15px', background: applied ? '#10B981' : (targetStudent && !applying ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#E5E7EB'), border: 'none', borderRadius: 12, color: (targetStudent && !applying) || applied ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: (targetStudent && !applying) ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-          {applying
-            ? <><Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> Aplicando...</>
-            : applied
-            ? <><Check size={18} /> Programa aplicado!</>
-            : <><Share2 size={16} /> Aplicar programa</>}
-        </button>
-      </div>
-    </div>
-  );
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 1000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '22px 22px 0 0', width: '100%', maxWidth: 480, padding: '24px 24px 40px', maxHeight: '82vh', display: 'flex', flexDirection: 'column' }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexShrink: 0 }}>
-          <div>
-            <h3 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: '#111827' }}>Biblioteca de Programas</h3>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>
-              {programs.length} programa{programs.length !== 1 ? 's' : ''} salvo{programs.length !== 1 ? 's' : ''}
-            </p>
-          </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <X size={16} color="#6B7280" />
-          </button>
-        </div>
-
-        {programs.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: '#9CA3AF' }}>
-            <Layers size={40} color="#E5E7EB" style={{ marginBottom: 12 }} />
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#374151' }}>Nenhum programa salvo</p>
-            <p style={{ margin: '6px 0 0', fontSize: 13, lineHeight: 1.5 }}>
-              Monte a semana de um aluno e clique em<br />"Salvar programa" para criar sua biblioteca
-            </p>
-          </div>
-        ) : (
-          <div style={{ overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {[...programs].reverse().map(prog => {
-              const groups = [...new Set(prog.days.map(d => d.name))];
-              const totalExs = prog.days.reduce((acc, d) => acc + (d.exercises || []).length, 0);
-              const levelColor = prog.level === 'Avançado' ? '#EF4444' : prog.level === 'Intermediário' ? '#F59E0B' : '#10B981';
-              return (
-                <div key={prog.id} style={{ borderRadius: 14, border: '1.5px solid #E5E7EB', background: 'white', overflow: 'hidden' }}>
-                  <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'flex-start', gap: 12 }}>
-                    <div style={{ width: 44, height: 44, borderRadius: 12, background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Layers size={20} color="white" />
-                    </div>
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4, flexWrap: 'wrap' }}>
-                        <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827' }}>{prog.name}</p>
-                        <span style={{ fontSize: 10, fontWeight: 800, color: levelColor, background: levelColor + '18', padding: '2px 7px', borderRadius: 20 }}>{prog.level}</span>
-                        {(prog.useCount || 0) > 0 && (
-                          <span style={{ fontSize: 10, color: '#6B7280', background: '#F3F4F6', padding: '2px 7px', borderRadius: 20 }}>
-                            {prog.useCount}× aplicado
-                          </span>
-                        )}
-                      </div>
-                      <p style={{ margin: '0 0 6px', fontSize: 12, color: '#9CA3AF' }}>
-                        {prog.days.length}x/semana · {totalExs} exercícios
-                      </p>
-                      <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                        {groups.slice(0, 5).map(g => {
-                          const gc = GROUP_COLORS[g] || '#6B7280';
-                          return <span key={g} style={{ fontSize: 10, fontWeight: 700, color: gc, background: gc + '15', padding: '2px 7px', borderRadius: 20 }}>{g}</span>;
-                        })}
-                        {groups.length > 5 && <span style={{ fontSize: 10, color: '#9CA3AF' }}>+{groups.length - 5}</span>}
-                      </div>
-                    </div>
-                    <button onClick={() => onDelete(prog.id)} style={{ width: 30, height: 30, borderRadius: 8, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Trash2 size={13} color="#EF4444" />
-                    </button>
-                  </div>
-                  <div style={{ padding: '0 16px 14px' }}>
-                    <button onClick={() => setSelected(prog)}
-                      style={{ width: '100%', padding: '11px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', borderRadius: 10, color: 'white', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}>
-                      <Share2 size={14} /> Aplicar para aluno
-                    </button>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/* ─── DayEditorSheet ────────────────────────────────────────── */
-function DayEditorSheet({ day, dayInfo, group, setGroup, planName, setPlanName, planType, setPlanType, exercises, onUpdate, onDelete, onMove, onAdd, onSave, onDelete2, onClose, saving, saved, existing, onOpenTemplate, onOpenAI }) {
-  const gc = GROUP_COLORS[group] || '#3B82F6';
-  const [showCatalog, setShowCatalog] = useState(false);
-
-  // Compute which superset letters are already in use
-  const usedLetters = [...new Set(exercises.map(e => e.supersetGroup).filter(Boolean))];
-  const availableLetters = SUPERSET_LETTERS.filter(l => !usedLetters.includes(l));
-  const supersetLetters = usedLetters.length > 0 ? [...usedLetters, ...availableLetters].slice(0, 5) : SUPERSET_LETTERS;
-
-  // Group exercises for visual display
-  const renderList = () => {
-    const rendered = [];
-    const seenGroups = new Set();
-    exercises.forEach((ex, i) => {
-      if (ex.supersetGroup && !seenGroups.has(ex.supersetGroup)) {
-        seenGroups.add(ex.supersetGroup);
-        const ssColor = SUPERSET_COLORS[ex.supersetGroup] || '#3B82F6';
-        const groupExs = exercises.map((e, idx) => ({ e, idx })).filter(({ e }) => e.supersetGroup === ex.supersetGroup);
-        rendered.push(
-          <div key={`ss-${ex.supersetGroup}`} style={{ border: `2px solid ${ssColor}40`, borderRadius: 18, padding: '8px 8px 4px', marginBottom: 10, background: ssColor + '05' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 8px 8px' }}>
-              <Zap size={12} color={ssColor} fill={ssColor} />
-              <span style={{ fontSize: 11, fontWeight: 800, color: ssColor, letterSpacing: '0.08em' }}>SUPERSET {ex.supersetGroup}</span>
-              <span style={{ fontSize: 11, color: '#9CA3AF' }}>— sem descanso entre os exercícios</span>
-            </div>
-            {groupExs.map(({ e, idx }) => (
-              <ExerciseCard key={idx} ex={e} index={idx} total={exercises.length}
-                onUpdate={(field, val) => onUpdate(idx, field, val)} onDelete={() => onDelete(idx)}
-                onMove={onMove} accentColor={ssColor} autoOpen={!e.name}
-                supersetLetters={supersetLetters} />
-            ))}
-          </div>
-        );
-      } else if (!ex.supersetGroup) {
-        rendered.push(
-          <ExerciseCard key={i} ex={ex} index={i} total={exercises.length}
-            onUpdate={(field, val) => onUpdate(i, field, val)} onDelete={() => onDelete(i)}
-            onMove={onMove} accentColor={gc} autoOpen={!ex.name}
-            supersetLetters={supersetLetters} />
-        );
-      }
-    });
-    return rendered;
-  };
-
-  return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 680, margin: '0 auto', background: 'white', borderRadius: '20px 20px 0 0', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
-        {/* Header */}
-        <div style={{ padding: '12px 20px 0', flexShrink: 0 }}>
-          <div style={{ width: 40, height: 4, borderRadius: 2, background: '#E5E7EB', margin: '0 auto 16px' }} />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-            <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <X size={16} color="#6B7280" />
-            </button>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#374151', flex: 1 }}>{dayInfo?.full}</p>
-            <div style={{ display: 'flex', gap: 6 }}>
-              {/* Template buttons */}
-              <button onClick={() => onOpenTemplate('load')}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, height: 36, padding: '0 12px', background: '#F5F3FF', border: 'none', borderRadius: 10, cursor: 'pointer', color: '#7C3AED', fontSize: 12, fontWeight: 700 }}
-                title="Carregar template">
-                <FolderOpen size={14} /> Template
-              </button>
-              {existing && (
-                <button onClick={onDelete2} style={{ width: 36, height: 36, borderRadius: '50%', background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Trash2 size={15} color="#EF4444" />
-                </button>
-              )}
-              <button onClick={onSave} disabled={saving}
-                style={{ padding: '0 18px', height: 36, background: saved ? '#10B981' : gc, color: 'white', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 700, fontSize: 14, display: 'flex', alignItems: 'center', gap: 6, opacity: saving ? 0.7 : 1 }}>
-                {saving ? <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> : saved ? <Check size={14} /> : <Save size={14} />}
-                {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar'}
-              </button>
-            </div>
-          </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 10, marginBottom: 12 }}>
-            <div>
-              <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nome do treino</p>
-              <input value={planName} onChange={e => setPlanName(e.target.value)} placeholder={`Ex: Treino A — ${group}`} style={{ fontSize: 14, fontWeight: 700, color: '#111827' }} />
-            </div>
-            <div>
-              <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tipo</p>
-              <select value={planType} onChange={e => setPlanType(e.target.value)}
-                style={{ height: 44, padding: '0 10px', borderRadius: 10, border: '1.5px solid #E5E7EB', fontSize: 13, fontWeight: 700, color: '#374151', background: 'white', cursor: 'pointer', outline: 'none' }}>
-                {PLAN_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-              </select>
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 12, paddingBottom: 14, borderBottom: '1px solid #F3F4F6' }}>
-            {GROUPS.map(g => (
-              <button key={g} onClick={() => setGroup(g)}
-                style={{ padding: '4px 10px', borderRadius: 20, border: `2px solid ${group === g ? (GROUP_COLORS[g] || '#3B82F6') : 'transparent'}`, background: group === g ? (GROUP_COLORS[g] || '#3B82F6') : 'transparent', color: group === g ? 'white' : '#9CA3AF', fontSize: 11, fontWeight: 700, cursor: 'pointer', transition: 'all 0.12s' }}>
-                {g}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Exercise list */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '0 20px' }}>
-          {exercises.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '32px 0', color: '#9CA3AF' }}>
-              <Dumbbell size={36} color="#E5E7EB" style={{ marginBottom: 10 }} />
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 600 }}>Nenhum exercício ainda</p>
-              <p style={{ margin: '4px 0 0', fontSize: 12 }}>Clique em "+ Adicionar exercício" abaixo ou carregue um template</p>
-            </div>
-          ) : renderList()}
-          <div style={{ height: 16 }} />
-        </div>
-
-        {/* Footer */}
-        <div style={{ padding: '12px 20px 32px', flexShrink: 0, borderTop: '1px solid #F3F4F6', display: 'flex', flexDirection: 'column', gap: 8 }}>
-          <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={() => setShowCatalog(true)} style={{ flex: 1, padding: '13px', border: `2px dashed ${gc}60`, borderRadius: 14, background: gc + '06', color: gc, cursor: 'pointer', fontSize: 14, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              <Plus size={17} /> Adicionar exercício
-            </button>
-            <button onClick={() => onOpenTemplate('save')}
-              style={{ padding: '13px 14px', border: '2px dashed #7C3AED60', borderRadius: 14, background: '#F5F3FF', color: '#7C3AED', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}
-              title="Salvar como template para reutilizar">
-              <BookMarked size={16} />
-            </button>
-          </div>
-          {/* Compartilhar treino via WhatsApp */}
-          {exercises.filter(e => e.name?.trim()).length > 0 && (() => {
-            const student = null; // acesso via prop não disponível aqui — botão gera texto genérico
-            const lines = exercises.filter(e => e.name?.trim()).map((e, i) =>
-              `${i + 1}. ${e.name}${e.sets && e.reps ? ` — ${e.sets}x${e.reps}` : ''}${e.load ? ` · ${e.load}kg` : ''}${e.rest ? ` · ${e.rest} desc.` : ''}${e.obs ? `\n   💡 ${e.obs}` : ''}`
-            ).join('\n');
-            const text = `🏋️ *${planName || 'Treino'} — ${group}*\n\n${lines}\n\n_Gerado pelo WAY FIT 💪_`;
-            return (
-              <a href={`https://wa.me/?text=${encodeURIComponent(text)}`} target="_blank" rel="noopener noreferrer"
-                style={{ width: '100%', padding: '11px', border: '1.5px solid #25D36660', borderRadius: 14, background: '#F0FDF4', color: '#15803D', cursor: 'pointer', fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, textDecoration: 'none' }}>
-                <Share2 size={15} /> Compartilhar treino
-              </a>
-            );
-          })()}
-
-          {onOpenAI && (
-            <button onClick={onOpenAI}
-              style={{ width: '100%', padding: '13px', border: 'none', borderRadius: 14, background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', cursor: 'pointer', fontSize: 14, fontWeight: 800, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 4px 14px rgba(59,130,246,0.3)' }}>
-              <Zap size={16} fill="white" /> Gerar treino com IA
-            </button>
           )}
         </div>
+        {!open && ex.name && <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, flexShrink: 0 }}>{ex.sets}×{ex.reps}</span>}
+        <button onClick={() => setOpen(v => !v)} style={{ padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex' }}>{open ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button>
+        <button onClick={onDelete} style={{ padding: 6, border: 'none', background: 'none', cursor: 'pointer', color: '#EF4444', display: 'flex' }}><Trash2 size={14} /></button>
       </div>
 
-      {showCatalog && (
-        <ExerciseCatalogModal
-          defaultGroup={group}
-          onSelect={(libEx) => {
-            onAdd(libEx);
-            setShowCatalog(false);
-          }}
-          onClose={() => setShowCatalog(false)}
-        />
+      {open && (
+        <div style={{ padding: '4px 12px 14px', borderTop: '1px solid #F3F4F6' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
+            {[['SÉRIES', 'sets', 'number'], ['REPS', 'reps', 'text'], ['CARGA', 'load', 'text']].map(([lbl, field, type]) => (
+              <div key={field}>
+                <label style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 3 }}>{lbl}</label>
+                <input type={type} value={ex[field]} onChange={e => onChange({ ...ex, [field]: e.target.value })}
+                  placeholder={field === 'load' ? '—' : ''} min={type === 'number' ? 1 : undefined}
+                  style={{ width: '100%', padding: '7px 8px', border: '1.5px solid #E5E7EB', borderRadius: 8, fontSize: 14, fontWeight: 700, textAlign: 'center', boxSizing: 'border-box' }} />
+              </div>
+            ))}
+          </div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 6 }}>
+            {REPS_Q.map(r => <button key={r} onClick={() => onChange({ ...ex, reps: r })} style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none', background: ex.reps === r ? '#EFF6FF' : '#F3F4F6', color: ex.reps === r ? '#3B82F6' : '#6B7280' }}>{r}</button>)}
+          </div>
+          <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF' }}>DESCANSO</span>
+            {REST_Q.map(r => <button key={r} onClick={() => onChange({ ...ex, rest: r })} style={{ padding: '3px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: 'none', background: ex.rest === r ? '#F0FDF4' : '#F3F4F6', color: ex.rest === r ? '#10B981' : '#6B7280' }}>{r}</button>)}
+          </div>
+          <input value={ex.obs} onChange={e => onChange({ ...ex, obs: e.target.value })} placeholder="Observação (opcional)..."
+            style={{ width: '100%', padding: '7px 10px', border: '1.5px solid #E5E7EB', borderRadius: 8, fontSize: 12, color: '#6B7280', boxSizing: 'border-box' }} />
+        </div>
       )}
     </div>
   );
 }
 
-/* ─── AIWorkoutModal ────────────────────────────────────────── */
-function AIWorkoutModal({ group, planType, studentName, onClose, onApply }) {
-  const [level, setLevel] = useState('Intermediário');
-  const [equipment, setEquipment] = useState('Academia completa');
-  const [numExercises, setNumExercises] = useState(6);
-  const [restrictions, setRestrictions] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+// ─── AIModal ──────────────────────────────────────────────────────────────────
 
-  const generate = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const res = await fetch('/api/generate-workout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ group, planType, level, equipment, numExercises, restrictions, studentName }),
-      });
-      const data = await res.json();
-      if (!data?.ok) throw new Error(data?.error || 'Erro ao gerar treino');
-      onApply(data.exercises);
-      onClose();
-    } catch (e) {
-      setError(e.message || 'Falha ao gerar treino. Verifique se a ANTHROPIC_API_KEY está configurada no Vercel.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const LEVELS = ['Iniciante', 'Intermediário', 'Avançado'];
-  const EQUIPMENTS = ['Academia completa', 'Academia básica', 'Em casa (halteres)', 'Em casa (sem equipamento)', 'Funcional/calistenia'];
+function AIModal({ onApply, onClose }) {
+  const [groups, setGroups] = useState([]);
+  const [level, setLevel]   = useState('Intermediário');
+  const toggle = (g) => setGroups(p => p.includes(g) ? p.filter(x => x !== g) : [...p, g]);
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '24px 24px 0 0', width: '100%', maxWidth: 480, padding: '28px 24px 40px', maxHeight: '90vh', overflowY: 'auto' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Zap size={16} color="white" fill="white" />
-              </div>
-              <h3 style={{ margin: 0, fontSize: 20, fontWeight: 900, color: '#111827' }}>Gerar treino com IA</h3>
-            </div>
-            <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF' }}>
-              IA gera {numExercises} exercícios de <strong style={{ color: '#374151' }}>{group}</strong> para <strong style={{ color: '#374151' }}>{studentName || 'o aluno'}</strong>
-            </p>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Sparkles size={20} color="white" /></div>
+          <div><h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Sugestão com IA</h3><p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>Gera exercícios pelo objetivo</p></div>
+          <button onClick={onClose} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
+        </div>
+        <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 8 }}>Grupos musculares</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18 }}>
+          {GROUPS.map(g => { const sel = groups.includes(g); const c = gc(g); return (
+            <button key={g} onClick={() => toggle(g)} style={{ padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? c : '#E5E7EB'}`, background: sel ? c + '18' : 'white', color: sel ? c : '#6B7280' }}>{g}</button>
+          ); })}
+        </div>
+        <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 8 }}>Nível</label>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 20 }}>
+          {Object.keys(AI_LEVELS).map(l => (
+            <button key={l} onClick={() => setLevel(l)} style={{ flex: 1, padding: '10px 8px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: `2px solid ${level === l ? '#8B5CF6' : '#E5E7EB'}`, background: level === l ? '#F5F3FF' : 'white', color: level === l ? '#7C3AED' : '#6B7280' }}>{l}</button>
+          ))}
+        </div>
+        {groups.length > 0 && <div style={{ background: '#F5F3FF', borderRadius: 10, padding: '10px 14px', marginBottom: 16, fontSize: 12, color: '#7C3AED' }}>Vai gerar <strong>{AI_LEVELS[level]?.n} exercícios</strong> · {groups.join(' + ')} · {level}</div>}
+        <button onClick={() => { if (!groups.length) return; onApply(genAI(groups, level)); onClose(); }} disabled={!groups.length}
+          style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: groups.length ? 'linear-gradient(135deg, #8B5CF6, #3B82F6)' : '#E5E7EB', color: groups.length ? 'white' : '#9CA3AF', fontSize: 14, fontWeight: 700, cursor: groups.length ? 'pointer' : 'not-allowed' }}>
+          <Sparkles size={14} style={{ marginRight: 8, verticalAlign: 'middle' }} />Gerar exercícios
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ─── TemplateEditor ───────────────────────────────────────────────────────────
+
+function TemplateEditor({ item, mode = 'template', studentId, studentName, onSave, onClose }) {
+  const isNew = !item?.id;
+  const [name,  setName]  = useState(item?.name  || '');
+  const [type,  setType]  = useState(item?.type  || 'Hipertrofia');
+  const [days,  setDays]  = useState(item?.days  || []);
+  const [exs,   setExs]   = useState(() => {
+    const src = item?.exercises || [];
+    const sorted = [...src].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+    return sorted.length ? sorted.map((e, i) => ({ ...e, id: e.id || Date.now() + i })) : [newEx(0)];
+  });
+  const [saving, setSaving] = useState(false);
+  const [showAI, setShowAI] = useState(false);
+
+  const toggleDay = (d) => setDays(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d]);
+  const updateEx  = (i, upd) => setExs(p => p.map((e, j) => j === i ? upd : e));
+  const deleteEx  = (i) => setExs(p => p.filter((_, j) => j !== i));
+
+  const handleSave = async () => {
+    if (!name.trim() || saving) return;
+    const valid = exs.filter(e => e.name?.trim());
+    if (!valid.length) return;
+    setSaving(true);
+    await onSave({ id: item?.id, name: name.trim(), type, days, exercises: valid, studentId: mode === 'plan' ? studentId : null });
+    setSaving(false);
+  };
+
+  const panelTitle = mode === 'template'
+    ? (isNew ? 'Nova cartilha' : 'Editar cartilha')
+    : (isNew ? `Novo treino — ${studentName || ''}` : `Editar treino — ${studentName || ''}`);
+
+  const color = tc(type);
+
+  return (
+    <>
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }} />
+      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 520, background: 'white', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)' }}>
+
+        <div style={{ padding: '18px 22px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', padding: 4 }}><X size={20} /></button>
+          <div style={{ flex: 1 }}>
+            <h2 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>{panelTitle}</h2>
+            {mode === 'plan' && <p style={{ margin: '1px 0 0', fontSize: 11, color: '#9CA3AF' }}>Treino específico do aluno — não afeta as cartilhas</p>}
           </div>
-          <button onClick={onClose} style={{ width: 36, height: 36, borderRadius: '50%', background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <X size={16} color="#6B7280" />
+          <button onClick={() => setShowAI(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+            <Sparkles size={13} /> IA
           </button>
         </div>
 
-        {/* Nível */}
-        <div style={{ marginBottom: 18 }}>
-          <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Nível do aluno</p>
-          <div style={{ display: 'flex', gap: 8 }}>
-            {LEVELS.map(l => (
-              <button key={l} onClick={() => setLevel(l)}
-                style={{ flex: 1, padding: '10px 4px', borderRadius: 12, border: `2px solid ${level === l ? '#3B82F6' : '#E5E7EB'}`, background: level === l ? '#EFF6FF' : 'white', cursor: 'pointer', fontSize: 13, fontWeight: 700, color: level === l ? '#1D4ED8' : '#6B7280' }}>
-                {l}
-              </button>
-            ))}
+        <div style={{ flex: 1, overflowY: 'auto', padding: '20px 22px' }}>
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 5, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Nome</label>
+            <input value={name} onChange={e => setName(e.target.value)} placeholder="ex: Treino A — Peito e Tríceps"
+              style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 15, fontWeight: 600, boxSizing: 'border-box', outline: 'none' }} />
           </div>
-        </div>
 
-        {/* Equipamento */}
-        <div style={{ marginBottom: 18 }}>
-          <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Equipamentos disponíveis</p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {EQUIPMENTS.map(eq => (
-              <button key={eq} onClick={() => setEquipment(eq)}
-                style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 12, border: `2px solid ${equipment === eq ? '#3B82F6' : '#E5E7EB'}`, background: equipment === eq ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'left' }}>
-                <div style={{ width: 18, height: 18, borderRadius: '50%', border: `2px solid ${equipment === eq ? '#3B82F6' : '#D1D5DB'}`, background: equipment === eq ? '#3B82F6' : 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  {equipment === eq && <Check size={10} color="white" strokeWidth={3} />}
-                </div>
-                <span style={{ fontSize: 14, fontWeight: 600, color: equipment === eq ? '#1D4ED8' : '#374151' }}>{eq}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Quantidade de exercícios */}
-        <div style={{ marginBottom: 18 }}>
-          <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Quantidade de exercícios</p>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {[4, 5, 6, 7, 8].map(n => (
-              <button key={n} onClick={() => setNumExercises(n)}
-                style={{ flex: 1, padding: '10px 4px', borderRadius: 12, border: `2px solid ${numExercises === n ? '#3B82F6' : '#E5E7EB'}`, background: numExercises === n ? '#EFF6FF' : 'white', cursor: 'pointer', fontSize: 16, fontWeight: 800, color: numExercises === n ? '#1D4ED8' : '#6B7280' }}>
-                {n}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Restrições */}
-        <div style={{ marginBottom: 20 }}>
-          <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Restrições / observações (opcional)</p>
-          <textarea value={restrictions} onChange={e => setRestrictions(e.target.value)}
-            placeholder="Ex: lesão no joelho, evitar agachamento livre, preferir máquinas..."
-            rows={3}
-            style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', fontSize: 14, color: '#374151', resize: 'none', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
-        </div>
-
-        {/* Erro */}
-        {error && (
-          <div style={{ marginBottom: 14, padding: '12px 14px', background: '#FEF2F2', borderRadius: 12, border: '1px solid #FECACA' }}>
-            <p style={{ margin: 0, fontSize: 13, color: '#EF4444', lineHeight: 1.5 }}>{error}</p>
-          </div>
-        )}
-
-        {/* Botão Gerar */}
-        <button onClick={generate} disabled={loading}
-          style={{ width: '100%', padding: '16px', background: loading ? '#9CA3AF' : 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', borderRadius: 14, color: 'white', fontSize: 16, fontWeight: 800, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, boxShadow: loading ? 'none' : '0 4px 16px rgba(59,130,246,0.35)' }}>
-          {loading
-            ? <><Loader size={18} style={{ animation: 'spin 1s linear infinite' }} /> Gerando com IA...</>
-            : <><Zap size={18} fill="white" /> Gerar {numExercises} exercícios</>
-          }
-        </button>
-        {loading && <p style={{ textAlign: 'center', fontSize: 12, color: '#9CA3AF', margin: '10px 0 0' }}>A IA está montando o treino ideal para {studentName || 'o aluno'}...</p>}
-      </div>
-    </div>
-  );
-}
-
-/* ─── Tutorial ──────────────────────────────────────────────── */
-function Tutorial({ onDismiss }) {
-  const [expanded, setExpanded] = useState(null);
-  return (
-    <div style={{ background: 'white', borderRadius: 16, border: '1px solid #E0E7FF', overflow: 'hidden', marginBottom: 16 }}>
-      <div style={{ background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', padding: '18px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <HelpCircle size={20} color="white" />
-          <div>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'white' }}>Como montar um treino</p>
-            <p style={{ margin: 0, fontSize: 12, color: 'rgba(255,255,255,0.7)' }}>Siga esses passos e seu aluno terá o treino em minutos</p>
-          </div>
-        </div>
-        <button onClick={onDismiss} style={{ background: 'rgba(255,255,255,0.2)', border: 'none', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <X size={15} color="white" />
-        </button>
-      </div>
-      <div style={{ padding: '4px 0' }}>
-        {TUTORIAL_STEPS.map((step, i) => {
-          const isOpen = expanded === i;
-          const StepIcon = step.Icon;
-          return (
-            <div key={i}>
-              <button onClick={() => setExpanded(isOpen ? null : i)}
-                style={{ width: '100%', padding: '14px 22px', background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 14, textAlign: 'left', borderBottom: '1px solid #F3F4F6' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 12, background: step.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <StepIcon size={19} color={step.color} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <span style={{ fontSize: 11, fontWeight: 800, color: step.color, background: step.bg, padding: '2px 8px', borderRadius: 20 }}>Passo {i + 1}</span>
-                  <p style={{ margin: '2px 0 0', fontSize: 14, fontWeight: 700, color: '#111827' }}>{step.title}</p>
-                </div>
-                <ChevronDown size={16} color="#9CA3AF" style={{ transform: isOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }} />
-              </button>
-              {isOpen && (
-                <div style={{ padding: '12px 22px 14px 76px', background: '#F9FAFB', borderBottom: '1px solid #F3F4F6' }}>
-                  <p style={{ margin: 0, fontSize: 13, color: '#6B7280', lineHeight: 1.6 }}>{step.desc}</p>
-                </div>
-              )}
+          <div style={{ marginBottom: 14 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Tipo</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+              {PLAN_TYPES.map(t => { const c = tc(t); const sel = type === t; return (
+                <button key={t} onClick={() => setType(t)} style={{ padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? c : '#E5E7EB'}`, background: sel ? c + '18' : 'white', color: sel ? c : '#6B7280' }}>{t}</button>
+              ); })}
             </div>
-          );
-        })}
+          </div>
+
+          <div style={{ marginBottom: 20 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Dias da semana</label>
+            <div style={{ display: 'flex', gap: 5 }}>
+              {DAYS.map(d => { const sel = days.includes(d.v); return (
+                <button key={d.v} onClick={() => toggleDay(d.v)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? color : '#E5E7EB'}`, background: sel ? color + '18' : 'white', color: sel ? color : '#9CA3AF' }}>{d.s}</button>
+              ); })}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exercícios ({exs.filter(e => e.name).length})</label>
+          </div>
+          {exs.map((ex, i) => (
+            <ExerciseRowEditor key={ex.id || i} ex={ex} index={i} onChange={upd => updateEx(i, upd)} onDelete={() => deleteEx(i)} />
+          ))}
+          <button onClick={() => setExs(p => [...p, newEx(p.length)])}
+            style={{ width: '100%', padding: '11px', borderRadius: 10, border: '2px dashed #D1D5DB', background: 'none', fontSize: 13, fontWeight: 700, color: '#9CA3AF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, marginTop: 4 }}>
+            <Plus size={15} /> Adicionar exercício
+          </button>
+          <div style={{ height: 24 }} />
+        </div>
+
+        <div style={{ padding: '16px 22px', borderTop: '1px solid #F1F5F9', background: 'white' }}>
+          <button onClick={handleSave} disabled={!name.trim() || saving}
+            style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: name.trim() ? `linear-gradient(135deg, ${color}, ${color}99)` : '#E5E7EB', color: name.trim() ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: name.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            {saving ? 'Salvando...' : <><Save size={16} /> {isNew ? (mode === 'template' ? 'Criar cartilha' : 'Salvar treino') : 'Salvar alterações'}</>}
+          </button>
+        </div>
       </div>
-      <div style={{ padding: '14px 22px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>Selecione um aluno acima para começar →</p>
-        <button onClick={onDismiss} style={{ fontSize: 12, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>Entendido</button>
+      {showAI && <AIModal onApply={newExs => setExs(newExs)} onClose={() => setShowAI(false)} />}
+    </>
+  );
+}
+
+// ─── TemplateCard ─────────────────────────────────────────────────────────────
+
+function TemplateCard({ tpl, onEdit, onAssign, onDelete }) {
+  const exs     = [...(tpl.exercises || [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+  const color   = tc(tpl.type);
+  const dayLbls = (tpl.days || []).map(d => DAYS.find(x => x.v === d)?.s).filter(Boolean);
+  const preview = exs.slice(0, 5);
+  const extra   = exs.length - 5;
+
+  return (
+    <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.07)', border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ background: `linear-gradient(135deg, ${color}, ${color}bb)`, padding: '14px 16px' }}>
+        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginBottom: 3 }}>
+              <Dumbbell size={12} color="rgba(255,255,255,0.75)" />
+              <span style={{ fontSize: 10, fontWeight: 800, color: 'rgba(255,255,255,0.75)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>{tpl.type}</span>
+            </div>
+            <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 900, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{tpl.name || 'Sem nome'}</h3>
+            <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+              {dayLbls.length ? dayLbls.map(d => (
+                <span key={d} style={{ fontSize: 10, fontWeight: 700, color: 'white', background: 'rgba(255,255,255,0.2)', padding: '2px 7px', borderRadius: 20 }}>{d}</span>
+              )) : <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.5)' }}>Sem dia</span>}
+            </div>
+          </div>
+          <button onClick={() => onDelete(tpl)} style={{ background: 'rgba(255,255,255,0.18)', border: 'none', borderRadius: 8, padding: 6, cursor: 'pointer', color: 'white', display: 'flex' }}><Trash2 size={13} /></button>
+        </div>
+      </div>
+
+      <div style={{ flex: 1, padding: '12px 16px 0' }}>
+        {exs.length === 0 ? (
+          <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF', textAlign: 'center', padding: '18px 0' }}>Sem exercícios</p>
+        ) : (
+          <>
+            {preview.map((ex, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 7, padding: '4px 0', borderBottom: i < preview.length - 1 || extra > 0 ? '1px solid #F9FAFB' : 'none' }}>
+                <span style={{ width: 16, fontSize: 10, fontWeight: 800, color: '#D1D5DB', flexShrink: 0, textAlign: 'right' }}>{i + 1}</span>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 500, color: '#374151', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name || '—'}</span>
+                <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, flexShrink: 0 }}>{ex.sets}×{ex.reps}</span>
+              </div>
+            ))}
+            {extra > 0 && <p style={{ margin: '5px 0 0', fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>+{extra} mais</p>}
+          </>
+        )}
+      </div>
+
+      <div style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F3F4F6', marginTop: 12 }}>
+        <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{exs.length} exercício{exs.length !== 1 ? 's' : ''}</span>
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={() => onEdit(tpl)} style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Edit3 size={12} /> Editar
+          </button>
+          <button onClick={() => onAssign(tpl)} style={{ padding: '6px 12px', borderRadius: 8, border: 'none', background: `linear-gradient(135deg, ${color}, ${color}bb)`, fontSize: 12, fontWeight: 700, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <Send size={11} /> Atribuir
+          </button>
+        </div>
       </div>
     </div>
   );
 }
 
-/* ─── Componente principal ──────────────────────────────────── */
+// ─── AssignModal ──────────────────────────────────────────────────────────────
+
+function AssignModal({ tpl, students, onAssign, onClose }) {
+  const [picked, setPicked]  = useState([]);
+  const [days,   setDays]    = useState(tpl.days || []);
+  const [saving, setSaving]  = useState(false);
+  const [done,   setDone]    = useState(false);
+  const toggle    = (id) => setPicked(p => p.includes(id) ? p.filter(x => x !== id) : [...p, id]);
+  const toggleDay = (d)  => setDays(p => p.includes(d)  ? p.filter(x => x !== d)  : [...p, d]);
+
+  const handle = async () => {
+    if (!picked.length || !days.length || saving) return;
+    setSaving(true);
+    await onAssign(tpl, picked, days);
+    setSaving(false); setDone(true); setTimeout(onClose, 1200);
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 20, padding: 26, width: '100%', maxWidth: 440, maxHeight: '90vh', overflowY: 'auto' }}>
+        {done ? (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}><Check size={26} color="#10B981" strokeWidth={3} /></div>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Treino atribuído!</p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6B7280' }}>Os alunos já podem ver no app</p>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Atribuir treino</h3>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6B7280' }}>{tpl.name}</p>
+              </div>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
+            </div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Dias da semana</label>
+            <div style={{ display: 'flex', gap: 5, marginBottom: 18 }}>
+              {DAYS.map(d => { const sel = days.includes(d.v); return (
+                <button key={d.v} onClick={() => toggleDay(d.v)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', color: sel ? '#3B82F6' : '#9CA3AF' }}>{d.s}</button>
+              ); })}
+            </div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Alunos</label>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6, maxHeight: 240, overflowY: 'auto', marginBottom: 18 }}>
+              {students.length === 0 ? <p style={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', padding: 20 }}>Nenhum aluno ativo</p> : students.map(s => { const sel = picked.includes(s.id); return (
+                <button key={s.id} onClick={() => toggle(s.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 10, border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', cursor: 'pointer', textAlign: 'left' }}>
+                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: s.color || '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><span style={{ fontSize: 11, fontWeight: 800, color: 'white' }}>{s.initials || s.name?.[0]}</span></div>
+                  <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#111827' }}>{s.name}</span>
+                  {sel && <Check size={15} color="#3B82F6" strokeWidth={3} />}
+                </button>
+              ); })}
+            </div>
+            <button onClick={handle} disabled={!picked.length || !days.length || saving}
+              style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: picked.length && days.length ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : '#E5E7EB', color: picked.length && days.length ? 'white' : '#9CA3AF', fontSize: 14, fontWeight: 700, cursor: picked.length && days.length ? 'pointer' : 'not-allowed' }}>
+              {saving ? 'Salvando...' : `Atribuir para ${picked.length || '...'} aluno${picked.length !== 1 ? 's' : ''}`}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── WeekBar ──────────────────────────────────────────────────────────────────
+
+function WeekBar({ plans }) {
+  const byDay = {};
+  plans.forEach(p => (p.days || []).forEach(d => { byDay[d] = p; }));
+  return (
+    <div style={{ display: 'flex', gap: 5, marginBottom: 20 }}>
+      {DAYS.map(d => {
+        const p = byDay[d.v];
+        const c = p ? tc(p.type) : null;
+        return (
+          <div key={d.v} style={{ flex: 1, textAlign: 'center', padding: '7px 4px', borderRadius: 8, background: c ? c + '14' : '#F9FAFB', border: `1.5px solid ${c ? c + '40' : '#E5E7EB'}` }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: c || '#C4C9D4' }}>{d.s}</div>
+            {c && <div style={{ width: 5, height: 5, borderRadius: '50%', background: c, margin: '3px auto 0' }} />}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── StudentPlanCard ──────────────────────────────────────────────────────────
+
+function StudentPlanCard({ plan, onEdit, onDelete }) {
+  const [expanded, setExpanded] = useState(false);
+  const exs     = [...(plan.exercises || [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+  const color   = tc(plan.type);
+  const dayLbls = (plan.days || []).map(d => DAYS.find(x => x.v === d)?.s).filter(Boolean);
+
+  return (
+    <div style={{ background: 'white', borderRadius: 12, border: '1.5px solid #E5E7EB', overflow: 'hidden', marginBottom: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '13px 14px' }}>
+        <div style={{ width: 38, height: 38, borderRadius: 10, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Dumbbell size={18} color={color} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2, flexWrap: 'wrap' }}>
+            <span style={{ fontSize: 10, fontWeight: 800, color, background: color + '18', padding: '1px 7px', borderRadius: 20 }}>{plan.type}</span>
+            {dayLbls.map(d => <span key={d} style={{ fontSize: 10, fontWeight: 700, color: '#6B7280', background: '#F3F4F6', padding: '1px 6px', borderRadius: 20 }}>{d}</span>)}
+          </div>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{plan.name}</p>
+          <p style={{ margin: '1px 0 0', fontSize: 11, color: '#9CA3AF' }}>{exs.length} exercício{exs.length !== 1 ? 's' : ''}</p>
+        </div>
+        <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+          <button onClick={() => setExpanded(v => !v)} style={{ padding: 7, border: '1.5px solid #E5E7EB', borderRadius: 8, background: 'white', cursor: 'pointer', color: '#6B7280', display: 'flex' }}>{expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}</button>
+          <button onClick={() => onEdit(plan)} style={{ padding: 7, border: '1.5px solid #E5E7EB', borderRadius: 8, background: 'white', cursor: 'pointer', color: '#374151', display: 'flex' }}><Edit3 size={14} /></button>
+          <button onClick={() => onDelete(plan)} style={{ padding: 7, border: '1.5px solid #FEE2E2', borderRadius: 8, background: '#FEF2F2', cursor: 'pointer', color: '#EF4444', display: 'flex' }}><Trash2 size={14} /></button>
+        </div>
+      </div>
+      {expanded && exs.length > 0 && (
+        <div style={{ borderTop: '1px solid #F3F4F6', padding: '8px 14px 12px 62px' }}>
+          {exs.map((ex, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '3px 0' }}>
+              <span style={{ width: 16, fontSize: 10, fontWeight: 800, color: '#D1D5DB', flexShrink: 0, textAlign: 'right' }}>{i + 1}</span>
+              <span style={{ flex: 1, fontSize: 12, color: '#374151' }}>{ex.name}</span>
+              <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, flexShrink: 0 }}>{ex.sets}×{ex.reps}</span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── PickTemplateModal ────────────────────────────────────────────────────────
+
+function PickTemplateModal({ templates, student, onAssign, onClose }) {
+  const [step, setStep]     = useState('pick');
+  const [chosen, setChosen] = useState(null);
+  const [days, setDays]     = useState([]);
+  const [saving, setSaving] = useState(false);
+  const [done, setDone]     = useState(false);
+
+  const handleConfirm = async () => {
+    if (!days.length || saving) return;
+    setSaving(true);
+    await onAssign(chosen, [student.id], days);
+    setSaving(false); setDone(true); setTimeout(onClose, 1200);
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 350, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 20, padding: 26, width: '100%', maxWidth: 460, maxHeight: '88vh', overflowY: 'auto' }}>
+        {done ? (
+          <div style={{ textAlign: 'center', padding: '24px 0' }}>
+            <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}><Check size={26} color="#10B981" strokeWidth={3} /></div>
+            <p style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Treino atribuído!</p>
+          </div>
+        ) : step === 'pick' ? (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+              <div>
+                <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Escolher cartilha</h3>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6B7280' }}>Para {student.name}</p>
+              </div>
+              <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
+            </div>
+            {templates.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '30px 0', color: '#9CA3AF', fontSize: 13 }}>Nenhuma cartilha criada ainda.<br />Crie uma na aba Cartilhas primeiro.</div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {templates.map(t => { const c = tc(t.type); return (
+                  <button key={t.id} onClick={() => { setChosen(t); setDays(t.days || []); setStep('days'); }}
+                    style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', background: 'white', cursor: 'pointer', textAlign: 'left' }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = c}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = '#E5E7EB'}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: c + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><Dumbbell size={18} color={c} /></div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>{t.name}</p>
+                      <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9CA3AF' }}>{t.type} · {(t.exercises || []).length} exercícios</p>
+                    </div>
+                    <ChevronDown size={16} color="#9CA3AF" style={{ transform: 'rotate(-90deg)', flexShrink: 0 }} />
+                  </button>
+                ); })}
+              </div>
+            )}
+          </>
+        ) : (
+          <>
+            <button onClick={() => setStep('pick')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#3B82F6', fontSize: 13, fontWeight: 700, marginBottom: 14, padding: 0 }}>← Voltar</button>
+            <h3 style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 800 }}>{chosen?.name}</h3>
+            <p style={{ margin: '0 0 16px', fontSize: 12, color: '#6B7280' }}>Qual dia(s) da semana?</p>
+            <div style={{ display: 'flex', gap: 5, marginBottom: 20 }}>
+              {DAYS.map(d => { const sel = days.includes(d.v); return (
+                <button key={d.v} onClick={() => setDays(p => p.includes(d.v) ? p.filter(x => x !== d.v) : [...p, d.v])} style={{ flex: 1, padding: '9px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', color: sel ? '#3B82F6' : '#9CA3AF' }}>{d.s}</button>
+              ); })}
+            </div>
+            <button onClick={handleConfirm} disabled={!days.length || saving}
+              style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: days.length ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : '#E5E7EB', color: days.length ? 'white' : '#9CA3AF', fontSize: 14, fontWeight: 700, cursor: days.length ? 'pointer' : 'not-allowed' }}>
+              {saving ? 'Salvando...' : 'Confirmar'}
+            </button>
+          </>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Página principal ─────────────────────────────────────────────────────────
+
 export default function Treinos() {
   const { user } = useAuth();
-  const [plans, setPlans] = useState([]);
-  const [students, setStudents] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [studentId, setStudentId] = useState('');
-  const [day, setDay] = useState(null);
-  const [group, setGroup] = useState('Peito');
-  const [planName, setPlanName] = useState('');
-  const [planType, setPlanType] = useState('Hipertrofia');
-  const [exercises, setExercises] = useState([]);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [configModal, setConfigModal] = useState(false);
-  const [copyModal, setCopyModal] = useState(false);
-  const [showTutorial, setShowTutorial] = useState(true);
-  const [templateModal, setTemplateModal] = useState(null); // null | 'save' | 'load'
+  const [tab,       setTab]       = useState('cartilhas');
   const [templates, setTemplates] = useState([]);
-  const [aiModal, setAiModal] = useState(false);
-  const [programs, setPrograms] = useState([]);
-  const [programModal, setProgramModal] = useState(null); // null | 'save' | 'library'
+  const [students,  setStudents]  = useState([]);
+  const [plans,     setPlans]     = useState([]);
+  const [loading,   setLoading]   = useState(true);
+
+  const [search,     setSearch]     = useState('');
+  const [editor,     setEditor]     = useState(null);
+  const [assignTpl,  setAssignTpl]  = useState(null);
+  const [selStudent, setSelStudent] = useState(null);
+  const [pickTpl,    setPickTpl]    = useState(false);
 
   useEffect(() => {
-    if (localStorage.getItem('treinos_tutorial_dismissed')) setShowTutorial(false);
-  }, []);
-
-  // Load templates from localStorage
-  useEffect(() => {
-    if (!user?.id) return;
-    try {
-      const saved = JSON.parse(localStorage.getItem(`wf_templates_${user.id}`)) || [];
-      setTemplates(saved);
-    } catch { setTemplates([]); }
-  }, [user?.id]);
-
-  // Load programs from localStorage
-  useEffect(() => {
-    if (!user?.id) return;
-    try {
-      const saved = JSON.parse(localStorage.getItem(`wf_programs_${user.id}`)) || [];
-      setPrograms(saved);
-    } catch { setPrograms([]); }
-  }, [user?.id]);
-
-  const dismissTutorial = () => {
-    setShowTutorial(false);
-    localStorage.setItem('treinos_tutorial_dismissed', '1');
-  };
-
-  useEffect(() => {
-    if (!user) return;
-    if (hasSupabase) {
-      Promise.all([
-        supabase.from('training_plans').select('*, exercises(*)').eq('personal_id', user.id),
-        supabase.from('students').select('id, name, initials, color').eq('personal_id', user.id).eq('status', 'ativo'),
-      ]).then(([{ data: p }, { data: s }]) => {
-        setPlans(p || []);
-        setStudents(s || []);
-        setLoading(false);
-      });
-    } else {
-      setPlans(mockPlans);
-      setStudents(mockStudents);
+    if (!user || !hasSupabase) { setLoading(false); return; }
+    Promise.all([
+      supabase.from('training_plans').select('*, exercises(*)').eq('personal_id', user.id).is('student_id', null),
+      supabase.from('training_plans').select('*, exercises(*)').eq('personal_id', user.id).not('student_id', 'is', null),
+      supabase.from('students').select('id, name, initials, color').eq('personal_id', user.id).eq('status', 'ativo'),
+    ]).then(([{ data: t }, { data: p }, { data: s }]) => {
+      setTemplates(t || []);
+      setPlans(p || []);
+      setStudents(s || []);
+      if (s?.length) setSelStudent(s[0].id);
       setLoading(false);
-    }
+    });
   }, [user?.id]);
 
-  const myPlans = plans.filter(p => String(p.student_id || p.studentId) === String(studentId));
-  const planForDay = (d) => myPlans.find(p => (p.days || []).includes(d));
-  const newExercise = () => ({ name: '', sets: 4, reps: '10', rest: '60s', load: '', videoUrl: '', obs: '', supersetGroup: null });
-
-  const openDay = (d) => {
-    setDay(d); setSaved(false);
-    const plan = planForDay(d);
-    if (plan) {
-      const detectedGroup = GROUPS.find(g => g === plan.name)
-        || GROUPS.find(g => plan.name?.toLowerCase().includes(g.toLowerCase()))
-        || 'Peito';
-      setGroup(detectedGroup);
-      setPlanName(plan.name || '');
-      setPlanType(plan.type || 'Hipertrofia');
-      setExercises((plan.exercises || []).sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-        .map(ex => ({ name: ex.name, sets: ex.sets || 4, reps: ex.reps || '10', rest: ex.rest || '60s', load: ex.load || '', videoUrl: ex.video_url || '', obs: ex.obs || '', supersetGroup: ex.superset_group || null })));
-    } else {
-      setGroup('Peito'); setPlanName(''); setPlanType('Hipertrofia');
-      setExercises([newExercise()]);
-    }
-  };
-
-  const updateEx = (idx, field, val) => setExercises(prev => prev.map((e, i) => i === idx ? { ...e, [field]: val } : e));
-  const deleteEx = (idx) => setExercises(prev => prev.filter((_, i) => i !== idx));
-  const moveEx = (idx, dir) => {
-    setExercises(prev => {
-      const arr = [...prev]; const swap = idx + dir;
-      if (swap < 0 || swap >= arr.length) return arr;
-      [arr[idx], arr[swap]] = [arr[swap], arr[idx]]; return arr;
-    });
-  };
-
-  // Template save/load
-  const saveTemplate = (name) => {
-    const template = {
-      id: `${Date.now()}`,
-      name,
-      group,
-      planType,
-      exercises: exercises.filter(e => e.name?.trim()).map(e => ({ ...e })),
-      savedAt: new Date().toISOString(),
-    };
-    const updated = [...templates, template];
-    setTemplates(updated);
-    localStorage.setItem(`wf_templates_${user.id}`, JSON.stringify(updated));
-  };
-
-  const loadTemplate = (template) => {
-    setExercises(template.exercises.map(e => ({ ...e })));
-    if (template.planType) setPlanType(template.planType);
-    if (template.group) setGroup(template.group);
-  };
-
-  const deleteTemplate = (id) => {
-    const updated = templates.filter(t => t.id !== id);
-    setTemplates(updated);
-    localStorage.setItem(`wf_templates_${user.id}`, JSON.stringify(updated));
-  };
-
-  const saveProgram = (name, level) => {
-    const program = {
-      id: `prog_${Date.now()}`,
-      name,
-      level,
-      days: myPlans.map(p => ({
-        name: p.name,
-        type: p.type || 'Hipertrofia',
-        days: p.days || [],
-        exercises: (p.exercises || [])
-          .sort((a, b) => (a.order_index || 0) - (b.order_index || 0))
-          .map(e => ({
-            name: e.name,
-            sets: e.sets || 4,
-            reps: e.reps || '10',
-            rest: e.rest || '60s',
-            load: e.load || '',
-            videoUrl: e.video_url || e.videoUrl || '',
-            obs: e.obs || '',
-            supersetGroup: e.superset_group || e.supersetGroup || null,
-          })),
-      })),
-      savedAt: new Date().toISOString(),
-      useCount: 0,
-    };
-    const updated = [...programs, program];
-    setPrograms(updated);
-    localStorage.setItem(`wf_programs_${user.id}`, JSON.stringify(updated));
-  };
-
-  const deleteProgram = (id) => {
-    const updated = programs.filter(p => p.id !== id);
-    setPrograms(updated);
-    localStorage.setItem(`wf_programs_${user.id}`, JSON.stringify(updated));
-  };
-
-  const applyProgram = async (program, targetStudentId) => {
-    const target = students.find(s => String(s.id) === targetStudentId);
-    if (!target) return;
-
-    // Increment use count
-    const updatedProgs = programs.map(p => p.id === program.id ? { ...p, useCount: (p.useCount || 0) + 1 } : p);
-    setPrograms(updatedProgs);
-    localStorage.setItem(`wf_programs_${user.id}`, JSON.stringify(updatedProgs));
-
+  const saveItem = async ({ id, name, type, days, exercises, studentId }) => {
     if (!hasSupabase) return;
+    const isTemplate = studentId === null || studentId === undefined;
 
-    for (const planData of program.days) {
-      // Delete any existing plans for this student on these days
-      const existingForDays = plans.filter(p =>
-        String(p.student_id) === targetStudentId &&
-        (planData.days || []).some(dv => (p.days || []).includes(dv))
-      );
-      for (const ex of existingForDays) {
-        await supabase.from('training_plans').delete().eq('id', ex.id);
+    if (id) {
+      await supabase.from('training_plans').update({ name, type, days }).eq('id', id);
+      await supabase.from('exercises').delete().eq('plan_id', id);
+      if (exercises.length) {
+        await supabase.from('exercises').insert(exercises.map((e, i) => ({ plan_id: id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps, rest: e.rest, load: e.load || '', obs: e.obs || '', order_index: i })));
       }
-
-      const { data: newPlan } = await supabase.from('training_plans').insert({
-        personal_id: user.id,
-        student_id: target.id,
-        student_name: target.name,
-        name: planData.name,
-        type: planData.type || 'Hipertrofia',
-        days: planData.days || [],
-      }).select().single();
-
-      if (newPlan && (planData.exercises || []).length > 0) {
-        await supabase.from('exercises').insert(
-          planData.exercises.map((e, i) => ({
-            plan_id: newPlan.id,
-            name: e.name,
-            sets: parseInt(e.sets) || 4,
-            reps: e.reps,
-            rest: e.rest,
-            load: e.load || '',
-            video_url: e.videoUrl || '',
-            obs: e.obs || '',
-            order_index: i,
-            superset_group: e.supersetGroup || null,
-          }))
-        );
-      }
-    }
-
-    const { data: refreshed } = await supabase.from('training_plans').select('*, exercises(*)').eq('personal_id', user.id);
-    if (refreshed) setPlans(refreshed);
-  };
-
-  const savePlan = async () => {
-    if (!studentId || day === null) return;
-    const validEx = exercises.filter(e => e.name?.trim());
-    if (validEx.length === 0) {
-      alert('Adicione pelo menos 1 exercício antes de salvar o treino.');
-      return;
-    }
-    setSaving(true);
-    const student = students.find(s => String(s.id) === String(studentId));
-    const existing = planForDay(day);
-    const finalName = planName.trim() || group;
-    const exRows = (id) => validEx.map((e, i) => ({
-      plan_id: id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps,
-      load: e.load || '', rest: e.rest, video_url: e.videoUrl || '',
-      obs: e.obs || '', order_index: i,
-      superset_group: e.supersetGroup || null,
-    }));
-    if (hasSupabase) {
-      if (existing) {
-        await supabase.from('training_plans').update({ name: finalName, type: planType }).eq('id', existing.id);
-        await supabase.from('exercises').delete().eq('plan_id', existing.id);
-        if (validEx.length) await supabase.from('exercises').insert(exRows(existing.id));
-        const { data: u } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', existing.id).single();
-        if (u) setPlans(prev => prev.map(p => p.id === existing.id ? u : p));
-      } else {
-        const { data: plan } = await supabase.from('training_plans').insert({ personal_id: user.id, student_id: student?.id, student_name: student?.name, name: finalName, type: planType, days: [day] }).select().single();
-        if (plan) {
-          if (validEx.length) await supabase.from('exercises').insert(exRows(plan.id));
-          const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', plan.id).single();
-          if (full) setPlans(prev => [full, ...prev]);
-        }
+      const { data: up } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', id).single();
+      if (up) {
+        if (isTemplate) setTemplates(prev => prev.map(t => t.id === id ? up : t));
+        else setPlans(prev => prev.map(p => p.id === id ? up : p));
       }
     } else {
-      if (existing) setPlans(prev => prev.map(p => p.id === existing.id ? { ...p, name: finalName, type: planType, exercises: validEx } : p));
-      else setPlans(prev => [{ id: Date.now(), student_id: studentId, student_name: student?.name, name: finalName, type: planType, days: [day], exercises: validEx }, ...prev]);
-    }
-    setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2000);
-  };
-
-  const deleteDay = async () => {
-    const existing = planForDay(day);
-    if (!existing) { setDay(null); return; }
-    if (hasSupabase) await supabase.from('training_plans').delete().eq('id', existing.id);
-    setPlans(prev => prev.filter(p => p.id !== existing.id));
-    setDay(null);
-  };
-
-  const handleConfigWeek = async (dayGroups) => {
-    const student = students.find(s => String(s.id) === String(studentId));
-    if (!student) return;
-    const newPlansLocal = [];
-    for (const [dayVal, grpName] of Object.entries(dayGroups)) {
-      const dv = parseInt(dayVal);
-      const existing = myPlans.find(p => (p.days || []).includes(dv));
-      if (hasSupabase) {
-        if (existing) {
-          await supabase.from('training_plans').update({ name: grpName, type: 'Hipertrofia' }).eq('id', existing.id);
-          const { data: u } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', existing.id).single();
-          if (u) newPlansLocal.push({ type: 'update', plan: u });
-        } else {
-          const { data: plan } = await supabase.from('training_plans').insert({ personal_id: user.id, student_id: student.id, student_name: student.name, name: grpName, type: 'Hipertrofia', days: [dv] }).select().single();
-          if (plan) {
-            const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', plan.id).single();
-            if (full) newPlansLocal.push({ type: 'insert', plan: full });
-          }
+      const stud = !isTemplate ? students.find(s => s.id === studentId) : null;
+      const { data: plan } = await supabase.from('training_plans').insert({
+        personal_id: user.id,
+        student_id: isTemplate ? null : studentId,
+        student_name: stud?.name || null,
+        name, type, days,
+      }).select().single();
+      if (plan) {
+        if (exercises.length) {
+          await supabase.from('exercises').insert(exercises.map((e, i) => ({ plan_id: plan.id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps, rest: e.rest, load: e.load || '', obs: e.obs || '', order_index: i })));
         }
-      } else {
-        newPlansLocal.push({ type: 'insert', plan: { id: Date.now() + dv, student_id: studentId, student_name: student.name, name: grpName, type: 'Hipertrofia', days: [dv], exercises: [] } });
+        const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', plan.id).single();
+        if (full) {
+          if (isTemplate) setTemplates(prev => [full, ...prev]);
+          else setPlans(prev => [full, ...prev]);
+        }
       }
     }
-    setPlans(prev => {
-      let arr = [...prev];
-      for (const { type, plan } of newPlansLocal) {
-        if (type === 'update') arr = arr.map(p => p.id === plan.id ? plan : p);
-        else arr = [...arr, plan];
-      }
-      return arr;
-    });
+    setEditor(null);
   };
 
-  const handleCopyPlan = async (targetStudentId) => {
-    const target = students.find(s => String(s.id) === targetStudentId);
-    if (!target || !hasSupabase) return;
-    for (const plan of myPlans) {
-      const exs = [...(plan.exercises || [])].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
-      const { data: newPlan } = await supabase.from('training_plans').insert({ personal_id: user.id, student_id: target.id, student_name: target.name, name: plan.name, type: plan.type || 'Hipertrofia', days: plan.days || [] }).select().single();
-      if (newPlan && exs.length) {
-        await supabase.from('exercises').insert(exs.map((e, i) => ({
-          plan_id: newPlan.id, name: e.name, sets: e.sets, reps: e.reps,
-          rest: e.rest, load: e.load || '', video_url: e.video_url || e.videoUrl || '',
-          obs: e.obs || '', order_index: i, superset_group: e.superset_group || null,
-        })));
+  const deleteItem = async (item, isTemplate) => {
+    if (!window.confirm(`Excluir "${item.name}"?`)) return;
+    if (hasSupabase) await supabase.from('training_plans').delete().eq('id', item.id);
+    if (isTemplate) setTemplates(prev => prev.filter(t => t.id !== item.id));
+    else setPlans(prev => prev.filter(p => p.id !== item.id));
+  };
+
+  const assignTemplate = async (tpl, studentIds, selectedDays) => {
+    if (!hasSupabase) return;
+    const exs = [...(tpl.exercises || [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+    for (const sid of studentIds) {
+      const stud = students.find(s => s.id === sid);
+      const overlapping = plans.filter(p => p.student_id === sid && (p.days || []).some(d => selectedDays.includes(d)));
+      for (const op of overlapping) await supabase.from('training_plans').delete().eq('id', op.id);
+      setPlans(prev => prev.filter(p => !overlapping.find(o => o.id === p.id)));
+      const { data: plan } = await supabase.from('training_plans').insert({
+        personal_id: user.id, student_id: sid, student_name: stud?.name || null,
+        name: tpl.name, type: tpl.type, days: selectedDays,
+      }).select().single();
+      if (plan) {
+        if (exs.length) {
+          await supabase.from('exercises').insert(exs.map((e, i) => ({ plan_id: plan.id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps, rest: e.rest, load: e.load || '', obs: e.obs || '', order_index: i })));
+        }
+        const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', plan.id).single();
+        if (full) setPlans(prev => [full, ...prev]);
       }
     }
-    const { data: refreshed } = await supabase.from('training_plans').select('*, exercises(*)').eq('personal_id', user.id);
-    if (refreshed) setPlans(refreshed);
   };
 
-  const dayInfo = DAYS.find(d => d.value === day);
+  const selectedStudent    = students.find(s => s.id === selStudent);
+  const studentPlans       = plans.filter(p => p.student_id === selStudent);
+  const filteredTemplates  = templates.filter(t =>
+    !search || t.name?.toLowerCase().includes(search.toLowerCase()) || t.type?.toLowerCase().includes(search.toLowerCase())
+  );
 
   if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300, flex: 1 }}>
-      <Loader size={28} color="#3B82F6" style={{ animation: 'spin 1s linear infinite' }} />
-      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: 300 }}>
+      <Dumbbell size={32} color="#D1D5DB" />
     </div>
   );
 
   return (
     <div className="page-padding" style={{ flex: 1 }}>
-      <div style={{ marginBottom: 20, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
-        <div style={{ minWidth: 0 }}>
-          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#111827' }}>Treinos</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#9CA3AF' }}>
-            Monte o programa semanal de cada aluno
-            {programs.length > 0 && ` · ${programs.length} programa${programs.length !== 1 ? 's' : ''} na biblioteca`}
+
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Treinos</h2>
+          <p style={{ margin: '3px 0 0', fontSize: 13, color: '#9CA3AF' }}>
+            {tab === 'cartilhas' ? `${templates.length} cartilha${templates.length !== 1 ? 's' : ''}` : `${students.length} aluno${students.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button onClick={() => setProgramModal('library')}
-            style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 13px', borderRadius: 20, background: programs.length > 0 ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#F1F5F9', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: programs.length > 0 ? 'white' : '#6B7280', boxShadow: programs.length > 0 ? '0 2px 8px rgba(59,130,246,0.3)' : 'none' }}>
-            <Library size={14} /> {programs.length > 0 ? `Programas (${programs.length})` : 'Programas'}
+        {tab === 'cartilhas' ? (
+          <button onClick={() => setEditor({ item: null, mode: 'template' })}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(59,130,246,0.3)' }}>
+            <Plus size={16} /> Nova cartilha
           </button>
-          {templates.length > 0 && (
-            <button onClick={() => setTemplateModal('load')}
-              style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 20, background: '#F5F3FF', border: '1px solid #DDD6FE', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: '#7C3AED' }}>
-              <FolderOpen size={14} /> Templates
-            </button>
-          )}
-          {!showTutorial && (
-            <button onClick={() => setShowTutorial(true)} style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 12px', borderRadius: 20, background: '#F1F5F9', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: '#6B7280' }}>
-              <HelpCircle size={14} /> Como usar
-            </button>
-          )}
-        </div>
-      </div>
-
-      {showTutorial && <Tutorial onDismiss={dismissTutorial} />}
-
-      {/* Seleção de aluno */}
-      <div style={{ background: 'white', borderRadius: 16, padding: '18px 20px', marginBottom: 14, border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-        <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Aluno</p>
-        {students.length === 0 ? (
-          <p style={{ fontSize: 14, color: '#9CA3AF', margin: 0 }}>Nenhum aluno ativo. Cadastre primeiro na página Alunos.</p>
-        ) : students.length > 8 ? (
-          <select value={studentId} onChange={e => { setStudentId(e.target.value); setDay(null); }}
-            style={{ width: '100%', height: 48, padding: '0 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', fontSize: 15, fontWeight: 700, color: studentId ? '#111827' : '#9CA3AF', background: 'white', cursor: 'pointer', outline: 'none' }}>
-            <option value="">Selecione um aluno...</option>
-            {students.map(s => <option key={s.id} value={String(s.id)}>{s.name}</option>)}
-          </select>
         ) : (
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-            {students.map(s => {
-              const active = String(s.id) === studentId;
-              return (
-                <button key={s.id} onClick={() => { setStudentId(String(s.id)); setDay(null); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: 9, padding: '9px 16px', borderRadius: 40, border: `2.5px solid ${active ? '#3B82F6' : '#E5E7EB'}`, background: active ? '#EFF6FF' : 'white', cursor: 'pointer', transition: 'all 0.12s' }}>
-                  <div style={{ width: 30, height: 30, borderRadius: '50%', background: s.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 800, color: 'white', flexShrink: 0 }}>
-                    {(s.initials || s.name?.slice(0, 2)).toUpperCase()}
-                  </div>
-                  <span style={{ fontSize: 14, fontWeight: 700, color: active ? '#1D4ED8' : '#374151' }}>{s.name.split(' ')[0]}</span>
-                  {active && <Check size={14} color="#3B82F6" />}
-                </button>
-              );
-            })}
-          </div>
+          selectedStudent && (
+            <button onClick={() => setPickTpl(true)}
+              style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(16,185,129,0.3)' }}>
+              <Plus size={16} /> Atribuir treino
+            </button>
+          )
         )}
       </div>
 
-      {studentId && (
-        <div style={{ background: 'white', borderRadius: 16, padding: '18px 20px', border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14, gap: 10, flexWrap: 'wrap' }}>
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Semana de treinos</p>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-              {myPlans.length > 0 && (
-                <>
-                  <button onClick={() => setProgramModal('save')}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 14px', borderRadius: 20, background: '#EFF6FF', color: '#3B82F6', border: '1.5px solid #BFDBFE', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
-                    <Layers size={13} /> Salvar programa
-                  </button>
-                  <button onClick={() => setCopyModal(true)}
-                    style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '8px 14px', borderRadius: 20, background: '#F3F4F6', color: '#374151', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
-                    <Copy size={13} /> Copiar para...
-                  </button>
-                </>
-              )}
-              <button onClick={() => setConfigModal(true)}
-                style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 16px', borderRadius: 20, background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', color: 'white', border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 700 }}>
-                Configurar semana
-              </button>
-            </div>
-          </div>
+      {/* Tab switcher */}
+      <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 12, padding: 4, marginBottom: 24, width: 'fit-content' }}>
+        {[
+          { id: 'cartilhas', icon: BookOpen, label: 'Cartilhas' },
+          { id: 'alunos',    icon: Users,    label: 'Por Aluno'  },
+        ].map(({ id, icon: Icon, label }) => {
+          const active = tab === id;
+          return (
+            <button key={id} onClick={() => setTab(id)}
+              style={{ display: 'flex', alignItems: 'center', gap: 7, padding: '9px 20px', borderRadius: 9, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700, background: active ? 'white' : 'transparent', color: active ? '#111827' : '#9CA3AF', boxShadow: active ? '0 1px 4px rgba(0,0,0,0.1)' : 'none' }}>
+              <Icon size={15} /> {label}
+            </button>
+          );
+        })}
+      </div>
 
-          <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
-            {DAYS.map(d => {
-              const plan = planForDay(d.value);
-              const isActive = day === d.value;
-              const gc2 = plan ? (GROUP_COLORS[plan.name] || '#6B7280') : null;
-              const firstExercises = (plan?.exercises || []).sort((a, b) => (a.order_index || 0) - (b.order_index || 0)).slice(0, 3);
-              const remaining = Math.max(0, (plan?.exercises || []).length - 3);
-              const hasSupersets = (plan?.exercises || []).some(e => e.superset_group);
-              return (
-                <button key={d.value} onClick={() => openDay(d.value)}
-                  style={{ flex: '0 0 auto', width: 110, padding: '12px 10px', borderRadius: 14, border: `2px solid ${isActive ? '#3B82F6' : plan ? gc2 + '55' : '#E5E7EB'}`, background: isActive ? '#EFF6FF' : plan ? gc2 + '08' : '#F9FAFB', cursor: 'pointer', textAlign: 'left', transition: 'all 0.12s', boxShadow: isActive ? '0 0 0 3px rgba(59,130,246,0.15)' : 'none' }}>
-                  <p style={{ margin: '0 0 6px', fontSize: 10, fontWeight: 800, color: isActive ? '#3B82F6' : '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{d.label}</p>
-                  {plan ? (
-                    <>
-                      <p style={{ margin: '0 0 5px', fontSize: 12, fontWeight: 800, color: gc2, lineHeight: 1.2 }}>{plan.name}</p>
-                      {hasSupersets && <p style={{ margin: '0 0 4px', fontSize: 9, color: '#7C3AED', fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}><Zap size={9} fill="#7C3AED" />supersets</p>}
-                      {firstExercises.map((ex, ei) => (
-                        <p key={ei} style={{ margin: '0 0 1px', fontSize: 10, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                          {ex.name.split(' ').slice(0, 3).join(' ')}
-                        </p>
-                      ))}
-                      {remaining > 0 && <p style={{ margin: '2px 0 0', fontSize: 9, color: '#9CA3AF', fontWeight: 600 }}>+{remaining} mais</p>}
-                    </>
-                  ) : (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 6 }}>
-                      <div style={{ width: 22, height: 22, borderRadius: 6, border: '2px dashed #D1D5DB', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <Plus size={11} color="#9CA3AF" />
-                      </div>
-                      <span style={{ fontSize: 10, color: '#9CA3AF' }}>Adicionar</span>
-                    </div>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {myPlans.length === 0 && (
-            <div style={{ marginTop: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
-              <div style={{ padding: '14px 16px', background: '#EFF6FF', borderRadius: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-                <Lightbulb size={18} color="#3B82F6" style={{ flexShrink: 0 }} />
-                <p style={{ margin: 0, fontSize: 13, color: '#1D4ED8', lineHeight: 1.5 }}>
-                  Clique em <strong>"Configurar semana"</strong> para montar a divisão automaticamente, ou clique em qualquer dia para começar do zero.
-                </p>
-              </div>
-              {programs.length > 0 && (
-                <button onClick={() => setProgramModal('library')}
-                  style={{ padding: '13px 16px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', borderRadius: 12, color: 'white', fontSize: 13, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: '0 3px 10px rgba(59,130,246,0.25)' }}>
-                  <Share2 size={15} /> Aplicar programa da biblioteca ({programs.length} disponíveis)
-                </button>
-              )}
+      {/* ── Tab: Cartilhas ─────────────────────────────────────────────────── */}
+      {tab === 'cartilhas' && (
+        <>
+          {templates.length > 4 && (
+            <div style={{ position: 'relative', marginBottom: 16 }}>
+              <Search size={15} color="#9CA3AF" style={{ position: 'absolute', left: 13, top: '50%', transform: 'translateY(-50%)' }} />
+              <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar cartilha..."
+                style={{ width: '100%', padding: '9px 14px 9px 38px', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
           )}
-        </div>
+
+          {templates.length === 0 && (
+            <div style={{ background: 'white', borderRadius: 16, padding: '60px 24px', textAlign: 'center', border: '2px dashed #E5E7EB' }}>
+              <div style={{ width: 60, height: 60, borderRadius: 16, background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}><BookOpen size={26} color="#8B5CF6" /></div>
+              <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800 }}>Nenhuma cartilha ainda</h3>
+              <p style={{ margin: '0 0 24px', fontSize: 14, color: '#6B7280', maxWidth: 300, marginLeft: 'auto', marginRight: 'auto' }}>Crie uma cartilha e use a IA para sugerir exercícios. Depois é só atribuir para seus alunos.</p>
+              <button onClick={() => setEditor({ item: null, mode: 'template' })}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+                <Plus size={16} /> Criar primeira cartilha
+              </button>
+            </div>
+          )}
+
+          {filteredTemplates.length > 0 && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(290px, 1fr))', gap: 14 }}>
+              {filteredTemplates.map(t => (
+                <TemplateCard key={t.id} tpl={t}
+                  onEdit={tpl => setEditor({ item: tpl, mode: 'template' })}
+                  onAssign={tpl => setAssignTpl(tpl)}
+                  onDelete={tpl => deleteItem(tpl, true)} />
+              ))}
+            </div>
+          )}
+        </>
       )}
 
-      {/* Editor */}
-      {day !== null && (
-        <DayEditorSheet
-          day={day} dayInfo={dayInfo} group={group} setGroup={setGroup}
-          planName={planName} setPlanName={setPlanName} planType={planType} setPlanType={setPlanType}
-          exercises={exercises}
-          onUpdate={updateEx} onDelete={deleteEx} onMove={moveEx}
-          onAdd={(libEx) => {
-            const insertIdx = exercises.length;
-            setExercises(prev => [...prev, { ...newExercise(), ...(libEx ? { name: libEx.name } : {}) }]);
-            if (libEx?.videoSearch) {
-              fetchExerciseVideo(libEx.name, libEx.videoSearch).then(url => {
-                if (url) setExercises(prev => prev.map((e, i) => i === insertIdx ? { ...e, videoUrl: url } : e));
-              }).catch(() => {});
-            }
-          }}
-          onSave={savePlan} onDelete2={deleteDay} onClose={() => setDay(null)}
-          saving={saving} saved={saved} existing={!!planForDay(day)}
-          onOpenTemplate={(mode) => setTemplateModal(mode)}
-          onOpenAI={() => setAiModal(true)}
-        />
+      {/* ── Tab: Por Aluno ─────────────────────────────────────────────────── */}
+      {tab === 'alunos' && (
+        <>
+          {students.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '60px 0', color: '#9CA3AF', fontSize: 14 }}>Nenhum aluno ativo cadastrado</div>
+          ) : (
+            <>
+              {/* Student selector */}
+              <div style={{ display: 'flex', gap: 8, overflowX: 'auto', marginBottom: 24, paddingBottom: 4 }}>
+                {students.map(s => {
+                  const sel = selStudent === s.id;
+                  const count = plans.filter(p => p.student_id === s.id).length;
+                  return (
+                    <button key={s.id} onClick={() => setSelStudent(s.id)}
+                      style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 14px 8px 10px', borderRadius: 40, border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', cursor: 'pointer', flexShrink: 0 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: '50%', background: s.color || '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <span style={{ fontSize: 10, fontWeight: 800, color: 'white' }}>{s.initials || s.name?.[0]}</span>
+                      </div>
+                      <div style={{ textAlign: 'left' }}>
+                        <p style={{ margin: 0, fontSize: 13, fontWeight: sel ? 700 : 500, color: sel ? '#1D4ED8' : '#374151', whiteSpace: 'nowrap' }}>{s.name}</p>
+                        {count > 0 && <p style={{ margin: 0, fontSize: 10, color: '#9CA3AF' }}>{count} treino{count !== 1 ? 's' : ''}</p>}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedStudent && (
+                <>
+                  {studentPlans.length > 0 && <WeekBar plans={studentPlans} />}
+
+                  {studentPlans.length === 0 ? (
+                    <div style={{ background: 'white', borderRadius: 14, padding: '40px 24px', textAlign: 'center', border: '2px dashed #E5E7EB' }}>
+                      <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 700, color: '#374151' }}>{selectedStudent.name} não tem treinos atribuídos</p>
+                      <p style={{ margin: '0 0 20px', fontSize: 13, color: '#9CA3AF' }}>Atribua uma cartilha existente ou crie um treino personalizado</p>
+                      <div style={{ display: 'flex', gap: 10, justifyContent: 'center', flexWrap: 'wrap' }}>
+                        <button onClick={() => setPickTpl(true)}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                          <Send size={14} /> Usar cartilha existente
+                        </button>
+                        <button onClick={() => setEditor({ item: null, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name })}
+                          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 18px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: 'white', color: '#374151', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                          <Plus size={14} /> Criar personalizado
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      {studentPlans.map(plan => (
+                        <StudentPlanCard key={plan.id} plan={plan}
+                          onEdit={p => setEditor({ item: p, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name })}
+                          onDelete={p => deleteItem(p, false)} />
+                      ))}
+                      <button onClick={() => setEditor({ item: null, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name })}
+                        style={{ width: '100%', marginTop: 4, padding: '11px', borderRadius: 10, border: '2px dashed #D1D5DB', background: 'none', fontSize: 13, fontWeight: 700, color: '#9CA3AF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                        <Plus size={15} /> Adicionar outro treino
+                      </button>
+                    </>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </>
       )}
 
-      {aiModal && day !== null && (
-        <AIWorkoutModal
-          group={group}
-          planType={planType}
-          studentName={students.find(s => String(s.id) === studentId)?.name || ''}
-          onClose={() => setAiModal(false)}
-          onApply={(generated) => {
-            setExercises(generated.map(e => ({ ...newExercise(), ...e })));
-            setAiModal(false);
-          }}
-        />
-      )}
-      {configModal && studentId && <ConfigWeekModal onConfirm={handleConfigWeek} onClose={() => setConfigModal(false)} />}
-      {copyModal && studentId && <CopyPlanModal students={students} currentStudentId={studentId} onConfirm={handleCopyPlan} onClose={() => setCopyModal(false)} />}
-      {programModal === 'save' && studentId && (
-        <SaveProgramModal
-          plans={myPlans}
-          onSave={saveProgram}
-          onClose={() => setProgramModal(null)}
-        />
-      )}
-      {programModal === 'library' && (
-        <ProgramLibraryModal
-          programs={programs}
-          students={students}
-          onApply={applyProgram}
-          onDelete={deleteProgram}
-          onClose={() => setProgramModal(null)}
-        />
-      )}
-      {templateModal && (
-        <TemplateModal
-          mode={templateModal}
-          templates={templates}
-          exercises={exercises}
-          planType={planType}
-          group={group}
-          onSave={saveTemplate}
-          onLoad={loadTemplate}
-          onDelete={deleteTemplate}
-          onClose={() => setTemplateModal(null)}
-        />
+      {/* Modais */}
+      {editor !== null && (
+        <TemplateEditor
+          item={editor.item}
+          mode={editor.mode}
+          studentId={editor.studentId}
+          studentName={editor.studentName}
+          onSave={saveItem}
+          onClose={() => setEditor(null)} />
       )}
 
-      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}} input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none} input[type=number]{-moz-appearance:textfield}`}</style>
+      {assignTpl && (
+        <AssignModal tpl={assignTpl} students={students} onAssign={assignTemplate} onClose={() => setAssignTpl(null)} />
+      )}
+
+      {pickTpl && selectedStudent && (
+        <PickTemplateModal templates={templates} student={selectedStudent} onAssign={assignTemplate} onClose={() => setPickTpl(false)} />
+      )}
     </div>
   );
 }

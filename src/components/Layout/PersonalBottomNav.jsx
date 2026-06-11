@@ -1,17 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, BookOpen, MoreHorizontal, ClipboardList, DollarSign, Bell, Settings, MessageCircle, LogOut, Dumbbell } from 'lucide-react';
+import { LayoutDashboard, Users, Calendar, Dumbbell, MoreHorizontal, ClipboardList, DollarSign, Bell, Settings, MessageCircle, LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const TABS = [
-  { to: '/dashboard',            icon: LayoutDashboard, label: 'Início',    end: true },
-  { to: '/dashboard/alunos',     icon: Users,           label: 'Alunos'    },
-  { to: '/dashboard/cartilhas',  icon: BookOpen,        label: 'Cartilhas' },
-  { to: '/dashboard/agenda',     icon: Calendar,        label: 'Agenda'    },
+  { to: '/dashboard',            icon: LayoutDashboard, label: 'Início',  end: true },
+  { to: '/dashboard/alunos',     icon: Users,           label: 'Alunos'  },
+  { to: '/dashboard/treinos',    icon: Dumbbell,        label: 'Treinos' },
+  { to: '/dashboard/agenda',     icon: Calendar,        label: 'Agenda'  },
 ];
 
 const MORE_ITEMS = [
-  { to: '/dashboard/treinos',    icon: Dumbbell,      label: 'Treinos',       color: '#8B5CF6', bg: '#F5F3FF' },
   { to: '/dashboard/chat',       icon: MessageCircle, label: 'Chat',          color: '#3B82F6', bg: '#EFF6FF' },
   { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência',    color: '#10B981', bg: '#ECFDF5' },
   { to: '/dashboard/financeiro', icon: DollarSign,    label: 'Financeiro',    color: '#F59E0B', bg: '#FFFBEB' },

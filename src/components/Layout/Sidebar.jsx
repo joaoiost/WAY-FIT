@@ -1,14 +1,15 @@
 import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { Zap, LayoutDashboard, Users, Calendar, Dumbbell, DollarSign, Bell, LogOut, X, Settings, ClipboardList, MessageCircle, Activity } from 'lucide-react';
+import { Zap, LayoutDashboard, Users, Calendar, Dumbbell, DollarSign, Bell, LogOut, X, Settings, ClipboardList, MessageCircle, Activity, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import { useNotifications } from '../../context/NotificationsContext';
 
 const PRIMARY = [
-  { to: '/dashboard',          icon: LayoutDashboard, label: 'Início',  end: true },
-  { to: '/dashboard/alunos',   icon: Users,           label: 'Alunos'  },
-  { to: '/dashboard/treinos',  icon: Dumbbell,        label: 'Treinos' },
-  { to: '/dashboard/agenda',   icon: Calendar,        label: 'Agenda'  },
+  { to: '/dashboard',             icon: LayoutDashboard, label: 'Início',    end: true },
+  { to: '/dashboard/alunos',      icon: Users,           label: 'Alunos'    },
+  { to: '/dashboard/cartilhas',   icon: BookOpen,        label: 'Cartilhas' },
+  { to: '/dashboard/treinos',     icon: Dumbbell,        label: 'Treinos'   },
+  { to: '/dashboard/agenda',      icon: Calendar,        label: 'Agenda'    },
 ];
 
 const SECONDARY = [

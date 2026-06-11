@@ -22,6 +22,7 @@ import Chat from './pages/dashboard/Chat';
 import RelatorioAluno from './pages/dashboard/RelatorioAluno';
 import AvaliacaoFisica from './pages/dashboard/AvaliacaoFisica';
 import PlanoAlimentar from './pages/dashboard/PlanoAlimentar';
+import Cartilhas from './pages/dashboard/Cartilhas';
 
 import PublicProfile from './pages/PublicProfile';
 import Termos from './pages/Termos';
@@ -140,6 +141,7 @@ export default function App() {
             <Route path="/dashboard/alunos" element={<Alunos />} />
             <Route path="/dashboard/agenda" element={<Agenda />} />
             <Route path="/dashboard/treinos" element={<Treinos />} />
+            <Route path="/dashboard/cartilhas" element={<Cartilhas />} />
             <Route path="/dashboard/financeiro" element={<Financeiro />} />
             <Route path="/dashboard/whatsapp" element={<WhatsApp />} />
             <Route path="/dashboard/perfil" element={<Perfil />} />

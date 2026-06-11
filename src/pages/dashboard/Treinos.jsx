@@ -305,18 +305,25 @@ function AIModal({ onApply, onClose }) {
 
 // ─── TemplateEditor ───────────────────────────────────────────────────────────
 
-function TemplateEditor({ item, mode = 'template', studentId, studentName, defaultDays, onSave, onClose }) {
+function TemplateEditor({ item, mode = 'template', studentId, studentName, defaultDays, students = [], onSave, onClose }) {
   const isNew   = !item?.id;
-  const [name,   setName]  = useState(item?.name  || '');
-  const [type,   setType]  = useState(item?.type  || 'Hipertrofia');
-  const [days,   setDays]  = useState(item?.days  || defaultDays || []);
-  const [exs,    setExs]   = useState(() => {
+  const [name,        setName]        = useState(item?.name  || '');
+  const [type,        setType]        = useState(item?.type  || 'Hipertrofia');
+  const [days,        setDays]        = useState(item?.days  || defaultDays || []);
+  const [exs,         setExs]         = useState(() => {
     const src    = item?.exercises || [];
     const sorted = [...src].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
     return sorted.length ? sorted.map((e, i) => ({ ...e, id: e.id || Date.now() + i })) : [newEx(0, item?.type || 'Hipertrofia')];
   });
-  const [saving, setSaving] = useState(false);
-  const [showAI, setShowAI] = useState(false);
+  const [saving,      setSaving]      = useState(false);
+  const [showAI,      setShowAI]      = useState(false);
+  // Atribuição inline — só aparece no modo template
+  const [assignStu,   setAssignStu]   = useState(null); // studentId | null
+  const [assignWeek,  setAssignWeek]  = useState(() => {
+    const w = {};
+    DAYS.forEach(d => { w[d.v] = 'empty'; }); // 'empty' | 'plan' | 'rest'
+    return w;
+  });
   const exsListRef = useRef(null);
 
   const toggleDay = (d)      => setDays(p => p.includes(d) ? p.filter(x => x !== d) : [...p, d]);
@@ -329,6 +336,15 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
   });
   const addEx = () => setExs(p => [...p, newEx(p.length, type)]);
 
+  const cycleDay = (dv) => setAssignWeek(prev => ({
+    ...prev,
+    [dv]: prev[dv] === 'empty' ? 'plan' : prev[dv] === 'plan' ? 'rest' : 'empty',
+  }));
+  const clearAssignWeek = () => setAssignWeek(prev => { const w = {}; DAYS.forEach(d => { w[d.v] = 'empty'; }); return w; });
+
+  const planDays  = Object.entries(assignWeek).filter(([, s]) => s === 'plan').map(([d]) => parseInt(d));
+  const assignSet = assignStu && planDays.length > 0;
+
   const totalSeries = exs.filter(e => e.name).reduce((acc, e) => acc + (parseInt(e.sets) || 0), 0);
 
   const handleSave = async () => {
@@ -336,7 +352,12 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
     const valid = exs.filter(e => e.name?.trim());
     if (!valid.length) return;
     setSaving(true);
-    const ok = await onSave({ id: item?.id, name: name.trim(), type, days, exercises: valid, studentId: mode === 'plan' ? studentId : null });
+    const ok = await onSave({
+      id: item?.id, name: name.trim(), type, days, exercises: valid,
+      studentId: mode === 'plan' ? studentId : null,
+      assignStudents: assignSet ? [assignStu] : [],
+      assignDays: planDays,
+    });
     if (ok === false) setSaving(false);
   };
 
@@ -346,10 +367,16 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
 
   const color = tc(type);
 
+  const saveLabel = saving
+    ? 'Salvando...'
+    : assignSet
+      ? `Criar e atribuir · ${planDays.length} dia${planDays.length !== 1 ? 's' : ''}`
+      : isNew ? (mode === 'template' ? 'Criar cartilha' : 'Salvar treino') : 'Salvar alterações';
+
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }} />
-      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 520, background: 'white', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)' }}>
+      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 540, background: 'white', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)' }}>
 
         {/* Header */}
         <div style={{ padding: '18px 22px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -378,17 +405,19 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
             ); })}
           </div>
 
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
-            {mode === 'plan' ? 'Dias do treino' : 'Dias sugeridos'}
-          </label>
-          <div style={{ display: 'flex', gap: 5, marginBottom: 20 }}>
-            {DAYS.map(d => { const sel = days.includes(d.v); return (
-              <button key={d.v} onClick={() => toggleDay(d.v)}
-                style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? color : '#E5E7EB'}`, background: sel ? color + '18' : 'white', color: sel ? color : '#9CA3AF' }}>
-                {d.s}
-              </button>
-            ); })}
-          </div>
+          {mode === 'plan' && (
+            <>
+              <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Dias do treino</label>
+              <div style={{ display: 'flex', gap: 5, marginBottom: 20 }}>
+                {DAYS.map(d => { const sel = days.includes(d.v); return (
+                  <button key={d.v} onClick={() => toggleDay(d.v)}
+                    style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? color : '#E5E7EB'}`, background: sel ? color + '18' : 'white', color: sel ? color : '#9CA3AF' }}>
+                    {d.s}
+                  </button>
+                ); })}
+              </div>
+            </>
+          )}
 
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
             <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
@@ -416,6 +445,79 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
             style={{ width: '100%', padding: '10px', borderRadius: 10, border: '2px dashed #D1D5DB', background: 'none', fontSize: 13, fontWeight: 700, color: '#9CA3AF', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
             <Plus size={15} /> Adicionar exercício
           </button>
+
+          {/* ── Atribuir inline (só em modo template) ─────────────────────── */}
+          {mode === 'template' && students.length > 0 && (
+            <div style={{ marginTop: 24, paddingTop: 20, borderTop: '2px solid #F1F5F9' }}>
+
+              {/* Cabeçalho da seção */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, #EFF6FF, #E0E7FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <Users size={15} color="#3B82F6" />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#111827' }}>Atribuir para a semana</p>
+                  <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>Opcional — monte os dias direto ao criar</p>
+                </div>
+              </div>
+
+              {/* Seletor de aluno */}
+              <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14, paddingBottom: 2 }}>
+                {students.map(s => {
+                  const sel = assignStu === s.id;
+                  return (
+                    <button key={s.id}
+                      onClick={() => { setAssignStu(sel ? null : s.id); if (!sel) clearAssignWeek(); }}
+                      style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px 6px 7px', borderRadius: 40, border: `2px solid ${sel ? '#3B82F6' : '#E5E7EB'}`, background: sel ? '#EFF6FF' : 'white', cursor: 'pointer', flexShrink: 0, transition: 'all 0.15s', boxShadow: sel ? '0 3px 10px rgba(59,130,246,0.18)' : 'none' }}>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: s.color || '#CBD5E1', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                        <span style={{ fontSize: 9, fontWeight: 800, color: 'white' }}>{s.initials || s.name?.[0]}</span>
+                      </div>
+                      <span style={{ fontSize: 12, fontWeight: sel ? 700 : 500, color: sel ? '#1D4ED8' : '#374151', whiteSpace: 'nowrap' }}>{s.name}</span>
+                      {sel && <Check size={12} color="#3B82F6" strokeWidth={3} />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Grade 7 dias */}
+              {assignStu ? (
+                <>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 8 }}>
+                    {DAYS.map(d => {
+                      const state = assignWeek[d.v];
+                      return (
+                        <button key={d.v} onClick={() => cycleDay(d.v)}
+                          style={{
+                            padding: '9px 4px 8px', borderRadius: 12, cursor: 'pointer', textAlign: 'center',
+                            border: `2px solid ${state === 'plan' ? color : state === 'rest' ? '#8B5CF6' : '#E5E7EB'}`,
+                            background: state === 'plan' ? color + '10' : state === 'rest' ? '#F5F3FF' : '#FAFAFA',
+                            transition: 'all 0.15s',
+                            boxShadow: state !== 'empty' ? `0 3px 10px ${state === 'plan' ? color : '#8B5CF6'}22` : 'none',
+                          }}>
+                          <p style={{ margin: '0 0 5px', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em', color: state === 'plan' ? color : state === 'rest' ? '#7C3AED' : '#9CA3AF' }}>{d.s}</p>
+                          <div style={{ minHeight: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {state === 'plan'
+                              ? <Dumbbell size={15} color={color} />
+                              : state === 'rest'
+                              ? <span style={{ fontSize: 15 }}>🌙</span>
+                              : <span style={{ fontSize: 9, color: '#D1D5DB', fontWeight: 600 }}>livre</span>}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                  <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF', textAlign: 'center' }}>
+                    Clique: 1× <strong style={{ color }}>treino</strong> · 2× <strong style={{ color: '#7C3AED' }}>folga</strong> · 3× livre
+                  </p>
+                </>
+              ) : (
+                <div style={{ padding: '16px', borderRadius: 12, background: '#F9FAFB', border: '1.5px dashed #E5E7EB', textAlign: 'center' }}>
+                  <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>Selecione um aluno acima para montar a semana</p>
+                </div>
+              )}
+            </div>
+          )}
+
           <div style={{ height: 24 }} />
         </div>
 
@@ -427,9 +529,14 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
             </p>
           )}
           <button onClick={handleSave} disabled={!name.trim() || saving}
-            style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: name.trim() ? `linear-gradient(135deg, ${color}, ${color}99)` : '#E5E7EB', color: name.trim() ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: name.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-            {saving ? 'Salvando...' : <><Save size={16} />{isNew ? (mode === 'template' ? 'Criar cartilha' : 'Salvar treino') : 'Salvar alterações'}</>}
+            style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: name.trim() ? (assignSet ? `linear-gradient(135deg, #3B82F6, #8B5CF6)` : `linear-gradient(135deg, ${color}, ${color}99)`) : '#E5E7EB', color: name.trim() ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: name.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, boxShadow: name.trim() ? (assignSet ? '0 4px 16px rgba(59,130,246,0.35)' : `0 4px 14px ${color}30`) : 'none', transition: 'all 0.15s' }}>
+            <Save size={16} />{saveLabel}
           </button>
+          {assignSet && (
+            <p style={{ margin: '8px 0 0', fontSize: 11, color: '#9CA3AF', textAlign: 'center' }}>
+              Cartilha salva na biblioteca + atribuída para {students.find(s => s.id === assignStu)?.name}
+            </p>
+          )}
         </div>
       </div>
 
@@ -972,9 +1079,10 @@ export default function Treinos() {
 
   // ── Persistência ─────────────────────────────────────────────────────────────
 
-  const saveItem = async ({ id, name, type, days, exercises, studentId }) => {
+  const saveItem = async ({ id, name, type, days, exercises, studentId, assignStudents = [], assignDays = [] }) => {
     if (!hasSupabase) return false;
     const isTemplate = studentId === null || studentId === undefined;
+    let savedPlan = null;
     try {
       if (id) {
         const { error } = await supabase.from('training_plans').update({ name, type, days }).eq('id', id);
@@ -988,6 +1096,7 @@ export default function Treinos() {
         }
         const { data: up } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', id).single();
         if (up) {
+          savedPlan = up;
           if (isTemplate) setTemplates(prev => prev.map(t => t.id === id ? up : t));
           else setPlans(prev => prev.map(p => p.id === id ? up : p));
         }
@@ -1005,6 +1114,7 @@ export default function Treinos() {
         }
         const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', plan.id).single();
         if (full) {
+          savedPlan = full;
           if (isTemplate) setTemplates(prev => [full, ...prev]);
           else setPlans(prev => [full, ...prev]);
         }
@@ -1013,7 +1123,14 @@ export default function Treinos() {
       addToast('Erro ao salvar: ' + (err?.message || 'Tente novamente'), 'error');
       return false;
     }
-    addToast(isTemplate ? 'Cartilha salva com sucesso!' : 'Treino salvo com sucesso!');
+    // Se criou template com atribuição inline, atribui agora
+    if (isTemplate && savedPlan && assignStudents.length > 0 && assignDays.length > 0) {
+      await assignTemplate(savedPlan, assignStudents, assignDays);
+      const stuName = students.find(s => s.id === assignStudents[0])?.name || 'aluno';
+      addToast(`Cartilha criada e atribuída para ${stuName}!`);
+    } else {
+      addToast(isTemplate ? 'Cartilha salva com sucesso!' : 'Treino salvo com sucesso!');
+    }
     setEditor(null);
     return true;
   };
@@ -1415,6 +1532,7 @@ export default function Treinos() {
           studentId={editor.studentId}
           studentName={editor.studentName}
           defaultDays={editor.defaultDays}
+          students={editor.mode === 'template' ? students : []}
           onSave={saveItem}
           onClose={() => setEditor(null)} />
       )}

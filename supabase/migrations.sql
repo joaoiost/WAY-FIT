@@ -326,6 +326,12 @@ ALTER TABLE exercises ADD COLUMN IF NOT EXISTS superset_group TEXT;
 ALTER TABLE students ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMPTZ;
 
 -- ============================================================
+-- Feature: Cartilhas (templates de treino sem aluno associado)
+-- student_id pode ser NULL para representar uma cartilha/template
+-- ============================================================
+ALTER TABLE training_plans ALTER COLUMN student_id DROP NOT NULL;
+
+-- ============================================================
 -- Feature: Avaliação Física (AvaliacaoFisica.jsx)
 -- Execute no Supabase > SQL Editor se a tabela ainda não existe
 -- ============================================================

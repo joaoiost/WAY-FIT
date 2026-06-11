@@ -209,16 +209,12 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
             ); })}
           </div>
 
-          {mode === 'template' && (
-            <>
-              <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Dias sugeridos</label>
-              <div style={{ display: 'flex', gap: 5, marginBottom: 20 }}>
-                {DAYS.map(d => { const sel = days.includes(d.v); return (
-                  <button key={d.v} onClick={() => toggleDay(d.v)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? color : '#E5E7EB'}`, background: sel ? color + '18' : 'white', color: sel ? color : '#9CA3AF' }}>{d.s}</button>
-                ); })}
-              </div>
-            </>
-          )}
+          <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{mode === 'plan' ? 'Dias do treino' : 'Dias sugeridos'}</label>
+          <div style={{ display: 'flex', gap: 5, marginBottom: 20 }}>
+            {DAYS.map(d => { const sel = days.includes(d.v); return (
+              <button key={d.v} onClick={() => toggleDay(d.v)} style={{ flex: 1, padding: '8px 4px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer', border: `2px solid ${sel ? color : '#E5E7EB'}`, background: sel ? color + '18' : 'white', color: sel ? color : '#9CA3AF' }}>{d.s}</button>
+            ); })}
+          </div>
 
           <label style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 10, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exercícios ({exs.filter(e => e.name).length})</label>
           {exs.map((ex, i) => (
@@ -597,7 +593,7 @@ export default function Treinos() {
                     {activeDays === 0 ? 'Clique em um dia para adicionar treino' : `${activeDays} dia${activeDays !== 1 ? 's' : ''} com treino`}
                   </p>
                 </div>
-                <button onClick={() => setEditor({ item: null, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name })}
+                <button onClick={() => setEditor({ item: null, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name, defaultDays: targetDay ? [targetDay.v] : [] })}
                   style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 13px', borderRadius: 9, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }}>
                   <Plus size={13} /> Do zero
                 </button>

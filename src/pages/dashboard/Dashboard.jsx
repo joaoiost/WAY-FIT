@@ -245,47 +245,46 @@ export default function Dashboard() {
           {
             label: 'Alunos ativos', value: activeStudents.length,
             sub: <TrendBadge current={activeStudents.length} previous={activeLastMonth || activeStudents.length - 2} />,
-            color: '#3B82F6', bg: '#EFF6FF', icon: Users, to: '/dashboard/alunos',
-            badge: atRiskCount > 0 ? { text: `${atRiskCount} em risco`, color: '#F59E0B' } : null,
+            color: 'var(--accent)', bg: 'var(--accent-bg)', icon: Users, to: '/dashboard/alunos',
+            badge: atRiskCount > 0 ? { text: `${atRiskCount} em risco`, color: 'var(--yellow)' } : null,
           },
           {
             label: 'Receita no mês', value: `R$ ${revenue.toLocaleString('pt-BR')}`,
             sub: <TrendBadge current={revenue} previous={lastMonthRevenue} />,
-            color: '#10B981', bg: '#ECFDF5', icon: DollarSign, to: '/dashboard/financeiro',
+            color: 'var(--green)', bg: '#ECFDF5', icon: DollarSign, to: '/dashboard/financeiro',
           },
           {
             label: 'Aulas esta semana', value: weekSessions,
-            sub: <span style={{ fontSize: 11, color: '#9CA3AF' }}>sessões registradas</span>,
+            sub: <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>sessões registradas</span>,
             color: '#8B5CF6', bg: '#F5F3FF', icon: Activity, to: '/dashboard/frequencia',
           },
           {
             label: 'Aulas hoje', value: todayAppts.length,
             sub: pendingToday > 0
-              ? <span style={{ fontSize: 11, color: '#D97706', fontWeight: 700 }}>{pendingToday} pendente{pendingToday > 1 ? 's' : ''}</span>
-              : <span style={{ fontSize: 11, color: '#10B981', fontWeight: 700 }}>em dia ✓</span>,
-            color: '#F59E0B', bg: '#FFFBEB', icon: Calendar, to: '/dashboard/agenda',
-            badge: latePayCount > 0 ? { text: `${latePayCount} pgto atrasado`, color: '#EF4444' } : null,
+              ? <span style={{ fontSize: 11, color: 'var(--yellow)', fontWeight: 700 }}>{pendingToday} pendente{pendingToday > 1 ? 's' : ''}</span>
+              : <span style={{ fontSize: 11, color: 'var(--green)', fontWeight: 700 }}>em dia ✓</span>,
+            color: 'var(--yellow)', bg: '#FFFBEB', icon: Calendar, to: '/dashboard/agenda',
+            badge: latePayCount > 0 ? { text: `${latePayCount} pgto atrasado`, color: 'var(--red)' } : null,
           },
         ].map(s => (
           <div key={s.label} onClick={() => navigate(s.to)}
-            style={{ background: 'white', borderRadius: 16, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', cursor: 'pointer', border: '1px solid #F1F5F9', transition: 'all 0.15s', position: 'relative', overflow: 'hidden' }}
-            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0,0,0,0.1)'; }}
-            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.07)'; }}>
+            style={{ background: 'white', borderRadius: 16, padding: '16px 18px', boxShadow: 'var(--shadow-sm)', cursor: 'pointer', border: '1px solid var(--border)', transition: 'all 0.15s', position: 'relative', overflow: 'hidden' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = 'var(--shadow-md)'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = 'var(--shadow-sm)'; }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 12 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <s.icon size={18} color={s.color} />
               </div>
               {s.badge && (
-                <span style={{ fontSize: 10, fontWeight: 700, color: s.badge.color, background: s.badge.color + '18', padding: '2px 7px', borderRadius: 20, whiteSpace: 'nowrap' }}>
+                <span style={{ fontSize: 10, fontWeight: 700, color: s.badge.color, background: s.badge.color === 'var(--red)' ? '#FEE2E2' : '#FEF3C7', padding: '2px 7px', borderRadius: 20, whiteSpace: 'nowrap' }}>
                   {s.badge.text}
                 </span>
               )}
             </div>
-            <p style={{ margin: '0 0 3px', fontSize: 22, fontWeight: 900, color: '#111827', lineHeight: 1 }}>{s.value}</p>
-            <p style={{ margin: '0 0 4px', fontSize: 11, color: '#9CA3AF', fontWeight: 500 }}>{s.label}</p>
+            <p style={{ margin: '0 0 3px', fontSize: 22, fontWeight: 900, color: 'var(--gray-900)', lineHeight: 1 }}>{s.value}</p>
+            <p style={{ margin: '0 0 4px', fontSize: 11, color: 'var(--gray-400)', fontWeight: 500 }}>{s.label}</p>
             {s.sub}
-            {/* accent bar */}
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: s.color + '30', borderRadius: '0 0 16px 16px' }} />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: 3, background: s.color, opacity: 0.15, borderRadius: '0 0 16px 16px' }} />
           </div>
         ))}
       </div>

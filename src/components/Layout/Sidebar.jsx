@@ -1,27 +1,40 @@
 import { NavLink, useNavigate, Link } from 'react-router-dom';
-import { Zap, LayoutDashboard, Users, Calendar, Dumbbell, DollarSign, Bell, LogOut, X, Settings, ClipboardList, MessageCircle, Salad, Apple } from 'lucide-react';
+import {
+  Zap, LayoutDashboard, Users, Calendar, Dumbbell,
+  DollarSign, Bell, LogOut, X, Settings, ClipboardList,
+  MessageCircle, Salad, Apple, BookOpen,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import { useNotifications } from '../../context/NotificationsContext';
 
-const PRIMARY = [
-  { to: '/dashboard',         icon: LayoutDashboard, label: 'Início',    end: true },
-  { to: '/dashboard/alunos',  icon: Users,           label: 'Alunos'    },
-  { to: '/dashboard/treinos', icon: Dumbbell,        label: 'Treinos'   },
-  { to: '/dashboard/agenda',  icon: Calendar,        label: 'Agenda'    },
-];
-
-const SECONDARY = [
-  { to: '/dashboard/financeiro', icon: DollarSign,    label: 'Financeiro'   },
-  { to: '/dashboard/chat',       icon: MessageCircle, label: 'Chat',  notif: true },
-  { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência'   },
-  { to: '/dashboard/whatsapp',   icon: Bell,          label: 'Notificações' },
-  { to: '/dashboard/perfil',     icon: Settings,      label: 'Meu Perfil'   },
-];
-
-const NUTRITION = [
-  { to: '/dashboard/nutricao',           icon: Salad, label: 'Planos Alimentares' },
-  { to: '/dashboard/nutricao/alimentos', icon: Apple, label: 'Banco de Alimentos' },
+const NAV = [
+  {
+    items: [
+      { to: '/dashboard',           icon: LayoutDashboard, label: 'Início',    end: true },
+      { to: '/dashboard/alunos',    icon: Users,           label: 'Alunos'    },
+      { to: '/dashboard/treinos',   icon: Dumbbell,        label: 'Treinos'   },
+      { to: '/dashboard/agenda',    icon: Calendar,        label: 'Agenda'    },
+      { to: '/dashboard/cartilhas', icon: BookOpen,        label: 'Cartilhas' },
+    ],
+  },
+  {
+    label: 'Nutrição',
+    items: [
+      { to: '/dashboard/nutricao',           icon: Salad, label: 'Planos Alimentares' },
+      { to: '/dashboard/nutricao/alimentos', icon: Apple, label: 'Banco de Alimentos' },
+    ],
+  },
+  {
+    label: 'Gestão',
+    items: [
+      { to: '/dashboard/chat',       icon: MessageCircle, label: 'Chat',         notif: true },
+      { to: '/dashboard/financeiro', icon: DollarSign,    label: 'Financeiro'    },
+      { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência'    },
+      { to: '/dashboard/whatsapp',   icon: Bell,          label: 'Notificações'  },
+      { to: '/dashboard/perfil',     icon: Settings,      label: 'Meu Perfil'    },
+    ],
+  },
 ];
 
 export default function Sidebar() {
@@ -75,17 +88,17 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="sidebar-nav">
-          {PRIMARY.map(item => <NavItem key={item.to} {...item} />)}
-
-          <div className="sidebar-divider" />
-          <p className="sidebar-section-label">Ferramentas</p>
-
-          {SECONDARY.map(item => <NavItem key={item.to} {...item} />)}
-
-          <div className="sidebar-divider" />
-          <p className="sidebar-section-label">Nutrição</p>
-
-          {NUTRITION.map(item => <NavItem key={item.to} {...item} />)}
+          {NAV.map((section, si) => (
+            <div key={si}>
+              {section.label && (
+                <>
+                  <div className="sidebar-divider" />
+                  <p className="sidebar-section-label">{section.label}</p>
+                </>
+              )}
+              {section.items.map(item => <NavItem key={item.to} {...item} />)}
+            </div>
+          ))}
         </nav>
 
         {/* User card */}

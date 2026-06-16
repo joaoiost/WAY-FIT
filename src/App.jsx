@@ -25,6 +25,7 @@ import PlanoAlimentar from './pages/dashboard/PlanoAlimentar';
 import NutricaoPlanos from './pages/dashboard/NutricaoPlanos';
 import NutricaoAlimentos from './pages/dashboard/NutricaoAlimentos';
 import NutricaoPlanoAluno from './pages/dashboard/NutricaoPlanoAluno';
+import Cartilhas from './pages/dashboard/Cartilhas';
 
 import PublicProfile from './pages/PublicProfile';
 import Termos from './pages/Termos';
@@ -154,6 +155,7 @@ export default function App() {
             <Route path="/dashboard/alunos/:id/nutricao" element={<NutricaoPlanoAluno />} />
             <Route path="/dashboard/nutricao" element={<NutricaoPlanos />} />
             <Route path="/dashboard/nutricao/alimentos" element={<NutricaoAlimentos />} />
+            <Route path="/dashboard/cartilhas" element={<Cartilhas />} />
           </Route>
 
           <Route element={<PersonalRouteClean />}>

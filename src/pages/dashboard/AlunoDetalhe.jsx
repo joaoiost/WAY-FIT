@@ -27,7 +27,7 @@ function StatBox({ icon: Icon, label, value, color, bg }) {
   );
 }
 
-const BASE_TABS = ['Visão Geral', 'Evolução', 'Treinos', 'Agenda', 'Frequência', 'Pagamentos', 'Nutrição'];
+const BASE_TABS = ['Visão Geral', 'Treinos', 'Agenda', 'Saúde', 'Financeiro'];
 
 export default function AlunoDetalhe() {
   const { id } = useParams();
@@ -270,17 +270,17 @@ export default function AlunoDetalhe() {
         )}
       </div>
 
-      {/* Tabs — Saúde e Feedback só aparecem quando têm dados */}
-      <div className="student-detail-tabs" style={{ marginBottom: 20, borderBottom: '2px solid #F3F4F6', paddingBottom: 0 }}>
-        {[...BASE_TABS, ...(anamnese ? ['Saúde'] : []), ...(ratings.length > 0 ? ['Feedback'] : [])].map(t => (
+      {/* Tabs */}
+      <div className="student-detail-tabs" style={{ marginBottom: 20, borderBottom: '2px solid var(--border-light)', paddingBottom: 0 }}>
+        {BASE_TABS.map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             style={{
               padding: '10px 16px', border: 'none', cursor: 'pointer', background: 'none',
               fontSize: 14, fontWeight: tab === t ? 700 : 500,
-              color: tab === t ? '#3B82F6' : '#6B7280',
-              borderBottom: `2px solid ${tab === t ? '#3B82F6' : 'transparent'}`,
+              color: tab === t ? 'var(--accent)' : 'var(--gray-500)',
+              borderBottom: `2px solid ${tab === t ? 'var(--accent)' : 'transparent'}`,
               marginBottom: -2, whiteSpace: 'nowrap', transition: 'all 0.15s',
             }}
           >{t}</button>
@@ -288,7 +288,43 @@ export default function AlunoDetalhe() {
       </div>
 
       {/* Tab content */}
-      {tab === 'Evolução' && (() => {
+      {tab === 'Treinos' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {plans.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '48px 0', color: '#9CA3AF' }}>
+              <Dumbbell size={36} color="#E5E7EB" style={{ marginBottom: 12 }} />
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#374151' }}>Nenhum plano criado</p>
+              <p style={{ margin: '4px 0 16px', fontSize: 13 }}>Vá para a seção Treinos para criar um plano</p>
+              <button onClick={() => navigate('/dashboard/treinos')} className="btn-primary">Ir para Treinos</button>
+            </div>
+          ) : plans.map(plan => (
+            <div key={plan.id} style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: 'var(--shadow-sm)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
+                <div>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>{plan.name}</p>
+                  <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9CA3AF' }}>
+                    {(plan.days || []).map(d => ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d]).join(', ')} · {(plan.exercises || []).length} exercícios
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {(plan.exercises || []).slice(0, 6).map((ex, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#F9FAFB', borderRadius: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: '#374151', flex: 1 }}>{ex.name}</span>
+                    <span style={{ fontSize: 12, color: '#6B7280' }}>{ex.sets}x{ex.reps}</span>
+                    {ex.weight && <span style={{ fontSize: 12, color: '#9CA3AF' }}>{ex.weight}kg</span>}
+                  </div>
+                ))}
+                {(plan.exercises || []).length > 6 && (
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: '#9CA3AF', textAlign: 'center' }}>+{plan.exercises.length - 6} exercícios</p>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {tab === 'Treinos' && (() => {
         const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
         const thisWeekSessions = workoutSessions.filter(s => s.date >= sevenDaysAgo);
         const totalSessionsAll = workoutSessions.length;
@@ -583,201 +619,173 @@ export default function AlunoDetalhe() {
     );
       })()}
 
-      {tab === 'Treinos' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-          {plans.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', color: '#9CA3AF' }}>
-              <Dumbbell size={36} color="#E5E7EB" style={{ marginBottom: 12 }} />
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#374151' }}>Nenhum plano criado</p>
-              <p style={{ margin: '4px 0 16px', fontSize: 13 }}>Vá para a seção Treinos para criar um plano</p>
-              <button onClick={() => navigate('/dashboard/treinos')} className="btn-primary">Ir para Treinos</button>
+      {tab === 'Agenda' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Frequência do mês */}
+          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: 'var(--shadow-sm)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>
+                Frequência — {new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}
+              </h3>
+              {attendRate !== null && (
+                <span style={{ fontSize: 13, fontWeight: 700, color: attendRate >= 70 ? 'var(--green)' : 'var(--yellow)' }}>
+                  {attendRate}% de presença
+                </span>
+              )}
             </div>
-          ) : plans.map(plan => (
-            <div key={plan.id} style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
-                <div>
-                  <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>{plan.name}</p>
-                  <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9CA3AF' }}>
-                    {(plan.days || []).map(d => ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d]).join(', ')} · {(plan.exercises || []).length} exercícios
-                  </p>
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-                {(plan.exercises || []).slice(0, 6).map((ex, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#F9FAFB', borderRadius: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#374151', flex: 1 }}>{ex.name}</span>
-                    <span style={{ fontSize: 12, color: '#6B7280' }}>{ex.sets}x{ex.reps}</span>
-                    {ex.weight && <span style={{ fontSize: 12, color: '#9CA3AF' }}>{ex.weight}kg</span>}
+            {attendances.length === 0 ? (
+              <p style={{ color: 'var(--gray-400)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Nenhum registro este mês</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {attendances.map(a => (
+                  <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, background: a.status === 'present' ? '#F0FDF4' : '#FEF2F2', border: `1px solid ${a.status === 'present' ? '#BBF7D0' : '#FECACA'}` }}>
+                    {a.status === 'present' ? <Check size={16} color="var(--green)" /> : <X size={16} color="var(--red)" />}
+                    <span style={{ fontSize: 14, color: 'var(--gray-700)', fontWeight: 500, flex: 1 }}>
+                      {new Date(a.date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}
+                    </span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: a.status === 'present' ? 'var(--green)' : 'var(--red)' }}>
+                      {a.status === 'present' ? 'Presente' : 'Faltou'}
+                    </span>
                   </div>
                 ))}
-                {(plan.exercises || []).length > 6 && (
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: '#9CA3AF', textAlign: 'center' }}>+{plan.exercises.length - 6} exercícios</p>
-                )}
               </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === 'Agenda' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {appointments.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', color: '#9CA3AF' }}>
-              <Calendar size={36} color="#E5E7EB" style={{ marginBottom: 12 }} />
-              <p style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 600, color: '#374151' }}>Nenhuma aula agendada</p>
-              <button onClick={() => setScheduleModal(true)} className="btn-primary"><Calendar size={15} /> Agendar Aula</button>
-            </div>
-          ) : appointments.map(appt => (
-            <div key={appt.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', borderLeft: `4px solid ${appt.color || '#3B82F6'}` }}>
-              <div style={{ minWidth: 60, textAlign: 'center' }}>
-                <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: appt.color || '#3B82F6', lineHeight: 1 }}>{(appt.time||'').slice(0,5)}</p>
-                <p style={{ margin: '2px 0 0', fontSize: 10, color: '#9CA3AF', fontWeight: 600 }}>
-                  {new Date(appt.date+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
-                </p>
-              </div>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#374151' }}>{appt.type}</p>
-                {appt.notes && <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>{appt.notes}</p>}
-              </div>
-              <span style={{
-                fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20,
-                background: appt.status === 'done' ? '#ECFDF5' : appt.status === 'cancelled' ? '#FEF2F2' : '#FFFBEB',
-                color: appt.status === 'done' ? '#10B981' : appt.status === 'cancelled' ? '#EF4444' : '#F59E0B',
-              }}>
-                {appt.status === 'done' ? '✓ Realizada' : appt.status === 'cancelled' ? '✗ Cancelada' : '● Agendada'}
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {tab === 'Frequência' && (
-        <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
-            <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>
-              {new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}
-            </h3>
-            {attendRate !== null && (
-              <span style={{ fontSize: 13, fontWeight: 700, color: attendRate >= 70 ? '#10B981' : '#F59E0B' }}>
-                {attendRate}% de presença
-              </span>
             )}
           </div>
-          {attendances.length === 0 ? (
-            <p style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Nenhum registro este mês</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {attendances.map(a => (
-                <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 14px', borderRadius: 10, background: a.status === 'present' ? '#F0FDF4' : '#FEF2F2', border: `1px solid ${a.status === 'present' ? '#BBF7D0' : '#FECACA'}` }}>
-                  {a.status === 'present' ? <Check size={16} color="#10B981" /> : <X size={16} color="#EF4444" />}
-                  <span style={{ fontSize: 14, color: '#374151', fontWeight: 500, flex: 1 }}>
-                    {new Date(a.date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long'})}
-                  </span>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: a.status === 'present' ? '#10B981' : '#EF4444' }}>
-                    {a.status === 'present' ? 'Presente' : 'Faltou'}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
 
-      {tab === 'Pagamentos' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {payments.length === 0 ? (
-            <p style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '48px 0' }}>Nenhum registro de pagamento</p>
-          ) : payments.map(p => (
-            <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
-              <div style={{ flex: 1 }}>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>R$ {Number(p.amount).toLocaleString('pt-BR')}</p>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#9CA3AF' }}>Venc. {new Date(p.due_date+'T12:00:00').toLocaleDateString('pt-BR')}</p>
+          {/* Histórico de aulas */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <h3 style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Histórico de Aulas</h3>
+            {appointments.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '32px 0', color: 'var(--gray-400)' }}>
+                <Calendar size={32} color="var(--border)" style={{ marginBottom: 10 }} />
+                <p style={{ margin: '0 0 14px', fontSize: 15, fontWeight: 600, color: 'var(--gray-700)' }}>Nenhuma aula agendada</p>
+                <button onClick={() => setScheduleModal(true)} className="btn-primary">Agendar Aula</button>
               </div>
-              <span style={{
-                fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20,
-                background: p.status === 'pago' ? '#D1FAE5' : p.due_date < today ? '#FEE2E2' : '#FEF3C7',
-                color: p.status === 'pago' ? '#065F46' : p.due_date < today ? '#991B1B' : '#92400E',
-              }}>
-                {p.status === 'pago' ? '✓ Pago' : p.due_date < today ? 'Atrasado' : 'Pendente'}
-              </span>
-            </div>
-          ))}
+            ) : appointments.map(appt => (
+              <div key={appt.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'white', borderRadius: 12, boxShadow: 'var(--shadow-sm)', borderLeft: `4px solid ${appt.color || 'var(--accent)'}` }}>
+                <div style={{ minWidth: 60, textAlign: 'center' }}>
+                  <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: appt.color || 'var(--accent)', lineHeight: 1 }}>{(appt.time||'').slice(0,5)}</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 10, color: 'var(--gray-400)', fontWeight: 600 }}>
+                    {new Date(appt.date+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'})}
+                  </p>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--gray-700)' }}>{appt.type}</p>
+                  {appt.notes && <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>{appt.notes}</p>}
+                </div>
+                <span style={{
+                  fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20,
+                  background: appt.status === 'done' ? '#ECFDF5' : appt.status === 'cancelled' ? '#FEF2F2' : '#FFFBEB',
+                  color: appt.status === 'done' ? 'var(--green)' : appt.status === 'cancelled' ? 'var(--red)' : 'var(--yellow)',
+                }}>
+                  {appt.status === 'done' ? '✓ Realizada' : appt.status === 'cancelled' ? '✗ Cancelada' : '● Agendada'}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
       {tab === 'Saúde' && (() => {
         const d = anamnese?.data || null;
         return (
-          <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
-            {!d ? (
-              <p style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '40px 0' }}>Aluno ainda não preencheu a ficha de saúde</p>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-                {d.fullName && <InfoRow label="Nome completo" value={d.fullName} />}
-                {d.birthDate && <InfoRow label="Data de nascimento" value={new Date(d.birthDate+'T12:00:00').toLocaleDateString('pt-BR')} />}
-                {(d.height || d.weightInitial) && <InfoRow label="Altura / Peso inicial" value={`${d.height || '—'}cm / ${d.weightInitial || '—'}kg`} />}
-                {d.goal && <InfoRow label="Objetivo" value={d.goal} />}
-                {d.goalDetail && <InfoRow label="Detalhes do objetivo" value={d.goalDetail} />}
-                {d.activityLevel && <InfoRow label="Nível de atividade" value={d.activityLevel} />}
-                {d.diseases?.length > 0 && <InfoRow label="Doenças pré-existentes" value={d.diseases.join(', ')} />}
-                {d.medications && <InfoRow label="Medicamentos" value={d.medications} />}
-                {d.injuries?.length > 0 && <InfoRow label="Lesões / restrições" value={d.injuries.join(', ')} />}
-                {d.injuryDetails && <InfoRow label="Detalhes das lesões" value={d.injuryDetails} />}
-                {d.limitations && <InfoRow label="Limitações físicas" value={d.limitations} />}
-                {d.sleepHours && <InfoRow label="Horas de sono" value={`${d.sleepHours}h`} />}
-                {d.stressLevel && <InfoRow label="Nível de estresse" value={`${d.stressLevel}/10`} />}
-                {d.waterLiters && <InfoRow label="Ingestão de água" value={`${d.waterLiters}L/dia`} />}
-                {d.diet && <InfoRow label="Alimentação atual" value={d.diet} />}
-                {d.phone && <InfoRow label="Telefone" value={d.phone} />}
-                {d.emergency && <InfoRow label="Contato de emergência" value={d.emergency} />}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {/* Nutrição */}
+            <div style={{ background: 'white', borderRadius: 14, padding: '20px 24px', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: 16 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Utensils size={22} color="var(--accent)" />
               </div>
-            )}
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: '0 0 3px', fontSize: 15, fontWeight: 800, color: 'var(--gray-900)' }}>Plano Alimentar</p>
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)' }}>Crie e edite o plano nutricional personalizado</p>
+              </div>
+              <button onClick={() => navigate(`/dashboard/alunos/${id}/nutricao`)} className="btn-primary" style={{ flexShrink: 0, fontSize: 13 }}>
+                Abrir editor
+              </button>
+            </div>
+
+            {/* Ficha de saúde */}
+            <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: 'var(--shadow-sm)' }}>
+              <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>Ficha de Saúde</h3>
+              {!d ? (
+                <p style={{ color: 'var(--gray-400)', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>Aluno ainda não preencheu a ficha de saúde</p>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                  {d.fullName && <InfoRow label="Nome completo" value={d.fullName} />}
+                  {d.birthDate && <InfoRow label="Data de nascimento" value={new Date(d.birthDate+'T12:00:00').toLocaleDateString('pt-BR')} />}
+                  {(d.height || d.weightInitial) && <InfoRow label="Altura / Peso inicial" value={`${d.height || '—'}cm / ${d.weightInitial || '—'}kg`} />}
+                  {d.goal && <InfoRow label="Objetivo" value={d.goal} />}
+                  {d.goalDetail && <InfoRow label="Detalhes do objetivo" value={d.goalDetail} />}
+                  {d.activityLevel && <InfoRow label="Nível de atividade" value={d.activityLevel} />}
+                  {d.diseases?.length > 0 && <InfoRow label="Doenças pré-existentes" value={d.diseases.join(', ')} />}
+                  {d.medications && <InfoRow label="Medicamentos" value={d.medications} />}
+                  {d.injuries?.length > 0 && <InfoRow label="Lesões / restrições" value={d.injuries.join(', ')} />}
+                  {d.injuryDetails && <InfoRow label="Detalhes das lesões" value={d.injuryDetails} />}
+                  {d.limitations && <InfoRow label="Limitações físicas" value={d.limitations} />}
+                  {d.sleepHours && <InfoRow label="Horas de sono" value={`${d.sleepHours}h`} />}
+                  {d.stressLevel && <InfoRow label="Nível de estresse" value={`${d.stressLevel}/10`} />}
+                  {d.waterLiters && <InfoRow label="Ingestão de água" value={`${d.waterLiters}L/dia`} />}
+                  {d.diet && <InfoRow label="Alimentação atual" value={d.diet} />}
+                  {d.phone && <InfoRow label="Telefone" value={d.phone} />}
+                  {d.emergency && <InfoRow label="Contato de emergência" value={d.emergency} />}
+                </div>
+              )}
+            </div>
           </div>
         );
       })()}
 
-      {tab === 'Nutrição' && (
-        <div style={{ background: 'white', borderRadius: 14, padding: 32, border: '1px solid var(--border)', textAlign: 'center' }}>
-          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
-            <Utensils size={26} color="#6366F1" />
-          </div>
-          <p style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 800, color: '#111827' }}>Plano Alimentar</p>
-          <p style={{ margin: '0 0 20px', fontSize: 13, color: '#9CA3AF' }}>Crie e edite o plano nutricional personalizado deste aluno</p>
-          <button onClick={() => navigate(`/dashboard/alunos/${id}/nutricao`)} className="btn-primary" style={{ margin: '0 auto' }}>
-            Abrir editor de nutrição
-          </button>
-        </div>
-      )}
-
-      {tab === 'Feedback' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {ratings.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
-              <Star size={36} color="#E5E7EB" style={{ marginBottom: 12 }} />
-              <p style={{ margin: '0 0 4px', fontSize: 15, fontWeight: 600, color: '#374151' }}>Nenhum feedback ainda</p>
-              <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF' }}>O aluno avalia os treinos após cada sessão</p>
-            </div>
-          ) : ratings.map(r => {
-            const FEELINGS = { otimo: '💪 Ótimo', bem: '😊 Bem', regular: '😐 Regular', cansado: '😓 Cansado', mal: '😩 Mal' };
-            return (
-              <div key={r.id} style={{ background: 'white', borderRadius: 12, padding: '14px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
-                <div style={{ minWidth: 56, textAlign: 'center' }}>
-                  <p style={{ margin: '0 0 2px', fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>
-                    {new Date(r.date+'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
-                  </p>
-                  <div style={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
-                    {[1,2,3,4,5].map(n => (
-                      <Star key={n} size={13} fill={r.rating >= n ? '#F59E0B' : 'none'} color={r.rating >= n ? '#F59E0B' : '#E5E7EB'} strokeWidth={1.5} />
-                    ))}
-                  </div>
-                </div>
+      {tab === 'Financeiro' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {/* Pagamentos */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <h3 style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Pagamentos</h3>
+            {payments.length === 0 ? (
+              <p style={{ color: 'var(--gray-400)', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>Nenhum registro de pagamento</p>
+            ) : payments.map(p => (
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'white', borderRadius: 12, boxShadow: 'var(--shadow-sm)' }}>
                 <div style={{ flex: 1 }}>
-                  {r.feeling && <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: '#374151' }}>{FEELINGS[r.feeling] || r.feeling}</p>}
-                  {r.notes && <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>{r.notes}</p>}
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>R$ {Number(p.amount).toLocaleString('pt-BR')}</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>Venc. {new Date(p.due_date+'T12:00:00').toLocaleDateString('pt-BR')}</p>
                 </div>
+                <span style={{
+                  fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 20,
+                  background: p.status === 'pago' ? '#D1FAE5' : p.due_date < today ? '#FEE2E2' : '#FEF3C7',
+                  color: p.status === 'pago' ? '#065F46' : p.due_date < today ? '#991B1B' : '#92400E',
+                }}>
+                  {p.status === 'pago' ? '✓ Pago' : p.due_date < today ? 'Atrasado' : 'Pendente'}
+                </span>
               </div>
-            );
-          })}
+            ))}
+          </div>
+
+          {/* Feedback */}
+          {ratings.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <h3 style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Feedback do Aluno</h3>
+              {ratings.map(r => {
+                const FEELINGS = { otimo: '💪 Ótimo', bem: '😊 Bem', regular: '😐 Regular', cansado: '😓 Cansado', mal: '😩 Mal' };
+                return (
+                  <div key={r.id} style={{ background: 'white', borderRadius: 12, padding: '14px 18px', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                    <div style={{ minWidth: 56, textAlign: 'center' }}>
+                      <p style={{ margin: '0 0 2px', fontSize: 11, color: 'var(--gray-400)', fontWeight: 600 }}>
+                        {new Date(r.date+'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
+                      </p>
+                      <div style={{ display: 'flex', gap: 1, justifyContent: 'center' }}>
+                        {[1,2,3,4,5].map(n => (
+                          <Star key={n} size={13} fill={r.rating >= n ? 'var(--yellow)' : 'none'} color={r.rating >= n ? 'var(--yellow)' : 'var(--border)'} strokeWidth={1.5} />
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      {r.feeling && <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 600, color: 'var(--gray-700)' }}>{FEELINGS[r.feeling] || r.feeling}</p>}
+                      {r.notes && <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-600)' }}>{r.notes}</p>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 

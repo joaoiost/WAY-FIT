@@ -1,21 +1,27 @@
 import { useState, useRef, useEffect } from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, Dumbbell, MoreHorizontal, ClipboardList, DollarSign, Bell, Settings, MessageCircle, LogOut } from 'lucide-react';
+import {
+  LayoutDashboard, Users, Calendar, Dumbbell, MoreHorizontal,
+  ClipboardList, DollarSign, Bell, Settings, MessageCircle,
+  LogOut, Salad, BookOpen,
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const TABS = [
-  { to: '/dashboard',            icon: LayoutDashboard, label: 'Início',  end: true },
-  { to: '/dashboard/alunos',     icon: Users,           label: 'Alunos'  },
-  { to: '/dashboard/treinos',    icon: Dumbbell,        label: 'Treinos' },
-  { to: '/dashboard/agenda',     icon: Calendar,        label: 'Agenda'  },
+  { to: '/dashboard',          icon: LayoutDashboard, label: 'Início',  end: true },
+  { to: '/dashboard/alunos',   icon: Users,           label: 'Alunos'  },
+  { to: '/dashboard/treinos',  icon: Dumbbell,        label: 'Treinos' },
+  { to: '/dashboard/agenda',   icon: Calendar,        label: 'Agenda'  },
 ];
 
 const MORE_ITEMS = [
-  { to: '/dashboard/chat',       icon: MessageCircle, label: 'Chat'         },
-  { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência'   },
-  { to: '/dashboard/financeiro', icon: DollarSign,    label: 'Financeiro'   },
-  { to: '/dashboard/whatsapp',   icon: Bell,          label: 'Notificações' },
-  { to: '/dashboard/perfil',     icon: Settings,      label: 'Meu Perfil'   },
+  { to: '/dashboard/nutricao',   icon: Salad,         label: 'Nutrição'      },
+  { to: '/dashboard/cartilhas',  icon: BookOpen,      label: 'Cartilhas'     },
+  { to: '/dashboard/chat',       icon: MessageCircle, label: 'Chat'          },
+  { to: '/dashboard/financeiro', icon: DollarSign,    label: 'Financeiro'    },
+  { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência'    },
+  { to: '/dashboard/whatsapp',   icon: Bell,          label: 'Notificações'  },
+  { to: '/dashboard/perfil',     icon: Settings,      label: 'Meu Perfil'    },
 ];
 
 const MORE_PATHS = MORE_ITEMS.map(i => i.to);
@@ -56,11 +62,7 @@ export default function PersonalBottomNav() {
 
       {/* More menu */}
       <div ref={menuRef} style={{ flex: 1, position: 'relative', display: 'flex' }}>
-        <button
-          className="bottom-nav-tab"
-          style={{ flex: 1 }}
-          onClick={() => setOpen(o => !o)}
-        >
+        <button className="bottom-nav-tab" style={{ flex: 1 }} onClick={() => setOpen(o => !o)}>
           <div className="bottom-nav-pill" style={{ background: isMoreActive || open ? 'var(--accent)' : 'transparent' }}>
             <MoreHorizontal size={18} color={isMoreActive || open ? 'white' : 'var(--gray-400)'} strokeWidth={isMoreActive || open ? 2.5 : 1.8} />
           </div>
@@ -73,8 +75,8 @@ export default function PersonalBottomNav() {
           <div style={{
             position: 'absolute', bottom: 'calc(100% + 8px)', right: 0,
             background: 'white', borderRadius: 16,
-            boxShadow: '0 -4px 24px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06)',
-            border: '1px solid var(--border)', overflow: 'hidden', minWidth: 200, zIndex: 70,
+            boxShadow: '0 -4px 32px rgba(0,0,0,0.12)',
+            border: '1px solid var(--border)', overflow: 'hidden', minWidth: 210, zIndex: 70,
           }}>
             <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid var(--border-light)' }}>
               <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Mais opções</span>

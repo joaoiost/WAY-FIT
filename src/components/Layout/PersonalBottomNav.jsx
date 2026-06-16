@@ -11,11 +11,11 @@ const TABS = [
 ];
 
 const MORE_ITEMS = [
-  { to: '/dashboard/chat',       icon: MessageCircle, label: 'Chat',          color: '#3B82F6', bg: '#EFF6FF' },
-  { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência',    color: '#10B981', bg: '#ECFDF5' },
-  { to: '/dashboard/financeiro', icon: DollarSign,    label: 'Financeiro',    color: '#F59E0B', bg: '#FFFBEB' },
-  { to: '/dashboard/whatsapp',   icon: Bell,          label: 'Notificações',  color: '#8B5CF6', bg: '#F5F3FF' },
-  { to: '/dashboard/perfil',     icon: Settings,      label: 'Meu Perfil',    color: '#6B7280', bg: '#F9FAFB' },
+  { to: '/dashboard/chat',       icon: MessageCircle, label: 'Chat'         },
+  { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência'   },
+  { to: '/dashboard/financeiro', icon: DollarSign,    label: 'Financeiro'   },
+  { to: '/dashboard/whatsapp',   icon: Bell,          label: 'Notificações' },
+  { to: '/dashboard/perfil',     icon: Settings,      label: 'Meu Perfil'   },
 ];
 
 const MORE_PATHS = MORE_ITEMS.map(i => i.to);
@@ -30,80 +30,80 @@ export default function PersonalBottomNav() {
 
   useEffect(() => {
     if (!open) return;
-    const handler = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false); };
+    const handler = e => { if (menuRef.current && !menuRef.current.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [open]);
 
-  const handleMoreItem = (to) => { navigate(to); setOpen(false); };
+  const go = to => { navigate(to); setOpen(false); };
 
   return (
-    <nav className="personal-bottom-nav" style={{ gap: 0 }}>
+    <nav className="personal-bottom-nav">
       {TABS.map(({ to, icon: Icon, label, end }) => (
-        <NavLink key={to} to={to} end={end}
-          style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0 4px', textDecoration: 'none', gap: 3 }}
-        >
+        <NavLink key={to} to={to} end={end} className="bottom-nav-tab">
           {({ isActive }) => (
             <>
-              <div style={{
-                width: 48, height: 28, borderRadius: 14,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: isActive ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : 'transparent',
-                transition: 'background 0.2s',
-              }}>
-                <Icon size={18} color={isActive ? 'white' : '#9CA3AF'} strokeWidth={isActive ? 2.5 : 2} />
+              <div className="bottom-nav-pill" style={{ background: isActive ? 'var(--accent)' : 'transparent' }}>
+                <Icon size={18} color={isActive ? 'white' : 'var(--gray-400)'} strokeWidth={isActive ? 2.5 : 1.8} />
               </div>
-              <span style={{ fontSize: 10, fontWeight: isActive ? 700 : 500, color: isActive ? '#3B82F6' : '#9CA3AF', letterSpacing: '-0.01em' }}>{label}</span>
+              <span className="bottom-nav-label" style={{ color: isActive ? 'var(--accent)' : 'var(--gray-400)', fontWeight: isActive ? 700 : 500 }}>
+                {label}
+              </span>
             </>
           )}
         </NavLink>
       ))}
 
-      <div ref={menuRef} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', position: 'relative' }}>
-        <button onClick={() => setOpen(o => !o)}
-          style={{ width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '8px 0 4px', background: 'none', border: 'none', cursor: 'pointer', gap: 3 }}>
-          <div style={{
-            width: 48, height: 28, borderRadius: 14,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: isMoreActive || open ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : 'transparent',
-            transition: 'background 0.2s',
-          }}>
-            <MoreHorizontal size={18} color={isMoreActive || open ? 'white' : '#9CA3AF'} strokeWidth={isMoreActive || open ? 2.5 : 2} />
+      {/* More menu */}
+      <div ref={menuRef} style={{ flex: 1, position: 'relative', display: 'flex' }}>
+        <button
+          className="bottom-nav-tab"
+          style={{ flex: 1 }}
+          onClick={() => setOpen(o => !o)}
+        >
+          <div className="bottom-nav-pill" style={{ background: isMoreActive || open ? 'var(--accent)' : 'transparent' }}>
+            <MoreHorizontal size={18} color={isMoreActive || open ? 'white' : 'var(--gray-400)'} strokeWidth={isMoreActive || open ? 2.5 : 1.8} />
           </div>
-          <span style={{ fontSize: 10, fontWeight: isMoreActive || open ? 700 : 500, color: isMoreActive || open ? '#3B82F6' : '#9CA3AF', letterSpacing: '-0.01em' }}>Mais</span>
+          <span className="bottom-nav-label" style={{ color: isMoreActive || open ? 'var(--accent)' : 'var(--gray-400)', fontWeight: isMoreActive || open ? 700 : 500 }}>
+            Mais
+          </span>
         </button>
 
         {open && (
           <div style={{
-            position: 'absolute', bottom: 'calc(100% + 10px)', right: -8,
-            background: 'white', borderRadius: 18,
-            boxShadow: '0 -8px 32px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.08)',
-            border: '1px solid #F1F5F9', overflow: 'hidden', minWidth: 210, zIndex: 70,
+            position: 'absolute', bottom: 'calc(100% + 8px)', right: 0,
+            background: 'white', borderRadius: 16,
+            boxShadow: '0 -4px 24px rgba(0,0,0,0.10), 0 4px 12px rgba(0,0,0,0.06)',
+            border: '1px solid var(--border)', overflow: 'hidden', minWidth: 200, zIndex: 70,
           }}>
-            <div style={{ padding: '12px 16px 8px', borderBottom: '1px solid #F3F4F6' }}>
-              <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Mais opções</span>
+            <div style={{ padding: '10px 14px 8px', borderBottom: '1px solid var(--border-light)' }}>
+              <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Mais opções</span>
             </div>
-            {MORE_ITEMS.map(({ to, icon: Icon, label, color, bg }) => {
+            {MORE_ITEMS.map(({ to, icon: Icon, label }) => {
               const isActive = pathname.startsWith(to);
               return (
-                <button key={to} onClick={() => handleMoreItem(to)}
-                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', background: isActive ? bg : 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid #F9FAFB' }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#F9FAFB'; }}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: isActive ? bg : '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon size={17} color={isActive ? color : '#6B7280'} />
+                <button key={to} onClick={() => go(to)}
+                  style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 11, padding: '10px 14px', background: isActive ? 'var(--accent-bg)' : 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', borderBottom: '1px solid var(--border-light)' }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--gray-50)'; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'transparent'; }}
+                >
+                  <div style={{ width: 32, height: 32, borderRadius: 9, background: isActive ? 'var(--accent-bg)' : 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Icon size={16} color={isActive ? 'var(--accent-text)' : 'var(--gray-500)'} />
                   </div>
-                  <span style={{ fontSize: 14, fontWeight: isActive ? 700 : 500, color: isActive ? color : '#374151', flex: 1 }}>{label}</span>
-                  {isActive && <div style={{ width: 7, height: 7, borderRadius: '50%', background: color, flexShrink: 0 }} />}
+                  <span style={{ fontSize: 13.5, fontWeight: isActive ? 700 : 500, color: isActive ? 'var(--accent-text)' : 'var(--gray-700)', flex: 1 }}>{label}</span>
+                  {isActive && <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--accent)', flexShrink: 0 }} />}
                 </button>
               );
             })}
             <button onClick={() => { logout(); navigate('/login'); setOpen(false); }}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '11px 16px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-              <div style={{ width: 36, height: 36, borderRadius: 10, background: '#FEF2F2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                <LogOut size={17} color="#EF4444" />
+              style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 11, padding: '10px 14px', background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left' }}
+              onMouseEnter={e => e.currentTarget.style.background = '#FFF5F5'}
+              onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+            >
+              <div style={{ width: 32, height: 32, borderRadius: 9, background: '#FEE2E2', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <LogOut size={16} color="var(--red)" />
               </div>
-              <span style={{ fontSize: 14, fontWeight: 500, color: '#EF4444' }}>Sair</span>
+              <span style={{ fontSize: 13.5, fontWeight: 500, color: 'var(--red)' }}>Sair</span>
             </button>
           </div>
         )}

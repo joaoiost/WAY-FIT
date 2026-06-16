@@ -27,7 +27,7 @@ function StatBox({ icon: Icon, label, value, color, bg }) {
   );
 }
 
-const BASE_TABS = ['Visão Geral', 'Evolução', 'Treinos', 'Agenda', 'Frequência', 'Pagamentos'];
+const BASE_TABS = ['Visão Geral', 'Evolução', 'Treinos', 'Agenda', 'Frequência', 'Pagamentos', 'Nutrição'];
 
 export default function AlunoDetalhe() {
   const { id } = useParams();
@@ -735,6 +735,19 @@ export default function AlunoDetalhe() {
           </div>
         );
       })()}
+
+      {tab === 'Nutrição' && (
+        <div style={{ background: 'white', borderRadius: 14, padding: 32, border: '1px solid var(--border)', textAlign: 'center' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 16, background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+            <Utensils size={26} color="#6366F1" />
+          </div>
+          <p style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 800, color: '#111827' }}>Plano Alimentar</p>
+          <p style={{ margin: '0 0 20px', fontSize: 13, color: '#9CA3AF' }}>Crie e edite o plano nutricional personalizado deste aluno</p>
+          <button onClick={() => navigate(`/dashboard/alunos/${id}/nutricao`)} className="btn-primary" style={{ margin: '0 auto' }}>
+            Abrir editor de nutrição
+          </button>
+        </div>
+      )}
 
       {tab === 'Feedback' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Dumbbell, TrendingUp, Clock, Play, Loader, Bell, BellOff, ChevronRight, Flame, Star, Camera, MessageCircle, Activity, Award, Zap, Target, Edit2, Check } from 'lucide-react';
+import WaterTracker from '../../components/UI/WaterTracker';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { trainingPlans, appointments } from '../../data/mockData';
@@ -71,6 +72,7 @@ export default function StudentDashboard() {
   const [goalWeight, setGoalWeight] = useState(null);
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalInput, setGoalInput] = useState('');
+  const [waterGoalMl, setWaterGoalMl] = useState(2000);
 
   const now = new Date();
   const todayDay = now.getDay();
@@ -93,7 +95,7 @@ export default function StudentDashboard() {
             const neverOnboarded = !student.onboarded_at && !localStorage.getItem(`aluno_onboarded_${user.id}`);
             if (neverOnboarded) { navigate('/aluno/onboarding', { replace: true }); setLoading(false); return; }
 
-            const [{ data: plans }, { data: appts }, { data: profile }, { data: atts }, sessionsResult, weekResult, weightResult] = await Promise.all([
+            const [{ data: plans }, { data: appts }, { data: profile }, { data: atts }, sessionsResult, weekResult, weightResult, nutritionAnam] = await Promise.all([
               supabase.from('training_plans').select('*, exercises(*)').eq('student_id', student.id).order('created_at', { ascending: false }),
               supabase.from('appointments').select('*').eq('student_id', student.id).gte('date', todayStr).order('date').limit(1),
               student.personal_id ? supabase.from('profiles').select('name').eq('id', student.personal_id).single() : { data: null },
@@ -101,18 +103,28 @@ export default function StudentDashboard() {
               supabase.from('workout_sessions').select('date').eq('student_id', student.id).order('date', { ascending: false }).limit(90),
               supabase.from('workout_sessions').select('id').eq('student_id', student.id).gte('date', weekAgo),
               supabase.from('physical_assessments').select('data').eq('student_id', student.id).order('created_at', { ascending: true }),
+              supabase.from('nutrition_anamnesis').select('water_goal').eq('student_id', student.id).maybeSingle(),
             ]);
 
             const sessions = sessionsResult?.data || [];
             setWeekSessions(weekResult?.data?.length || 0);
 
             const weights = (weightResult?.data || []).map(r => parseFloat(r?.data?.weight)).filter(Boolean);
+            const latestWeight = weights.length > 0 ? weights[weights.length - 1] : null;
             if (weights.length > 0) {
-              setCurrentWeight(weights[weights.length - 1]);
+              setCurrentWeight(latestWeight);
               setStartWeight(weights[0]);
             }
             const savedGoal = localStorage.getItem(`goal_weight_${student.id}`);
             if (savedGoal) { setGoalWeight(parseFloat(savedGoal)); setGoalInput(savedGoal); }
+
+            /* Water goal: nutritionist-set > weight-based (35ml/kg) > default 2L */
+            const nutriWater = nutritionAnam?.data?.water_goal;
+            if (nutriWater && parseFloat(nutriWater) > 0) {
+              setWaterGoalMl(Math.round(parseFloat(nutriWater) * 1000));
+            } else if (latestWeight) {
+              setWaterGoalMl(Math.round(latestWeight * 35));
+            }
 
             // Streak calculation
             const uniqueDates = [...new Set(sessions.map(s => s.date))].sort().reverse();
@@ -381,6 +393,9 @@ export default function StudentDashboard() {
           </div>
         </div>
       )}
+
+      {/* ── Hidratação ── */}
+      <WaterTracker goalMl={waterGoalMl} studentId={studentId} />
 
       {/* ── Objetivo + Meta de peso ── */}
       {(studentGoal || currentWeight || goalWeight) && (

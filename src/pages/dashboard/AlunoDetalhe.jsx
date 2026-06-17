@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Calendar, Dumbbell, DollarSign, TrendingUp, MessageCircle, Check, X, Phone, Mail, Edit2, Clock, BarChart2, Activity, Star, FileText, Flame, ChevronDown, ChevronUp, Utensils } from 'lucide-react';
+import { ArrowLeft, Calendar, Dumbbell, DollarSign, TrendingUp, MessageCircle, Check, X, Phone, Mail, Edit2, Clock, BarChart2, Activity, Star, FileText, Flame, ChevronDown, ChevronUp, Utensils, Droplets } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import Modal from '../../components/UI/Modal';
@@ -45,6 +45,7 @@ export default function AlunoDetalhe() {
   const [ratings, setRatings] = useState([]);
   const [workoutSessions, setWorkoutSessions] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState([]);
+  const [waterLog, setWaterLog] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [scheduleModal, setScheduleModal] = useState(false);
@@ -73,6 +74,7 @@ export default function AlunoDetalhe() {
         { data: rat },
         { data: ws },
         { data: el },
+        { data: wl },
       ] = await Promise.all([
         supabase.from('students').select('*').eq('id', id).eq('personal_id', user.id).maybeSingle(),
         supabase.from('training_plans').select('*, exercises(*)').eq('student_id', id).order('created_at', { ascending: false }),
@@ -84,6 +86,7 @@ export default function AlunoDetalhe() {
         supabase.from('session_ratings').select('*').eq('student_id', id).order('date', { ascending: false }).limit(30),
         supabase.from('workout_sessions').select('id, date, plan_name, plan_type, exercises_done, exercises_total, finished_at').eq('student_id', id).order('date', { ascending: false }).limit(30),
         supabase.from('exercise_logs').select('exercise_name, load_actual, done, created_at, session_id').eq('student_id', id).not('load_actual', 'is', null).order('created_at', { ascending: true }).limit(100),
+        supabase.from('water_logs').select('intake_ml, goal_ml').eq('student_id', id).eq('date', today).maybeSingle(),
       ]);
 
       setStudent(s);
@@ -96,6 +99,7 @@ export default function AlunoDetalhe() {
       setRatings(rat || []);
       setWorkoutSessions(ws || []);
       setExerciseLogs(el || []);
+      setWaterLog(wl || null);
       setLoading(false);
     };
     load();
@@ -248,6 +252,7 @@ export default function AlunoDetalhe() {
         <StatBox icon={Activity} label="Frequência" value={attendRate !== null ? `${attendRate}%` : '—'} color="var(--green)" bg="#ECFDF5" />
         <StatBox icon={DollarSign} label="Pagamentos" value={latePay.length === 0 ? '✓ OK' : `${latePay.length} atraso`} color={latePay.length ? 'var(--red)' : 'var(--green)'} bg={latePay.length ? '#FEE2E2' : '#ECFDF5'} />
         <StatBox icon={TrendingUp} label="Peso atual" value={lastMeasure ? `${lastMeasure.weight}kg` : '—'} color="#8B5CF6" bg="#F5F3FF" />
+        <StatBox icon={Droplets} label="Água hoje" value={waterLog ? `${(waterLog.intake_ml / 1000).toFixed(1)}L` : '—'} color="#0284C7" bg="#E0F2FE" />
       </div>
 
       {/* Tabs */}
@@ -575,6 +580,32 @@ export default function AlunoDetalhe() {
               </div>
             </div>
           )}
+
+          {/* Água hoje */}
+          {waterLog && (() => {
+            const waterPct = Math.min(100, Math.round((waterLog.intake_ml / (waterLog.goal_ml || 2000)) * 100));
+            const goalReached = waterLog.intake_ml >= (waterLog.goal_ml || 2000);
+            return (
+              <div style={{ background: goalReached ? 'linear-gradient(135deg, #E0F2FE, #BAE6FD)' : 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', border: goalReached ? '1px solid #7DD3FC' : 'none' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                  <Droplets size={16} color="#0284C7" />
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>
+                    {goalReached ? '💧 Meta de água atingida!' : 'Hidratação Hoje'}
+                  </h3>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 10 }}>
+                  <span style={{ fontSize: 28, fontWeight: 900, color: '#0284C7', lineHeight: 1 }}>{(waterLog.intake_ml / 1000).toFixed(1)}L</span>
+                  <span style={{ fontSize: 13, color: '#6B7280' }}>de {((waterLog.goal_ml || 2000) / 1000).toFixed(1)}L</span>
+                </div>
+                <div style={{ height: 8, borderRadius: 99, background: '#BFDBFE', overflow: 'hidden', marginBottom: 6 }}>
+                  <div style={{ height: '100%', borderRadius: 99, width: `${waterPct}%`, background: goalReached ? '#0369A1' : 'linear-gradient(90deg, #38BDF8, #0284C7)', transition: 'width 0.6s ease' }} />
+                </div>
+                <p style={{ margin: 0, fontSize: 11, color: '#6B7280', fontWeight: 500 }}>
+                  {waterPct}% da meta · {Math.round(waterLog.intake_ml / 250)} copo{Math.round(waterLog.intake_ml / 250) !== 1 ? 's' : ''} (250ml)
+                </p>
+              </div>
+            );
+          })()}
 
           {/* Notes / goal */}
           {(student.goal || student.notes) && (

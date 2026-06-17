@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Droplets, Plus, Minus, Trophy } from 'lucide-react';
+import { supabase, hasSupabase } from '../../lib/supabase';
 
 const GLASS_ML = 250;
 
@@ -25,20 +26,38 @@ export default function WaterTracker({ goalMl = 2000, studentId }) {
   const rippleId = useRef(0);
   const prevIntake = useRef(intake);
   const alreadyCelebrated = useRef(false);
+  const syncTimer = useRef(null);
 
-  /* load from localStorage */
+  /* load from localStorage + Supabase (takes the higher value to sync across devices) */
   useEffect(() => {
     const saved = parseInt(localStorage.getItem(storageKey(studentId)) || '0', 10);
-    setIntake(saved);
-    prevIntake.current = saved;
-    if (saved >= goalMl && localStorage.getItem(celebratedKey(studentId))) {
-      setGoalReachedAnim(true);
+    const apply = (val) => {
+      setIntake(val);
+      prevIntake.current = val;
+      if (val >= goalMl && localStorage.getItem(celebratedKey(studentId))) setGoalReachedAnim(true);
+    };
+    if (hasSupabase && studentId && studentId !== 'guest') {
+      const today = new Date().toISOString().slice(0, 10);
+      supabase.from('water_logs').select('intake_ml').eq('student_id', studentId).eq('date', today).maybeSingle()
+        .then(({ data }) => apply(Math.max(saved, data?.intake_ml || 0)));
+    } else {
+      apply(saved);
     }
   }, [studentId, goalMl]);
 
-  /* persist */
+  /* persist to localStorage + sync to Supabase (debounced 1s) */
   useEffect(() => {
     localStorage.setItem(storageKey(studentId), String(intake));
+    if (hasSupabase && studentId && studentId !== 'guest') {
+      clearTimeout(syncTimer.current);
+      syncTimer.current = setTimeout(() => {
+        const today = new Date().toISOString().slice(0, 10);
+        supabase.from('water_logs').upsert(
+          { student_id: studentId, date: today, intake_ml: intake, goal_ml: goalMl },
+          { onConflict: 'student_id,date' }
+        );
+      }, 1000);
+    }
     /* trigger celebration once per day when goal first reached */
     if (intake >= goalMl && prevIntake.current < goalMl && !alreadyCelebrated.current) {
       if (!localStorage.getItem(celebratedKey(studentId))) {

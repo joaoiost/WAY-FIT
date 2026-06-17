@@ -352,3 +352,28 @@ CREATE POLICY "Aluno ve proprias avaliacoes" ON physical_assessments
   FOR SELECT USING (
     EXISTS (SELECT 1 FROM students s WHERE s.id = physical_assessments.student_id AND s.user_id = auth.uid())
   );
+
+-- ============================================================
+-- Feature: Hidratação diária do aluno (WaterTracker)
+-- O aluno registra a água; o personal vê quanto bebeu hoje.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS water_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  intake_ml INTEGER NOT NULL DEFAULT 0,
+  goal_ml INTEGER NOT NULL DEFAULT 2000,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(student_id, date)
+);
+ALTER TABLE water_logs ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Aluno gerencia própria hidratação" ON water_logs;
+CREATE POLICY "Aluno gerencia própria hidratação" ON water_logs FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = water_logs.student_id AND s.user_id = auth.uid())
+);
+
+DROP POLICY IF EXISTS "Personal vê hidratação dos alunos" ON water_logs;
+CREATE POLICY "Personal vê hidratação dos alunos" ON water_logs FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = water_logs.student_id AND s.personal_id = auth.uid())
+);

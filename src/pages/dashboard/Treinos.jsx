@@ -1280,20 +1280,19 @@ export default function Treinos() {
       <Toasts toasts={toasts} dismiss={id => setToasts(p => p.filter(t => t.id !== id))} />
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+      <div className="page-header">
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#111827', letterSpacing: '-0.3px' }}>Treinos</h2>
-          <p style={{ margin: '3px 0 0', fontSize: 13, color: '#9CA3AF' }}>
+          <h2 className="page-title">Treinos</h2>
+          <p className="page-subtitle">
             {students.length} aluno{students.length !== 1 ? 's' : ''} · {templates.length} cartilha{templates.length !== 1 ? 's' : ''}
             {plans.length > 0 && ` · ${plans.length} plano${plans.length !== 1 ? 's' : ''} atribuído${plans.length !== 1 ? 's' : ''}`}
           </p>
         </div>
-        <button onClick={() => setEditor({ item: null, mode: 'template' })}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 20px', borderRadius: 13, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 16px rgba(59,130,246,0.35)', transition: 'opacity 0.15s' }}
-          onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-          onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-          <Plus size={16} /> Nova cartilha
-        </button>
+        <div className="page-actions">
+          <button onClick={() => setEditor({ item: null, mode: 'template' })} className="btn-primary">
+            <Plus size={16} /> Nova cartilha
+          </button>
+        </div>
       </div>
 
       {/* ── Grade semanal ───────────────────────────────────────────────── */}
@@ -1450,41 +1449,37 @@ export default function Treinos() {
         )}
 
         {/* Cabeçalho da biblioteca */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginBottom: 12, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 30, height: 30, borderRadius: 9, background: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <BookOpen size={15} color="#8B5CF6" />
+        <div className="section-header" style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div className="icon-box icon-box-md icon-box-purple">
+              <BookOpen size={16} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827', letterSpacing: '-0.2px' }}>
+              <h3 className="section-title">
                 {targetDay ? `Atribuir para ${targetDay.full}` : 'Suas cartilhas'}
               </h3>
               {filtered.length > 0 && (
-                <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>{filtered.length} disponíve{filtered.length !== 1 ? 'is' : 'l'}</p>
+                <p className="section-desc">{filtered.length} disponíve{filtered.length !== 1 ? 'is' : 'l'}</p>
               )}
             </div>
           </div>
-          <div style={{ position: 'relative' }}>
-            <Search size={13} color="#9CA3AF" style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
+          <div className="search-bar" style={{ width: 200 }}>
+            <Search size={13} color="var(--gray-400)" style={{ flexShrink: 0 }} />
             <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar cartilha..."
-              style={{ padding: '8px 12px 8px 32px', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 13, outline: 'none', width: 180, transition: 'border-color 0.15s' }}
-              onFocus={e => e.target.style.borderColor = '#8B5CF6'}
-              onBlur={e => e.target.style.borderColor = '#E5E7EB'} />
+              style={{ border: 'none', outline: 'none', fontSize: 13, background: 'transparent', width: '100%' }} />
           </div>
         </div>
 
         {/* Filtros por tipo */}
         {usedTypes.length > 1 && (
-          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginBottom: 14, paddingBottom: 2 }}>
-            <button onClick={() => setTypeFilter('')}
-              style={{ padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0, border: `2px solid ${!typeFilter ? '#3B82F6' : '#E5E7EB'}`, background: !typeFilter ? '#EFF6FF' : 'white', color: !typeFilter ? '#3B82F6' : '#6B7280' }}>
-              Todos
-            </button>
+          <div className="filter-pills" style={{ marginBottom: 14, overflowX: 'auto', flexWrap: 'nowrap' }}>
+            <button onClick={() => setTypeFilter('')} className={`pill${!typeFilter ? ' active' : ''}`}>Todos</button>
             {PLAN_TYPES.filter(t => usedTypes.includes(t)).map(t => {
               const sel = typeFilter === t; const c = tc(t);
               return (
                 <button key={t} onClick={() => setTypeFilter(typeFilter === t ? '' : t)}
-                  style={{ padding: '5px 12px', borderRadius: 20, fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0, border: `2px solid ${sel ? c : '#E5E7EB'}`, background: sel ? c + '18' : 'white', color: sel ? c : '#6B7280' }}>
+                  className="pill"
+                  style={sel ? { background: c + '18', borderColor: c, color: c } : {}}>
                   {t}
                 </button>
               );

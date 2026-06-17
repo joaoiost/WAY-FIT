@@ -355,33 +355,32 @@ export default function Alunos() {
   return (
     <div className="page-padding" style={{ flex: 1 }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12, flexWrap: 'wrap' }}>
+      <div className="page-header">
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Alunos</h2>
-          <p style={{ margin: '2px 0 0', fontSize: 13, color: '#9CA3AF' }}>
+          <h2 className="page-title">Alunos</h2>
+          <p className="page-subtitle">
             {students.filter(s => s.status === 'ativo').length} ativos · {students.filter(s => s.user_id).length} no app
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-          <button className="btn-secondary hide-mobile" onClick={() => exportAlunosPDF(filtered)} style={{ padding: '9px 14px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
+        <div className="page-actions">
+          <button className="btn-secondary hide-mobile" onClick={() => exportAlunosPDF(filtered)}>
             <Download size={14} /> PDF
           </button>
-          <button className="btn-primary" onClick={openAdd} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <button className="btn-primary" onClick={openAdd}>
             <Plus size={16} /> Novo Aluno
           </button>
         </div>
       </div>
 
       {/* Search + filter */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 16 }}>
-        <div style={{ position: 'relative' }}>
-          <Search size={15} color="#9CA3AF" style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nome, email ou telefone..." style={{ paddingLeft: 36 }} />
+      <div style={{ marginBottom: 20 }}>
+        <div className="search-bar" style={{ marginBottom: 10 }}>
+          <Search size={15} color="var(--gray-400)" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar por nome, email ou telefone..." />
         </div>
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', scrollbarWidth: 'none', paddingBottom: 2 }}>
+        <div className="filter-pills">
           {['todos', 'ativo', 'pendente', 'inativo'].map(f => (
-            <button key={f} onClick={() => setFilter(f)}
-              style={{ padding: '6px 14px', borderRadius: 20, flexShrink: 0, border: `1.5px solid ${filter === f ? '#3B82F6' : '#E5E7EB'}`, background: filter === f ? '#EFF6FF' : 'white', color: filter === f ? '#3B82F6' : '#6B7280', fontSize: 13, fontWeight: filter === f ? 700 : 500, cursor: 'pointer', textTransform: 'capitalize' }}>
+            <button key={f} onClick={() => setFilter(f)} className={`pill${filter === f ? ' active' : ''}`}>
               {f === 'todos' ? `Todos (${students.length})` : f.charAt(0).toUpperCase() + f.slice(1)}
             </button>
           ))}
@@ -389,58 +388,58 @@ export default function Alunos() {
       </div>
 
       {/* Desktop table */}
-      <div className="alunos-desktop-table" style={{ background: 'white', borderRadius: 14, border: '1px solid #F1F5F9', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.06)' }}>
+      <div className="alunos-desktop-table card card-0">
         <div className="table-scroll">
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
             <thead>
-              <tr style={{ background: '#F9FAFB', borderBottom: '1px solid #F1F5F9' }}>
+              <tr style={{ background: 'var(--gray-50)', borderBottom: '1px solid var(--border-light)' }}>
                 {['Aluno', 'Contato', 'Plano', 'Status', 'App', 'Ações'].map(h => (
-                  <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
+                  <th key={h} style={{ padding: '11px 16px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={6} style={{ padding: 48, textAlign: 'center', color: '#9CA3AF', fontSize: 14 }}>
+                <tr><td colSpan={6} style={{ padding: 48, textAlign: 'center', color: 'var(--gray-400)', fontSize: 14 }}>
                   {search ? 'Nenhum aluno encontrado' : 'Nenhum aluno cadastrado. Clique em "Novo Aluno" para começar.'}
                 </td></tr>
               ) : filtered.map(s => (
-                <tr key={s.id} className="table-row" style={{ borderBottom: '1px solid #F9FAFB', cursor: 'pointer' }} onClick={() => navigate(`/dashboard/alunos/${s.id}`)}>
+                <tr key={s.id} className="table-row" style={{ borderBottom: '1px solid var(--border-light)', cursor: 'pointer' }} onClick={() => navigate(`/dashboard/alunos/${s.id}`)}>
                   <td style={{ padding: '13px 16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <Avatar initials={s.initials} color={s.color} />
                       <div>
-                        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: '#111827' }}>{s.name}</p>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--gray-900)' }}>{s.name}</p>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
-                          <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>{s.goal || '—'}</p>
+                          <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)' }}>{s.goal || '—'}</p>
                           <WeekDots sessionDates={weekSessions[String(s.id)] || new Set()} />
                         </div>
                       </div>
                     </div>
                   </td>
                   <td style={{ padding: '13px 16px' }}>
-                    <p style={{ margin: 0, fontSize: 13, color: '#374151' }}>{s.phone || '—'}</p>
-                    <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>{s.email || '—'}</p>
+                    <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-700)' }}>{s.phone || '—'}</p>
+                    <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)' }}>{s.email || '—'}</p>
                   </td>
                   <td style={{ padding: '13px 16px' }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{s.plan || '—'}</span>
-                    {s.plan_price && <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>R$ {Number(s.plan_price).toLocaleString('pt-BR')}</p>}
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-700)' }}>{s.plan || '—'}</span>
+                    {s.plan_price && <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)' }}>R$ {Number(s.plan_price).toLocaleString('pt-BR')}</p>}
                   </td>
                   <td style={{ padding: '13px 16px' }}><Badge status={s.status} /></td>
                   <td style={{ padding: '13px 16px' }} onClick={e => e.stopPropagation()}><AppBadge student={s} /></td>
                   <td style={{ padding: '13px 16px' }} onClick={e => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time: '08:00', type: 'Musculação' }); }}
-                        style={{ width: 30, height: 30, borderRadius: 8, background: '#ECFDF5', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Agendar aula">
-                        <Calendar size={14} color="#10B981" />
+                        className="icon-box icon-box-sm icon-box-green" style={{ border:'none', cursor:'pointer' }} title="Agendar aula">
+                        <Calendar size={14} />
                       </button>
                       <button onClick={() => openEdit(s)}
-                        style={{ width: 30, height: 30, borderRadius: 8, background: '#EFF6FF', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Editar">
-                        <Edit2 size={14} color="#3B82F6" />
+                        className="icon-box icon-box-sm icon-box-blue" style={{ border:'none', cursor:'pointer' }} title="Editar">
+                        <Edit2 size={14} />
                       </button>
                       <button onClick={() => setDeleteModal(s)}
-                        style={{ width: 30, height: 30, borderRadius: 8, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Excluir">
-                        <Trash2 size={14} color="#EF4444" />
+                        className="icon-box icon-box-sm icon-box-red" style={{ border:'none', cursor:'pointer' }} title="Excluir">
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </td>
@@ -454,31 +453,32 @@ export default function Alunos() {
       {/* Mobile cards */}
       <div className="alunos-mobile-cards">
         {filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '48px 20px', color: '#9CA3AF' }}>
-            <p style={{ margin: 0, fontSize: 14 }}>{search ? 'Nenhum aluno encontrado' : 'Nenhum aluno ainda'}</p>
+          <div className="empty-state">
+            <div className="empty-state-icon"><Users size={24} /></div>
+            <p className="empty-state-title">{search ? 'Nenhum aluno encontrado' : 'Nenhum aluno ainda'}</p>
           </div>
         ) : filtered.map(s => (
-          <div key={s.id} style={{ background: 'white', borderRadius: 14, padding: '14px 16px', marginBottom: 10, border: '1px solid #F1F5F9', boxShadow: '0 1px 3px rgba(0,0,0,0.06)', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div onClick={() => navigate(`/dashboard/alunos/${s.id}`)} style={{ flexShrink: 0, cursor: 'pointer' }}>
+          <div key={s.id} className="card" style={{ marginBottom: 10, display:'flex', alignItems:'center', gap:12, padding:'14px 16px' }}>
+            <div onClick={() => navigate(`/dashboard/alunos/${s.id}`)} style={{ flexShrink:0, cursor:'pointer' }}>
               <Avatar initials={s.initials} color={s.color} size={44} />
             </div>
-            <div onClick={() => navigate(`/dashboard/alunos/${s.id}`)} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
-                <span style={{ fontSize: 15, fontWeight: 700, color: '#111827' }}>{s.name.split(' ')[0]} {s.name.split(' ').slice(-1)[0]}</span>
+            <div onClick={() => navigate(`/dashboard/alunos/${s.id}`)} className="list-row-body" style={{ cursor:'pointer' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:7, flexWrap:'wrap' }}>
+                <span className="list-row-title" style={{ fontSize:15 }}>{s.name.split(' ')[0]} {s.name.split(' ').slice(-1)[0]}</span>
                 <Badge status={s.status} />
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
-                <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>
+              <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:3 }}>
+                <p className="list-row-sub" style={{ flex:1 }}>
                   {s.phone || s.email || s.goal || s.plan || '—'}
                 </p>
                 <WeekDots sessionDates={weekSessions[String(s.id)] || new Set()} />
               </div>
             </div>
-            <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+            <div style={{ display:'flex', gap:6, flexShrink:0 }}>
               <AppBadge student={s} />
-              <button onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time: '08:00', type: 'Musculação' }); }}
-                style={{ width: 34, height: 34, borderRadius: 10, background: '#ECFDF5', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Calendar size={15} color="#10B981" />
+              <button onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time:'08:00', type:'Musculação' }); }}
+                className="icon-box icon-box-md icon-box-green" style={{ border:'none', cursor:'pointer', width:34, height:34 }}>
+                <Calendar size={15} />
               </button>
             </div>
           </div>

@@ -315,23 +315,21 @@ export default function Agenda() {
   return (
     <div className="page-padding" style={{ flex: 1 }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12, flexWrap: 'wrap', gap: 10 }}>
+      <div className="page-header" style={{ marginBottom: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Agenda</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>
+          <h2 className="page-title">Agenda</h2>
+          <p className="page-subtitle">
             {weekDates[0].toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
           </p>
         </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-          <button onClick={goToday} style={{ padding: '8px 14px', background: 'white', border: '1px solid #E5E7EB', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#374151' }}>
-            Hoje
-          </button>
+        <div className="page-actions">
+          <button onClick={goToday} className="btn-secondary">Hoje</button>
           <div style={{ display: 'flex', gap: 2 }}>
-            <button onClick={prevWeek} style={{ padding: '8px 10px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '8px 0 0 8px', cursor: 'pointer', display: 'flex' }}>
-              <ChevronLeft size={16} color="#374151" />
+            <button onClick={prevWeek} className="btn-secondary" style={{ borderRadius: 'var(--radius-sm) 0 0 var(--radius-sm)', padding: '8px 10px' }}>
+              <ChevronLeft size={16} />
             </button>
-            <button onClick={nextWeek} style={{ padding: '8px 10px', background: 'white', border: '1px solid #E5E7EB', borderRadius: '0 8px 8px 0', cursor: 'pointer', display: 'flex' }}>
-              <ChevronRight size={16} color="#374151" />
+            <button onClick={nextWeek} className="btn-secondary" style={{ borderRadius: '0 var(--radius-sm) var(--radius-sm) 0', padding: '8px 10px' }}>
+              <ChevronRight size={16} />
             </button>
           </div>
           <button className="btn-primary agenda-new-btn" onClick={() => { setEditingId(null); setSelectedAppt(null); setForm({ studentId: '', date: TODAY, time: '08:00', type: 'Musculação', notes: '', repeat: false, repeatWeeks: '4' }); setModal(true); }}>
@@ -342,13 +340,12 @@ export default function Agenda() {
 
       {/* Student filter */}
       {students.length > 1 && (
-        <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap', alignItems: 'center' }}>
-          <span style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', marginRight: 2 }}>Filtrar:</span>
-          <button onClick={() => setFilterStudentId('')} style={{ padding: '5px 12px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, background: !filterStudentId ? '#111827' : '#F3F4F6', color: !filterStudentId ? 'white' : '#6B7280', transition: 'all 0.12s' }}>
-            Todos
-          </button>
+        <div className="filter-pills" style={{ marginBottom: 16 }}>
+          <span className="section-label" style={{ marginRight: 2, alignSelf: 'center' }}>Filtrar:</span>
+          <button onClick={() => setFilterStudentId('')} className={`pill${!filterStudentId ? ' active' : ''}`}>Todos</button>
           {students.map(s => (
-            <button key={s.id} onClick={() => setFilterStudentId(String(s.id))} style={{ padding: '5px 12px', borderRadius: 20, border: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600, transition: 'all 0.12s', background: filterStudentId === String(s.id) ? '#3B82F6' : '#F3F4F6', color: filterStudentId === String(s.id) ? 'white' : '#6B7280' }}>
+            <button key={s.id} onClick={() => setFilterStudentId(String(s.id))}
+              className={`pill${filterStudentId === String(s.id) ? ' active' : ''}`}>
               {s.name.split(' ')[0]}
             </button>
           ))}

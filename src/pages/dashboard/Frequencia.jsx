@@ -166,93 +166,91 @@ export default function Frequencia() {
 
   return (
     <div className="page-padding" style={{ flex: 1 }}>
-      <div style={{ marginBottom: 24 }}>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Frequência</h2>
-        <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>Controle de presença por aluno</p>
+      <div className="page-header">
+        <div>
+          <h2 className="page-title">Frequência</h2>
+          <p className="page-subtitle">Controle de presença por aluno</p>
+        </div>
       </div>
 
       {/* Student selector + month nav */}
-      <div style={{ background: 'white', borderRadius: 12, padding: '16px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+      <div className="card" style={{ padding: '14px 20px', marginBottom: 20, display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flex: 1, minWidth: 200 }}>
-          <Users size={16} color="#6B7280" />
-          <select
-            value={selectedId}
-            onChange={e => setSelectedId(e.target.value)}
-            style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 14, fontWeight: 600, color: '#111827', cursor: 'pointer', outline: 'none' }}
-          >
+          <Users size={16} color="var(--gray-400)" />
+          <select value={selectedId} onChange={e => setSelectedId(e.target.value)}
+            style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 14, fontWeight: 600, color: 'var(--gray-900)', cursor: 'pointer', outline: 'none' }}>
             <option value="">Selecione um aluno...</option>
             {students.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
         </div>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <button onClick={prevMonth} style={{ background: '#F3F4F6', border: 'none', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <ChevronLeft size={16} color="#6B7280" />
+          <button onClick={prevMonth} className="icon-box icon-box-md icon-box-gray" style={{ border: 'none', cursor: 'pointer' }}>
+            <ChevronLeft size={16} />
           </button>
-          <span style={{ fontSize: 14, fontWeight: 700, color: '#111827', minWidth: 110, textAlign: 'center' }}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--gray-900)', minWidth: 110, textAlign: 'center' }}>
             {MONTHS_PT[month]} {year}
           </span>
-          <button onClick={nextMonth} style={{ background: '#F3F4F6', border: 'none', borderRadius: 8, width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <ChevronRight size={16} color="#6B7280" />
+          <button onClick={nextMonth} className="icon-box icon-box-md icon-box-gray" style={{ border: 'none', cursor: 'pointer' }}>
+            <ChevronRight size={16} />
           </button>
         </div>
       </div>
 
       {!selectedId ? (
-        <div style={{ background: 'white', borderRadius: 12, padding: '60px 20px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <Users size={48} color="#E5E7EB" style={{ marginBottom: 12 }} />
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#374151' }}>Selecione um aluno</p>
-          <p style={{ margin: '6px 0 0', fontSize: 13, color: '#9CA3AF' }}>Escolha um aluno acima para ver e controlar as presenças</p>
+        <div className="card">
+          <div className="empty-state">
+            <div className="empty-state-icon"><Users size={26} /></div>
+            <p className="empty-state-title">Selecione um aluno</p>
+            <p className="empty-state-desc">Escolha um aluno acima para ver e controlar as presenças</p>
+          </div>
         </div>
       ) : (
         <>
           {/* Stats */}
           {selectedStudent && (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }} className="freq-stats">
-              <div style={{ background: 'white', borderRadius: 12, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', textAlign: 'center' }}>
-                <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: attendanceRate >= 75 ? '#10B981' : attendanceRate >= 50 ? '#F59E0B' : '#EF4444' }}>{attendanceRate}%</p>
-                <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <div className="kpi-grid freq-stats" style={{ marginBottom: 20 }}>
+              <div className="kpi-card" style={{ textAlign: 'center', cursor: 'default' }}>
+                <p className="kpi-card-value" style={{ color: attendanceRate >= 75 ? 'var(--green)' : attendanceRate >= 50 ? 'var(--yellow)' : 'var(--red)' }}>{attendanceRate}%</p>
+                <p className="kpi-card-label" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                   <TrendingUp size={11} /> Taxa de presença
                 </p>
               </div>
               {[
-                { label: 'Presenças', value: stats.present, color: '#10B981', bg: '#D1FAE5' },
-                { label: 'Faltas', value: stats.absent, color: '#EF4444', bg: '#FEE2E2' },
-                { label: 'Atrasos', value: stats.late, color: '#F59E0B', bg: '#FEF3C7' },
+                { label: 'Presenças', value: stats.present, color: 'var(--green)' },
+                { label: 'Faltas', value: stats.absent, color: 'var(--red)' },
+                { label: 'Atrasos', value: stats.late, color: 'var(--yellow)' },
               ].map(s => (
-                <div key={s.label} style={{ background: 'white', borderRadius: 12, padding: '14px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', textAlign: 'center' }}>
-                  <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: s.color }}>{s.value}</p>
-                  <p style={{ margin: '2px 0 0', fontSize: 11, color: '#6B7280' }}>{s.label}</p>
+                <div key={s.label} className="kpi-card" style={{ textAlign: 'center', cursor: 'default' }}>
+                  <p className="kpi-card-value" style={{ color: s.color }}>{s.value}</p>
+                  <p className="kpi-card-label">{s.label}</p>
                 </div>
               ))}
             </div>
           )}
 
           {/* Appointments list */}
-          <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-            <div style={{ padding: '14px 20px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 14, fontWeight: 700, color: '#111827' }}>
-                Sessões de {MONTHS_PT[month]}
-              </span>
+          <div className="card card-0">
+            <div className="card-header">
+              <span className="section-title">Sessões de {MONTHS_PT[month]}</span>
               {selectedStudent && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Avatar initials={selectedStudent.initials || selectedStudent.name.slice(0, 2).toUpperCase()} color={selectedStudent.color || '#6B7280'} size={24} />
-                  <span style={{ fontSize: 13, fontWeight: 600, color: '#374151' }}>{selectedStudent.name}</span>
+                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)' }}>{selectedStudent.name}</span>
                 </div>
               )}
             </div>
 
             {loadingAppts ? (
               <div style={{ padding: 40, textAlign: 'center' }}>
-                <Loader size={22} color="#3B82F6" style={{ animation: 'spin 1s linear infinite' }} />
+                <Loader size={22} color="var(--accent)" style={{ animation: 'spin 1s linear infinite' }} />
               </div>
             ) : appointments.length === 0 ? (
-              <div style={{ padding: 40, textAlign: 'center', color: '#9CA3AF' }}>
-                <p style={{ margin: 0, fontSize: 14 }}>Nenhuma sessão agendada neste período</p>
-                <p style={{ margin: '6px 0 0', fontSize: 12 }}>Crie agendamentos na página de Agenda</p>
+              <div className="empty-state">
+                <p className="empty-state-title">Nenhuma sessão agendada neste período</p>
+                <p className="empty-state-desc">Crie agendamentos na página de Agenda</p>
               </div>
             ) : (
-              <div>
+              <div style={{ padding: '0 20px' }}>
                 {appointments.map((appt, i) => {
                   const date = appt.date;
                   const att = attendances[date];
@@ -261,30 +259,20 @@ export default function Frequencia() {
                   const statusCfg = att?.status ? STATUS_CONFIG[att.status] : null;
 
                   return (
-                    <div
-                      key={appt.id}
-                      style={{
-                        display: 'flex', alignItems: 'center', gap: 16, padding: '14px 20px',
-                        borderBottom: i < appointments.length - 1 ? '1px solid #F9FAFB' : 'none',
-                        background: att?.status === 'absent' ? '#FFFBFB' : 'white',
-                      }}
-                    >
+                    <div key={appt.id} className="list-row"
+                      style={{ background: att?.status === 'absent' ? '#FFFBFB' : 'transparent' }}>
                       {/* Date */}
-                      <div style={{ minWidth: 48, textAlign: 'center', flexShrink: 0 }}>
-                        <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#111827', lineHeight: 1 }}>{dateObj.getDate()}</p>
-                        <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>
+                      <div style={{ minWidth: 44, textAlign: 'center', flexShrink: 0 }}>
+                        <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--gray-900)', lineHeight: 1 }}>{dateObj.getDate()}</p>
+                        <p className="section-label" style={{ margin: 0 }}>
                           {dateObj.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '')}
                         </p>
                       </div>
 
                       {/* Info */}
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827' }}>
-                          {appt.type || appt.session_type || 'Treino'}
-                        </p>
-                        <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6B7280' }}>
-                          {appt.time || ''} {appt.notes ? `· ${appt.notes}` : ''}
-                        </p>
+                      <div className="list-row-body">
+                        <p className="list-row-title">{appt.type || appt.session_type || 'Treino'}</p>
+                        <p className="list-row-sub">{appt.time || ''} {appt.notes ? `· ${appt.notes}` : ''}</p>
                       </div>
 
                       {/* Status badge */}
@@ -294,14 +282,12 @@ export default function Frequencia() {
                         </span>
                       )}
 
-                      {/* Toggle (only for past/today sessions) */}
-                      {isPast && (
+                      {isPast ? (
                         <div style={{ flexShrink: 0 }}>
                           <AttendanceToggle status={att?.status || null} onChange={s => handleAttendanceChange(appt, s)} />
                         </div>
-                      )}
-                      {!isPast && (
-                        <span style={{ fontSize: 11, color: '#9CA3AF', flexShrink: 0 }}>Futura</span>
+                      ) : (
+                        <span className="list-row-sub" style={{ flexShrink: 0 }}>Futura</span>
                       )}
                     </div>
                   );

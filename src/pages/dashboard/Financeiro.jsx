@@ -9,22 +9,14 @@ import { supabase, hasSupabase } from '../../lib/supabase';
 
 function StatBox({ icon: Icon, title, value, sub, color, bg }) {
   return (
-    <div style={{
-      background: 'white',
-      borderRadius: 12,
-      padding: '20px 24px',
-      boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
-      display: 'flex',
-      gap: 16,
-      alignItems: 'center',
-    }}>
-      <div style={{ width: 52, height: 52, borderRadius: 14, background: bg || '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Icon size={24} color={color || '#3B82F6'} />
+    <div className="kpi-card" style={{ display: 'flex', gap: 16, alignItems: 'center', cursor: 'default' }}>
+      <div style={{ width: 48, height: 48, borderRadius: 12, background: bg || '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={22} color={color || '#3B82F6'} />
       </div>
       <div>
-        <p style={{ margin: 0, fontSize: 13, color: '#6B7280', fontWeight: 500 }}>{title}</p>
-        <p style={{ margin: '4px 0 2px', fontSize: 24, fontWeight: 800, color: '#111827' }}>{value}</p>
-        {sub && <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>{sub}</p>}
+        <p className="kpi-card-label">{title}</p>
+        <p className="kpi-card-value" style={{ fontSize: 22, marginBottom: 2 }}>{value}</p>
+        {sub && <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>{sub}</p>}
       </div>
     </div>
   );
@@ -377,46 +369,29 @@ export default function Financeiro() {
         </div>
       )}
 
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+      <div className="page-header">
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Financeiro</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>Visão geral de receitas e pagamentos</p>
+          <h2 className="page-title">Financeiro</h2>
+          <p className="page-subtitle">Visão geral de receitas e pagamentos</p>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button
-            className="btn-secondary"
-            onClick={() => setNewPayModal(true)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', fontSize: 13 }}
-          >
+        <div className="page-actions">
+          <button className="btn-secondary" onClick={() => setNewPayModal(true)}>
             <Plus size={15} /> Novo Pagamento
           </button>
-          <button
-            className="btn-primary"
-            onClick={() => setGenModal(true)}
-            disabled={generating}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', fontSize: 13, opacity: generating ? 0.7 : 1 }}
-          >
+          <button className="btn-primary" onClick={() => setGenModal(true)} disabled={generating} style={{ opacity: generating ? 0.7 : 1 }}>
             <Zap size={15} /> {generating ? 'Gerando...' : `Gerar cobranças de ${currentMonthLabel.split(' ')[0]}`}
           </button>
-          <button
-            className="btn-secondary"
-            onClick={() => exportFinanceiroPDF(payments.map(p => ({ ...p, studentName: p.student_name || p.studentName, dueDate: p.due_date || p.dueDate, paidDate: p.paid_date || p.paidDate })), monthlyRevenue)}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', fontSize: 13 }}
-          >
+          <button className="btn-secondary" onClick={() => exportFinanceiroPDF(payments.map(p => ({ ...p, studentName: p.student_name || p.studentName, dueDate: p.due_date || p.dueDate, paidDate: p.paid_date || p.paidDate })), monthlyRevenue)}>
             <Download size={15} /> PDF
           </button>
-          <button
-            className="btn-secondary"
-            onClick={() => exportFinanceiroExcel(payments.map(p => ({ ...p, studentName: p.student_name || p.studentName, dueDate: p.due_date || p.dueDate, paidDate: p.paid_date || p.paidDate })))}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 14px', fontSize: 13 }}
-          >
+          <button className="btn-secondary" onClick={() => exportFinanceiroExcel(payments.map(p => ({ ...p, studentName: p.student_name || p.studentName, dueDate: p.due_date || p.dueDate, paidDate: p.paid_date || p.paidDate })))}>
             <Download size={15} /> Excel
           </button>
         </div>
       </div>
 
       {/* Stat boxes */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 24 }}>
+      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)' }}>
         <StatBox
           icon={DollarSign}
           title="Total do Mês"
@@ -446,8 +421,8 @@ export default function Financeiro() {
       {/* Chart + Table */}
       <div className="financeiro-main-grid" style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: 20 }}>
         {/* Bar chart */}
-        <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <h3 style={{ margin: '0 0 20px', fontSize: 16, fontWeight: 700, color: '#111827' }}>Receita Mensal</h3>
+        <div className="card" style={{ padding: 24 }}>
+          <h3 className="section-title" style={{ marginBottom: 20 }}>Receita Mensal</h3>
           <ResponsiveContainer width="100%" height={220}>
             <BarChart data={monthlyRevenue} margin={{ top: 4, right: 4, bottom: 0, left: -20 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F3F4F6" vertical={false} />
@@ -488,9 +463,9 @@ export default function Financeiro() {
         </div>
 
         {/* Payment table */}
-        <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-          <div style={{ padding: '20px 20px 0' }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#111827' }}>Pagamentos - {currentMonthLabel}</h3>
+        <div className="card card-0">
+          <div className="card-header">
+            <h3 className="section-title">Pagamentos — {currentMonthLabel}</h3>
           </div>
           <div className="table-scroll">
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -545,26 +520,25 @@ export default function Financeiro() {
       </div>
 
       {/* All months payments */}
-      <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginTop: 20 }}>
-        <h3 style={{ margin: '0 0 16px', fontSize: 16, fontWeight: 700, color: '#111827' }}>Histórico de Pagamentos</h3>
+      <div className="card" style={{ padding: 24, marginTop: 20 }}>
+        <h3 className="section-title" style={{ marginBottom: 16 }}>Histórico de Pagamentos</h3>
         <div style={{ display: 'flex', gap: 20, flexWrap: 'wrap' }}>
           {last3Months.map(month => {
             const mPayments = payments.filter(p => p.month === month);
             const mTotal = mPayments.reduce((sum, p) => sum + p.amount, 0);
             const mReceived = mPayments.filter(p => p.status === 'pago').reduce((sum, p) => sum + p.amount, 0);
+            const pct = mTotal > 0 ? Math.round((mReceived / mTotal) * 100) : 0;
             return (
-              <div key={month} style={{ flex: 1, minWidth: 200, padding: '16px', background: '#F9FAFB', borderRadius: 10, border: '1px solid #F3F4F6' }}>
-                <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 700, color: '#111827' }}>{month}</p>
-                <p style={{ margin: '0 0 4px', fontSize: 20, fontWeight: 800, color: '#111827' }}>
+              <div key={month} style={{ flex: 1, minWidth: 200, padding: '16px', background: 'var(--gray-50)', borderRadius: 'var(--radius)', border: '1px solid var(--border-light)' }}>
+                <p className="list-row-title" style={{ marginBottom: 4 }}>{month}</p>
+                <p style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, color: 'var(--gray-900)' }}>
                   R$ {mTotal.toLocaleString('pt-BR')}
                 </p>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 8 }}>
-                  <div style={{ flex: 1, height: 6, background: '#E5E7EB', borderRadius: 3, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${(mReceived / mTotal) * 100}%`, background: 'linear-gradient(90deg, #3B82F6, #8B5CF6)', borderRadius: 3 }} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ flex: 1, height: 5, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: 'linear-gradient(90deg, var(--accent), #8B5CF6)', borderRadius: 3 }} />
                   </div>
-                  <span style={{ fontSize: 12, color: '#10B981', fontWeight: 600, whiteSpace: 'nowrap' }}>
-                    {Math.round((mReceived / mTotal) * 100)}% recebido
-                  </span>
+                  <span style={{ fontSize: 11, color: 'var(--green)', fontWeight: 700, whiteSpace: 'nowrap' }}>{pct}%</span>
                 </div>
               </div>
             );

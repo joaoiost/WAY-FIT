@@ -581,32 +581,6 @@ export default function AlunoDetalhe() {
             </div>
           )}
 
-          {/* Água hoje */}
-          {waterLog && (() => {
-            const waterPct = Math.min(100, Math.round((waterLog.intake_ml / (waterLog.goal_ml || 2000)) * 100));
-            const goalReached = waterLog.intake_ml >= (waterLog.goal_ml || 2000);
-            return (
-              <div style={{ background: goalReached ? 'linear-gradient(135deg, #E0F2FE, #BAE6FD)' : 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', border: goalReached ? '1px solid #7DD3FC' : 'none' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-                  <Droplets size={16} color="#0284C7" />
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>
-                    {goalReached ? '💧 Meta de água atingida!' : 'Hidratação Hoje'}
-                  </h3>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, marginBottom: 10 }}>
-                  <span style={{ fontSize: 28, fontWeight: 900, color: '#0284C7', lineHeight: 1 }}>{(waterLog.intake_ml / 1000).toFixed(1)}L</span>
-                  <span style={{ fontSize: 13, color: '#6B7280' }}>de {((waterLog.goal_ml || 2000) / 1000).toFixed(1)}L</span>
-                </div>
-                <div style={{ height: 8, borderRadius: 99, background: '#BFDBFE', overflow: 'hidden', marginBottom: 6 }}>
-                  <div style={{ height: '100%', borderRadius: 99, width: `${waterPct}%`, background: goalReached ? '#0369A1' : 'linear-gradient(90deg, #38BDF8, #0284C7)', transition: 'width 0.6s ease' }} />
-                </div>
-                <p style={{ margin: 0, fontSize: 11, color: '#6B7280', fontWeight: 500 }}>
-                  {waterPct}% da meta · {Math.round(waterLog.intake_ml / 250)} copo{Math.round(waterLog.intake_ml / 250) !== 1 ? 's' : ''} (250ml)
-                </p>
-              </div>
-            );
-          })()}
-
           {/* Notes / goal */}
           {(student.goal || student.notes) && (
             <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
@@ -616,6 +590,88 @@ export default function AlunoDetalhe() {
             </div>
           )}
         </div>
+
+            {/* ── Hidratação — full width animado ── */}
+            {waterLog && (() => {
+              const waterPct = Math.min(100, Math.round((waterLog.intake_ml / (waterLog.goal_ml || 2000)) * 100));
+              const goalReached = waterLog.intake_ml >= (waterLog.goal_ml || 2000);
+              const liters = (waterLog.intake_ml / 1000).toFixed(1);
+              const goalL = ((waterLog.goal_ml || 2000) / 1000).toFixed(1);
+              const cups = Math.round(waterLog.intake_ml / 250);
+              const goalCups = Math.round((waterLog.goal_ml || 2000) / 250);
+              return (
+                <div style={{
+                  background: goalReached ? 'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)' : 'white',
+                  borderRadius: 16, padding: '20px 24px',
+                  boxShadow: goalReached ? '0 8px 28px rgba(2,132,199,0.32)' : '0 1px 3px rgba(0,0,0,0.07)',
+                  border: goalReached ? 'none' : '1px solid #E0F2FE',
+                  display: 'flex', alignItems: 'center', gap: 20,
+                  overflow: 'hidden', position: 'relative',
+                  transition: 'background 0.6s ease, box-shadow 0.6s ease',
+                }}>
+                  {/* Texture when goal reached */}
+                  {goalReached && (
+                    <div style={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 20'%3E%3Cpath d='M0 10 Q25 0 50 10 Q75 20 100 10 L100 20 L0 20Z' fill='rgba(255,255,255,0.06)'/%3E%3C/svg%3E\") repeat-x bottom", backgroundSize: '200px 40px', animation: 'alunoWaveScroll 3s linear infinite' }} />
+                  )}
+
+                  {/* Animated water circle */}
+                  <div style={{ width: 88, height: 88, borderRadius: '50%', position: 'relative', flexShrink: 0, overflow: 'hidden', border: `3px solid ${goalReached ? 'rgba(255,255,255,0.4)' : '#BAE6FD'}`, background: goalReached ? 'rgba(255,255,255,0.15)' : '#F0F9FF' }}>
+                    <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${waterPct}%`, background: goalReached ? 'rgba(255,255,255,0.3)' : 'linear-gradient(180deg, #38BDF8, #0284C7)', transition: 'height 0.8s cubic-bezier(0.34,1.56,0.64,1)' }}>
+                      <div className="aluno-water-wave" style={{ position: 'absolute', top: -8, left: 0, width: '200%', height: 16, background: goalReached ? 'rgba(255,255,255,0.5)' : '#38BDF8', borderRadius: '50% 50% 0 0' }} />
+                    </div>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <span style={{ fontSize: 17, fontWeight: 900, lineHeight: 1, color: waterPct > 45 ? 'white' : (goalReached ? 'rgba(255,255,255,0.85)' : '#0284C7'), textShadow: waterPct > 45 ? '0 1px 4px rgba(0,0,0,0.2)' : 'none' }}>{waterPct}%</span>
+                    </div>
+                  </div>
+
+                  {/* Info */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
+                      <Droplets size={15} color={goalReached ? 'rgba(255,255,255,0.9)' : '#0284C7'} />
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: goalReached ? 'white' : '#111827' }}>
+                        {goalReached ? 'Meta de água atingida! 💧' : 'Hidratação Hoje'}
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 10 }}>
+                      <span style={{ fontSize: 34, fontWeight: 900, color: goalReached ? 'white' : '#0284C7', lineHeight: 1 }}>{liters}L</span>
+                      <span style={{ fontSize: 14, color: goalReached ? 'rgba(255,255,255,0.65)' : '#9CA3AF' }}>de {goalL}L</span>
+                    </div>
+                    <div style={{ height: 6, borderRadius: 99, background: goalReached ? 'rgba(255,255,255,0.25)' : '#E0F2FE', overflow: 'hidden', marginBottom: 7 }}>
+                      <div style={{ height: '100%', width: `${waterPct}%`, borderRadius: 99, background: goalReached ? 'rgba(255,255,255,0.8)' : 'linear-gradient(90deg, #38BDF8, #0284C7)', transition: 'width 0.8s ease' }} />
+                    </div>
+                    <p style={{ margin: 0, fontSize: 12, color: goalReached ? 'rgba(255,255,255,0.7)' : '#6B7280' }}>
+                      {cups} copo{cups !== 1 ? 's' : ''} de {goalCups} · atualizado pelo aluno
+                    </p>
+                  </div>
+
+                  {/* Cup dots grid */}
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, width: 82, flexShrink: 0, alignContent: 'flex-start' }}>
+                    {Array.from({ length: goalCups }).map((_, i) => (
+                      <div key={i} style={{ width: 14, height: 19, borderRadius: 4, background: i < cups ? (goalReached ? 'rgba(255,255,255,0.75)' : '#0284C7') : (goalReached ? 'rgba(255,255,255,0.2)' : '#DBEAFE'), transition: 'background 0.3s ease' }} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
+
+            {/* ── Nutrição — full width ── */}
+            <div style={{ background: 'white', borderRadius: 16, padding: '18px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: 16, border: '1px solid #D1FAE5' }}>
+              <div style={{ width: 50, height: 50, borderRadius: 14, background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Utensils size={22} color="#059669" />
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ margin: '0 0 3px', fontSize: 15, fontWeight: 800, color: '#111827' }}>Plano Alimentar</p>
+                <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>Crie e edite a nutrição personalizada deste aluno</p>
+              </div>
+              <button onClick={() => navigate(`/dashboard/alunos/${id}/nutricao`)} style={{ flexShrink: 0, padding: '9px 18px', borderRadius: 10, border: 'none', background: '#059669', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Utensils size={14} /> Abrir plano
+              </button>
+            </div>
+
+            <style>{`
+              .aluno-water-wave { animation: alunoWaveScroll 1.8s linear infinite; }
+              @keyframes alunoWaveScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+            `}</style>
       </div>
     );
       })()}

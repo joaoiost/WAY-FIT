@@ -15,13 +15,13 @@ function avatarColor(id) { return AVATAR_COLORS[String(id).charCodeAt(0) % AVATA
 
 function StatBox({ icon: Icon, label, value, color, bg }) {
   return (
-    <div style={{ background: 'white', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: 12 }}>
-      <div style={{ width: 40, height: 40, borderRadius: 10, background: bg || '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-        <Icon size={20} color={color || '#3B82F6'} />
+    <div className="kpi-card" style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'default' }}>
+      <div style={{ width: 38, height: 38, borderRadius: 10, background: bg || 'var(--accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Icon size={18} color={color || 'var(--accent)'} />
       </div>
       <div>
-        <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF', fontWeight: 500 }}>{label}</p>
-        <p style={{ margin: '2px 0 0', fontSize: 18, fontWeight: 800, color: '#111827' }}>{value}</p>
+        <p className="kpi-card-label">{label}</p>
+        <p className="kpi-card-value" style={{ fontSize: 18 }}>{value}</p>
       </div>
     </div>
   );
@@ -183,107 +183,77 @@ export default function AlunoDetalhe() {
   return (
     <div className="page-padding" style={{ flex: 1 }}>
       {/* Back + header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-        <button onClick={() => navigate('/dashboard/alunos')} style={{ background: 'white', border: '1px solid #E5E7EB', borderRadius: 10, padding: '8px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#374151', fontWeight: 600, flexShrink: 0 }}>
-          <ArrowLeft size={16} /> Alunos
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
+        <button onClick={() => navigate('/dashboard/alunos')} className="btn-back">
+          <ArrowLeft size={15} /> <span>Alunos</span>
         </button>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flex: 1, minWidth: 0 }}>
-          <div style={{ width: 56, height: 56, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: 'white', flexShrink: 0 }}>
-            {student.avatarUrl ? <img src={student.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} /> : initials}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: 1, minWidth: 0 }}>
+          <div className="avatar avatar-lg" style={{ background: color }}>
+            {student.avatarUrl
+              ? <img src={student.avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} />
+              : initials}
           </div>
           <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: '#111827' }}>{student.name}</h2>
-              <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: student.status === 'ativo' ? '#D1FAE5' : '#FEF3C7', color: student.status === 'ativo' ? '#065F46' : '#92400E' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 3 }}>
+              <h2 style={{ margin: 0, fontSize: 20, fontWeight: 800, color: 'var(--gray-900)' }}>{student.name}</h2>
+              <span className={`tag ${student.status === 'ativo' ? 'tag-green' : 'tag-yellow'}`}>
                 {student.status === 'ativo' ? 'Ativo' : 'Pendente'}
               </span>
-              {latePay.length > 0 && <span style={{ fontSize: 11, fontWeight: 700, padding: '3px 10px', borderRadius: 20, background: '#FEE2E2', color: '#991B1B' }}>💰 Pagamento atrasado</span>}
+              {latePay.length > 0 && <span className="tag tag-red">💰 Pagamento atrasado</span>}
             </div>
-            <p style={{ margin: '3px 0 0', fontSize: 13, color: '#6B7280' }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-500)' }}>
               {student.goal && <span>{student.goal} · </span>}
               Plano {student.plan}
               {student.age && <span> · {student.age} anos</span>}
             </p>
+            {(student.email || student.phone) && (
+              <div style={{ display: 'flex', gap: 14, marginTop: 4, flexWrap: 'wrap' }}>
+                {student.email && <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--gray-400)' }}><Mail size={12} /> {student.email}</span>}
+                {student.phone && <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: 'var(--gray-400)' }}><Phone size={12} /> {student.phone}</span>}
+              </div>
+            )}
           </div>
         </div>
 
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          <button onClick={openEdit} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#F9FAFB', border: '1px solid #E5E7EB', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#374151' }}>
-            <Edit2 size={15} /> Editar
-          </button>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+          <button onClick={openEdit} className="btn-secondary"><Edit2 size={14} /> Editar</button>
           {student.phone && (
             <a href={`https://wa.me/55${student.phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer"
-              style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#F0FDF4', border: '1px solid #BBF7D0', borderRadius: 10, textDecoration: 'none', fontSize: 13, fontWeight: 600, color: '#15803D' }}>
-              <MessageCircle size={15} /> WhatsApp
+              className="btn-secondary" style={{ color: '#15803D', borderColor: '#BBF7D0', background: '#F0FDF4', textDecoration: 'none' }}>
+              <MessageCircle size={14} /> WhatsApp
             </a>
           )}
-          <button onClick={() => navigate(`/dashboard/chat`)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 10, cursor: 'pointer', fontSize: 13, fontWeight: 600, color: '#1E40AF' }}>
-            <MessageCircle size={15} /> Chat
+          <button onClick={() => navigate(`/dashboard/chat`)} className="btn-secondary" style={{ color: 'var(--blue)', borderColor: '#BFDBFE', background: '#EFF6FF' }}>
+            <MessageCircle size={14} /> Chat
           </button>
-          <button
-            onClick={() => navigate(`/dashboard/alunos/${id}/avaliacao`)}
-            className="btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: 13 }}
-          >
-            <Activity size={15} /> Avaliação Física
+          <button onClick={() => navigate(`/dashboard/alunos/${id}/avaliacao`)} className="btn-secondary">
+            <Activity size={14} /> Avaliação
           </button>
-          <button
-            onClick={() => navigate(`/dashboard/alunos/${id}/alimentacao`)}
-            className="btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: 13, color: '#059669', borderColor: '#BBF7D0', background: '#F0FDF4' }}
-          >
-            <Utensils size={15} /> Plano Alimentar
+          <button onClick={() => navigate(`/dashboard/alunos/${id}/alimentacao`)} className="btn-secondary" style={{ color: '#059669', borderColor: '#BBF7D0', background: '#F0FDF4' }}>
+            <Utensils size={14} /> Nutrição
           </button>
-          <button
-            onClick={() => window.open(`/dashboard/alunos/${id}/relatorio`, '_blank')}
-            className="btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', fontSize: 13 }}
-          >
-            <FileText size={15} /> Relatório PDF
+          <button onClick={() => window.open(`/dashboard/alunos/${id}/relatorio`, '_blank')} className="btn-secondary">
+            <FileText size={14} /> PDF
           </button>
           <button onClick={() => setScheduleModal(true)} className="btn-primary">
-            <Calendar size={15} /> Agendar Aula
+            <Calendar size={14} /> Agendar
           </button>
         </div>
       </div>
 
       {/* Stats row */}
-      <div className="student-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 14, marginBottom: 24 }}>
-        <StatBox icon={Calendar} label="Próxima aula" value={nextAppt ? new Date(nextAppt.date+'T12:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'short'}) : '—'} color="#3B82F6" bg="#EFF6FF" />
-        <StatBox icon={Activity} label="Frequência" value={attendRate !== null ? `${attendRate}%` : '—'} color="#10B981" bg="#ECFDF5" />
-        <StatBox icon={DollarSign} label="Pagamentos OK" value={latePay.length === 0 ? '✓' : `${latePay.length} atraso`} color={latePay.length ? '#EF4444' : '#10B981'} bg={latePay.length ? '#FEE2E2' : '#ECFDF5'} />
+      <div className="kpi-grid student-stats-grid" style={{ marginBottom: 24 }}>
+        <StatBox icon={Calendar} label="Próxima aula" value={nextAppt ? new Date(nextAppt.date+'T12:00:00').toLocaleDateString('pt-BR',{day:'numeric',month:'short'}) : '—'} color="var(--blue)" bg="#EFF6FF" />
+        <StatBox icon={Activity} label="Frequência" value={attendRate !== null ? `${attendRate}%` : '—'} color="var(--green)" bg="#ECFDF5" />
+        <StatBox icon={DollarSign} label="Pagamentos" value={latePay.length === 0 ? '✓ OK' : `${latePay.length} atraso`} color={latePay.length ? 'var(--red)' : 'var(--green)'} bg={latePay.length ? '#FEE2E2' : '#ECFDF5'} />
         <StatBox icon={TrendingUp} label="Peso atual" value={lastMeasure ? `${lastMeasure.weight}kg` : '—'} color="#8B5CF6" bg="#F5F3FF" />
       </div>
 
-      {/* Contact info */}
-      <div style={{ display: 'flex', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
-        {student.email && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#6B7280' }}>
-            <Mail size={14} /> {student.email}
-          </div>
-        )}
-        {student.phone && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, color: '#6B7280' }}>
-            <Phone size={14} /> {student.phone}
-          </div>
-        )}
-      </div>
-
       {/* Tabs */}
-      <div className="student-detail-tabs" style={{ marginBottom: 20, borderBottom: '2px solid var(--border-light)', paddingBottom: 0 }}>
+      <div className="tab-bar student-detail-tabs">
         {BASE_TABS.map(t => (
-          <button
-            key={t}
-            onClick={() => setTab(t)}
-            style={{
-              padding: '10px 16px', border: 'none', cursor: 'pointer', background: 'none',
-              fontSize: 14, fontWeight: tab === t ? 700 : 500,
-              color: tab === t ? 'var(--accent)' : 'var(--gray-500)',
-              borderBottom: `2px solid ${tab === t ? 'var(--accent)' : 'transparent'}`,
-              marginBottom: -2, whiteSpace: 'nowrap', transition: 'all 0.15s',
-            }}
-          >{t}</button>
+          <button key={t} onClick={() => setTab(t)} className={`tab-btn${tab === t ? ' active' : ''}`}>{t}</button>
         ))}
       </div>
 

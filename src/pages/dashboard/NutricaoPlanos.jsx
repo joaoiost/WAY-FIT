@@ -53,82 +53,63 @@ export default function NutricaoPlanos() {
   const withPlan = students.filter(s => planMap[s.id]).length;
   const withoutPlan = students.length - withPlan;
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80 }}>
-      <div style={{ width: 28, height: 28, border: '3px solid #EEF2FF', borderTopColor: '#6366F1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
+  if (loading) return <div className="loading-screen"><div className="spinner" /></div>;
 
   return (
     <div className="page-padding">
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+      <div className="page-header">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Salad size={18} color="#6366F1" />
-            </div>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: 'var(--gray-900)', letterSpacing: '-0.3px' }}>Planos Alimentares</h2>
-          </div>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-400)' }}>Gerencie a nutrição dos seus alunos</p>
+          <h2 className="page-title">Planos Alimentares</h2>
+          <p className="page-subtitle">Gerencie a nutrição dos seus alunos</p>
         </div>
-        <button
-          onClick={() => navigate('/dashboard/nutricao/alimentos')}
-          className="btn-secondary"
-          style={{ fontSize: 13 }}
-        >
-          Banco de Alimentos
-        </button>
+        <div className="page-actions">
+          <button onClick={() => navigate('/dashboard/nutricao/alimentos')} className="btn-secondary">
+            Banco de Alimentos
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 20 }}>
+      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)', marginBottom: 20 }}>
         {[
-          { label: 'Alunos ativos', value: students.length, icon: CheckCircle, color: '#6366F1', bg: '#EEF2FF' },
-          { label: 'Com plano', value: withPlan, icon: CheckCircle, color: '#10B981', bg: '#ECFDF5' },
-          { label: 'Sem plano', value: withoutPlan, icon: AlertCircle, color: '#F59E0B', bg: '#FFFBEB' },
+          { label: 'Alunos ativos', value: students.length, cls: 'icon-box-accent' },
+          { label: 'Com plano', value: withPlan, cls: 'icon-box-green' },
+          { label: 'Sem plano', value: withoutPlan, cls: 'icon-box-yellow' },
         ].map(s => (
-          <div key={s.label} style={{ background: 'white', borderRadius: 14, padding: '16px 18px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-xs)' }}>
-            <div style={{ width: 32, height: 32, borderRadius: 9, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 10 }}>
-              <s.icon size={16} color={s.color} />
-            </div>
-            <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: 'var(--gray-900)', lineHeight: 1 }}>{s.value}</p>
-            <p style={{ margin: '3px 0 0', fontSize: 11, color: 'var(--gray-400)', fontWeight: 600 }}>{s.label}</p>
+          <div key={s.label} className="kpi-card" style={{ cursor: 'default' }}>
+            <p className="kpi-card-value">{s.value}</p>
+            <p className="kpi-card-label">{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'white', border: '1.5px solid var(--border)', borderRadius: 9, padding: '7px 12px', flex: 1, minWidth: 200 }}>
+      <div className="toolbar">
+        <div className="search-bar" style={{ flex: 1, minWidth: 200 }}>
           <Search size={14} color="var(--gray-400)" />
-          <input
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar aluno..."
-            style={{ border: 'none', outline: 'none', fontSize: 13, flex: 1, padding: 0, boxShadow: 'none', background: 'transparent', width: 'auto' }}
-          />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar aluno..." />
         </div>
-        {[
-          { key: 'todos', label: 'Todos' },
-          { key: 'com_plano', label: 'Com plano' },
-          { key: 'sem_plano', label: 'Sem plano' },
-        ].map(f => (
-          <button key={f.key} onClick={() => setFilter(f.key)}
-            style={{ padding: '7px 16px', borderRadius: 9, border: `1.5px solid ${filter === f.key ? 'var(--accent)' : 'var(--border)'}`, background: filter === f.key ? 'var(--accent-bg)' : 'white', color: filter === f.key ? 'var(--accent-text)' : 'var(--gray-600)', fontSize: 13, fontWeight: filter === f.key ? 700 : 500, cursor: 'pointer' }}>
-            {f.label}
-          </button>
-        ))}
+        <div className="filter-pills">
+          {[
+            { key: 'todos', label: 'Todos' },
+            { key: 'com_plano', label: 'Com plano' },
+            { key: 'sem_plano', label: 'Sem plano' },
+          ].map(f => (
+            <button key={f.key} onClick={() => setFilter(f.key)} className={`pill${filter === f.key ? ' active' : ''}`}>
+              {f.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {filtered.length === 0 && (
-          <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--gray-400)' }}>
-            <Salad size={40} color="var(--gray-200)" style={{ display: 'block', margin: '0 auto 12px' }} />
-            <p style={{ margin: 0, fontWeight: 600 }}>Nenhum aluno encontrado</p>
+          <div className="empty-state">
+            <div className="empty-state-icon"><Salad size={24} /></div>
+            <p className="empty-state-title">Nenhum aluno encontrado</p>
           </div>
         )}
         {filtered.map(student => {
@@ -137,23 +118,17 @@ export default function NutricaoPlanos() {
           const updatedAt = plan?.updated_at ? new Date(plan.updated_at).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : null;
 
           return (
-            <div key={student.id}
-              onClick={() => navigate(`/dashboard/alunos/${student.id}/nutricao`)}
-              style={{ background: 'white', borderRadius: 14, padding: '14px 18px', border: '1px solid var(--border)', boxShadow: 'var(--shadow-xs)', display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer', transition: 'all 0.12s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; e.currentTarget.style.boxShadow = '0 2px 12px rgba(99,102,241,0.1)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.boxShadow = 'var(--shadow-xs)'; }}
-            >
-              {/* Avatar */}
-              <div style={{ width: 42, height: 42, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 800, color: 'white', flexShrink: 0 }}>
-                {(student.initials || initials(student.name))}
+            <div key={student.id} className="clickable-card"
+              onClick={() => navigate(`/dashboard/alunos/${student.id}/nutricao`)}>
+              <div className="avatar avatar-md" style={{ background: color }}>
+                {student.initials || initials(student.name)}
               </div>
 
-              {/* Info */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>{student.name}</p>
+              <div className="list-row-body">
+                <p className="list-row-title">{student.name}</p>
                 {plan ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-                    <span style={{ fontSize: 11, fontWeight: 600, color: '#10B981' }}>● {plan.name}</span>
+                    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--green)' }}>● {plan.name}</span>
                     {updatedAt && (
                       <span style={{ fontSize: 11, color: 'var(--gray-400)', display: 'flex', alignItems: 'center', gap: 3 }}>
                         <Clock size={10} /> {updatedAt}
@@ -161,15 +136,14 @@ export default function NutricaoPlanos() {
                     )}
                   </div>
                 ) : (
-                  <p style={{ margin: '2px 0 0', fontSize: 11, color: '#F59E0B', fontWeight: 600 }}>● Sem plano alimentar</p>
+                  <p className="list-row-sub" style={{ color: 'var(--yellow)' }}>● Sem plano alimentar</p>
                 )}
               </div>
 
-              {/* Action */}
               <button
                 onClick={e => { e.stopPropagation(); navigate(`/dashboard/alunos/${student.id}/nutricao`); }}
-                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '7px 14px', borderRadius: 9, border: 'none', background: plan ? 'var(--accent-bg)' : '#FFFBEB', color: plan ? 'var(--accent-text)' : '#D97706', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
-              >
+                className={plan ? 'btn-secondary' : 'btn-primary'}
+                style={{ fontSize: 12, padding: '6px 14px', flexShrink: 0 }}>
                 {plan ? 'Editar plano' : '+ Criar plano'} <ChevronRight size={13} />
               </button>
             </div>
@@ -178,13 +152,11 @@ export default function NutricaoPlanos() {
       </div>
 
       {students.length === 0 && !loading && (
-        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <div style={{ width: 64, height: 64, borderRadius: 20, background: '#EEF2FF', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-            <Salad size={30} color="#6366F1" />
-          </div>
-          <h3 style={{ margin: '0 0 8px', fontSize: 17, fontWeight: 800, color: 'var(--gray-900)' }}>Nenhum aluno ativo</h3>
-          <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--gray-400)' }}>Cadastre alunos para criar planos alimentares</p>
-          <button onClick={() => navigate('/dashboard/alunos')} className="btn-primary">Ir para Alunos</button>
+        <div className="empty-state" style={{ paddingTop: 60 }}>
+          <div className="empty-state-icon" style={{ width: 64, height: 64, borderRadius: 20 }}><Salad size={30} /></div>
+          <p className="empty-state-title" style={{ fontSize: 17 }}>Nenhum aluno ativo</p>
+          <p className="empty-state-desc">Cadastre alunos para criar planos alimentares</p>
+          <button onClick={() => navigate('/dashboard/alunos')} className="btn-primary" style={{ marginTop: 8 }}>Ir para Alunos</button>
         </div>
       )}
     </div>

@@ -333,12 +333,7 @@ export default function NutricaoPlanoAluno() {
   const allFoodsList = Object.values(mealFoods).flat();
   const totals = calcMacros(allFoodsList);
 
-  if (loading) return (
-    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 80 }}>
-      <div style={{ width: 28, height: 28, border: '3px solid #EEF2FF', borderTopColor: '#6366F1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
+  if (loading) return <div className="loading-screen"><div className="spinner" /></div>;
 
   return (
     <div className="page-padding">

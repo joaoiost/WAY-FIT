@@ -126,49 +126,38 @@ export default function NutricaoAlimentos() {
     <div className="page-padding">
 
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+      <div className="page-header">
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: '#ECFDF5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <Apple size={18} color="#10B981" />
-            </div>
-            <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: 'var(--gray-900)', letterSpacing: '-0.3px' }}>Banco de Alimentos</h2>
-          </div>
-          <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-400)' }}>{foods.length} alimento{foods.length !== 1 ? 's' : ''} cadastrado{foods.length !== 1 ? 's' : ''}</p>
+          <h2 className="page-title">Banco de Alimentos</h2>
+          <p className="page-subtitle">{foods.length} alimento{foods.length !== 1 ? 's' : ''} cadastrado{foods.length !== 1 ? 's' : ''}</p>
         </div>
-        <button onClick={openAdd} className="btn-primary">
-          <Plus size={16} /> Novo alimento
-        </button>
+        <div className="page-actions">
+          <button onClick={openAdd} className="btn-primary"><Plus size={16} /> Novo alimento</button>
+        </div>
       </div>
 
       {/* Search + filter */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 7, background: 'white', border: '1.5px solid var(--border)', borderRadius: 9, padding: '7px 12px', flex: 1, minWidth: 200 }}>
+      <div className="toolbar">
+        <div className="search-bar" style={{ flex: 1, minWidth: 200 }}>
           <Search size={14} color="var(--gray-400)" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar alimento..." style={{ border: 'none', outline: 'none', fontSize: 13, flex: 1, padding: 0, boxShadow: 'none', background: 'transparent', width: 'auto' }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar alimento..." />
         </div>
-        <div style={{ display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+        <div className="filter-pills" style={{ overflowX: 'auto', flexWrap: 'nowrap' }}>
           {categories.map(c => (
-            <button key={c} onClick={() => setCatFilter(c)}
-              style={{ padding: '7px 13px', borderRadius: 9, border: `1.5px solid ${catFilter === c ? 'var(--accent)' : 'var(--border)'}`, background: catFilter === c ? 'var(--accent-bg)' : 'white', color: catFilter === c ? 'var(--accent-text)' : 'var(--gray-600)', fontSize: 12, fontWeight: catFilter === c ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap' }}>
-              {c}
-            </button>
+            <button key={c} onClick={() => setCatFilter(c)} className={`pill${catFilter === c ? ' active' : ''}`}>{c}</button>
           ))}
         </div>
       </div>
 
       {/* Table / Cards */}
       {loading ? (
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-          <div style={{ width: 24, height: 24, border: '3px solid #EEF2FF', borderTopColor: '#6366F1', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
-          <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        </div>
+        <div className="loading-screen"><div className="spinner" /></div>
       ) : filtered.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px' }}>
-          <Apple size={40} color="var(--gray-200)" style={{ display: 'block', margin: '0 auto 12px' }} />
-          <p style={{ margin: '0 0 4px', fontWeight: 700, color: 'var(--gray-600)' }}>Nenhum alimento encontrado</p>
-          <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--gray-400)' }}>Adicione alimentos para montar planos alimentares</p>
-          <button onClick={openAdd} className="btn-primary"><Plus size={15} /> Adicionar alimento</button>
+        <div className="empty-state" style={{ paddingTop: 60 }}>
+          <div className="empty-state-icon"><Apple size={24} /></div>
+          <p className="empty-state-title">Nenhum alimento encontrado</p>
+          <p className="empty-state-desc">Adicione alimentos para montar planos alimentares</p>
+          <button onClick={openAdd} className="btn-primary" style={{ marginTop: 8 }}><Plus size={15} /> Adicionar alimento</button>
         </div>
       ) : (
         <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden' }}>
@@ -190,11 +179,11 @@ export default function NutricaoAlimentos() {
                 <span style={{ fontSize: 13, fontWeight: 700, color: '#F59E0B' }}>{food.carbs_per_100g || 0}g</span>
                 <span style={{ fontSize: 13, fontWeight: 700, color: '#10B981' }}>{food.fat_per_100g || 0}g</span>
                 <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                  <button onClick={() => openEdit(food)} style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--gray-100)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                    <Edit2 size={13} color="var(--gray-500)" />
+                  <button onClick={() => openEdit(food)} className="icon-box icon-box-sm icon-box-gray" style={{ border: 'none', cursor: 'pointer' }}>
+                    <Edit2 size={13} />
                   </button>
-                  <button onClick={() => handleDelete(food.id)} disabled={deletingId === food.id} style={{ width: 30, height: 30, borderRadius: 8, background: '#FEE2E2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: deletingId === food.id ? 0.5 : 1 }}>
-                    <Trash2 size={13} color="var(--red)" />
+                  <button onClick={() => handleDelete(food.id)} disabled={deletingId === food.id} className="icon-box icon-box-sm icon-box-red" style={{ border: 'none', cursor: 'pointer', opacity: deletingId === food.id ? 0.5 : 1 }}>
+                    <Trash2 size={13} />
                   </button>
                 </div>
               </div>
@@ -211,11 +200,11 @@ export default function NutricaoAlimentos() {
                     <span style={{ fontSize: 11, color: 'var(--gray-500)', background: 'var(--gray-100)', padding: '1px 7px', borderRadius: 20 }}>{food.category}</span>
                   </div>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={() => openEdit(food)} style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--gray-100)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Edit2 size={14} color="var(--gray-500)" />
+                    <button onClick={() => openEdit(food)} className="icon-box icon-box-sm icon-box-gray" style={{ border: 'none', cursor: 'pointer', width: 32, height: 32 }}>
+                      <Edit2 size={14} />
                     </button>
-                    <button onClick={() => handleDelete(food.id)} style={{ width: 32, height: 32, borderRadius: 8, background: '#FEE2E2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      <Trash2 size={14} color="var(--red)" />
+                    <button onClick={() => handleDelete(food.id)} className="icon-box icon-box-sm icon-box-red" style={{ border: 'none', cursor: 'pointer', width: 32, height: 32 }}>
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>

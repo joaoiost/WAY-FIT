@@ -157,12 +157,7 @@ export default function Frequencia() {
     ? Math.round(((stats.present + stats.late) / stats.total) * 100)
     : 0;
 
-  if (loading) return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 80 }}>
-      <Loader size={28} color="#3B82F6" style={{ animation: 'spin 1s linear infinite' }} />
-      <style>{`@keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}`}</style>
-    </div>
-  );
+  if (loading) return <div className="loading-screen"><div className="spinner" /></div>;
 
   return (
     <div className="page-padding" style={{ flex: 1 }}>
@@ -241,9 +236,7 @@ export default function Frequencia() {
             </div>
 
             {loadingAppts ? (
-              <div style={{ padding: 40, textAlign: 'center' }}>
-                <Loader size={22} color="var(--accent)" style={{ animation: 'spin 1s linear infinite' }} />
-              </div>
+              <div className="loading-screen" style={{ minHeight: 120 }}><div className="spinner" /></div>
             ) : appointments.length === 0 ? (
               <div className="empty-state">
                 <p className="empty-state-title">Nenhuma sessão agendada neste período</p>
@@ -298,10 +291,7 @@ export default function Frequencia() {
         </>
       )}
 
-      <style>{`
-        @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
-        @media (max-width: 640px) { .freq-stats { grid-template-columns: repeat(2, 1fr) !important; } }
-      `}</style>
+      <style>{`@media (max-width: 640px) { .freq-stats { grid-template-columns: repeat(2, 1fr) !important; } }`}</style>
     </div>
   );
 }

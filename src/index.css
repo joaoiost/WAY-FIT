@@ -1156,9 +1156,155 @@ label {
 /* ── Inline badge chip ──────────────────────────────────────── */
 .badge-gray { background: var(--gray-100); color: var(--gray-600); }
 
+/* ── Alert banners ──────────────────────────────────────────── */
+.alert {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 500;
+  margin-bottom: 16px;
+}
+.alert-error   { background: #FEF2F2; border: 1px solid #FECACA; color: #DC2626; }
+.alert-success { background: #D1FAE5; border: 1px solid #A7F3D0; color: #065F46; }
+.alert-warning { background: #FEF3C7; border: 1px solid #FDE68A; color: #92400E; }
+.alert-info    { background: var(--accent-bg); border: 1px solid #C7D2FE; color: var(--accent-text); }
+
+/* ── Clickable list cards ───────────────────────────────────── */
+.clickable-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  transition: border-color 0.12s, box-shadow 0.12s, transform 0.12s;
+}
+.clickable-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 2px 12px rgba(99,102,241,0.1);
+  transform: translateY(-1px);
+}
+
+/* ── Tag / chip ─────────────────────────────────────────────── */
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+}
+.tag-green  { background: #D1FAE5; color: #065F46; }
+.tag-yellow { background: #FEF3C7; color: #92400E; }
+.tag-red    { background: #FEE2E2; color: #991B1B; }
+.tag-blue   { background: #DBEAFE; color: #1E40AF; }
+.tag-purple { background: #EDE9FE; color: #6D28D9; }
+.tag-gray   { background: var(--gray-100); color: var(--gray-600); }
+.tag-accent { background: var(--accent-bg); color: var(--accent-text); }
+
+/* ── Loading spinner ────────────────────────────────────────── */
+.spinner {
+  width: 26px; height: 26px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin-360 0.8s linear infinite;
+}
+@keyframes spin-360 { to { transform: rotate(360deg); } }
+
+.loading-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 200px;
+  color: var(--gray-400);
+  font-size: 14px;
+}
+
+/* ── Back button ────────────────────────────────────────────── */
+.btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--gray-700);
+  cursor: pointer;
+  transition: background 0.12s, border-color 0.12s;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.btn-back:hover { background: var(--gray-50); border-color: var(--gray-300); }
+
+/* ── Avatar circle ──────────────────────────────────────────── */
+.avatar {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: white;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+.avatar-sm { width: 32px; height: 32px; font-size: 11px; }
+.avatar-md { width: 44px; height: 44px; font-size: 14px; }
+.avatar-lg { width: 56px; height: 56px; font-size: 18px; }
+.avatar-xl { width: 72px; height: 72px; font-size: 22px; }
+
+/* ── Tab bar ────────────────────────────────────────────────── */
+.tab-bar {
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 2px solid var(--border-light);
+  margin-bottom: 20px;
+  gap: 0;
+  scrollbar-width: none;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+.tab-btn {
+  padding: 10px 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--gray-500);
+  border-bottom: 2px solid transparent;
+  margin-bottom: -2px;
+  white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.tab-btn:hover { color: var(--gray-700); }
+.tab-btn.active {
+  font-weight: 700;
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
 /* ── Responsive KPI grid ────────────────────────────────────── */
 @media (max-width: 900px) {
   .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .perfil-grid { grid-template-columns: 1fr !important; }
+}
+@media (max-width: 640px) {
+  .student-detail-tabs { overflow-x: auto; scrollbar-width: none; }
+  .student-detail-tabs::-webkit-scrollbar { display: none; }
 }
 @media (max-width: 480px) {
   .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
@@ -1166,4 +1312,5 @@ label {
   .kpi-card-value { font-size: 22px; }
   .page-title { font-size: 18px; }
   .toolbar { gap: 8px; }
+  .btn-back span { display: none; }
 }

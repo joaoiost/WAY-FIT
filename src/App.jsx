@@ -25,6 +25,8 @@ import NutricaoPlanos from './pages/dashboard/NutricaoPlanos';
 import NutricaoAlimentos from './pages/dashboard/NutricaoAlimentos';
 import NutricaoPlanoAluno from './pages/dashboard/NutricaoPlanoAluno';
 import Cartilhas from './pages/dashboard/Cartilhas';
+import Turmas from './pages/dashboard/Turmas';
+import Configuracoes from './pages/dashboard/Configuracoes';
 
 import PublicProfile from './pages/PublicProfile';
 import Termos from './pages/Termos';
@@ -44,6 +46,9 @@ import FotosProgresso from './pages/student/FotosProgresso';
 import Anamnese from './pages/student/Anamnese';
 import MeuPlanoAlimentar from './pages/student/MeuPlanoAlimentar';
 import MinhaAvaliacao from './pages/student/MinhaAvaliacao';
+import LogAlimentar from './pages/student/LogAlimentar';
+import Conquistas from './pages/student/Conquistas';
+import Desafios from './pages/student/Desafios';
 
 import Sidebar from './components/Layout/Sidebar';
 import Header from './components/Layout/Header';
@@ -155,6 +160,8 @@ export default function App() {
             <Route path="/dashboard/nutricao" element={<NutricaoPlanos />} />
             <Route path="/dashboard/nutricao/alimentos" element={<NutricaoAlimentos />} />
             <Route path="/dashboard/cartilhas" element={<Cartilhas />} />
+            <Route path="/dashboard/turmas" element={<Turmas />} />
+            <Route path="/dashboard/configuracoes" element={<Configuracoes />} />
           </Route>
 
           <Route element={<PersonalRouteClean />}>
@@ -172,6 +179,9 @@ export default function App() {
             <Route path="/aluno/fotos" element={<FotosProgresso />} />
             <Route path="/aluno/saude" element={<Anamnese />} />
             <Route path="/aluno/alimentacao" element={<MeuPlanoAlimentar />} />
+            <Route path="/aluno/log-alimentar" element={<LogAlimentar />} />
+            <Route path="/aluno/conquistas" element={<Conquistas />} />
+            <Route path="/aluno/desafios" element={<Desafios />} />
             <Route path="/aluno/avaliacao" element={<MinhaAvaliacao />} />
           </Route>
 

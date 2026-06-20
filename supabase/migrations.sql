@@ -422,3 +422,133 @@ DROP POLICY IF EXISTS "Aluno ve propria anamnese nutricional" ON nutrition_anamn
 CREATE POLICY "Aluno ve propria anamnese nutricional" ON nutrition_anamnesis FOR SELECT USING (
   EXISTS (SELECT 1 FROM students s WHERE s.id = nutrition_anamnesis.student_id AND s.user_id = auth.uid())
 );
+
+-- ============================================================
+-- GAMIFICAÇÃO — Conquistas e XP
+-- ============================================================
+CREATE TABLE IF NOT EXISTS student_achievements (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  achievement_key TEXT NOT NULL,
+  unlocked_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(student_id, achievement_key)
+);
+ALTER TABLE student_achievements ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Aluno gerencia proprias conquistas" ON student_achievements;
+CREATE POLICY "Aluno gerencia proprias conquistas" ON student_achievements FOR ALL USING (auth.uid() = student_id);
+DROP POLICY IF EXISTS "Personal ve conquistas dos alunos" ON student_achievements;
+CREATE POLICY "Personal ve conquistas dos alunos" ON student_achievements FOR SELECT USING (
+  student_id IN (SELECT id FROM students WHERE personal_id = auth.uid())
+);
+
+-- ============================================================
+-- LOG ALIMENTAR DO ALUNO
+-- ============================================================
+CREATE TABLE IF NOT EXISTS food_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  personal_id UUID,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  meal_type TEXT NOT NULL,
+  food_name TEXT NOT NULL,
+  quantity_g NUMERIC NOT NULL DEFAULT 100,
+  kcal NUMERIC,
+  protein_g NUMERIC,
+  carbs_g NUMERIC,
+  fat_g NUMERIC,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE food_logs ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Aluno gerencia proprio log alimentar" ON food_logs;
+CREATE POLICY "Aluno gerencia proprio log alimentar" ON food_logs FOR ALL USING (auth.uid() = student_id);
+DROP POLICY IF EXISTS "Personal le log alimentar dos alunos" ON food_logs;
+CREATE POLICY "Personal le log alimentar dos alunos" ON food_logs FOR SELECT USING (
+  personal_id = auth.uid() OR student_id IN (SELECT id FROM students WHERE personal_id = auth.uid())
+);
+
+-- ============================================================
+-- DESAFIOS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS challenges (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  personal_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  title TEXT NOT NULL,
+  description TEXT,
+  type TEXT NOT NULL DEFAULT 'workouts',
+  target_value NUMERIC NOT NULL DEFAULT 10,
+  start_date DATE,
+  end_date DATE,
+  xp_reward INTEGER DEFAULT 200,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE challenges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Personal gerencia desafios" ON challenges;
+CREATE POLICY "Personal gerencia desafios" ON challenges FOR ALL USING (personal_id = auth.uid());
+DROP POLICY IF EXISTS "Aluno ve desafios" ON challenges;
+CREATE POLICY "Aluno ve desafios" ON challenges FOR SELECT USING (true);
+
+CREATE TABLE IF NOT EXISTS student_challenges (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  challenge_id UUID REFERENCES challenges(id) ON DELETE CASCADE,
+  progress NUMERIC DEFAULT 0,
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(student_id, challenge_id)
+);
+ALTER TABLE student_challenges ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Aluno gerencia proprios desafios" ON student_challenges;
+CREATE POLICY "Aluno gerencia proprios desafios" ON student_challenges FOR ALL USING (auth.uid() = student_id);
+DROP POLICY IF EXISTS "Personal ve desafios dos alunos" ON student_challenges;
+CREATE POLICY "Personal ve desafios dos alunos" ON student_challenges FOR SELECT USING (
+  challenge_id IN (SELECT id FROM challenges WHERE personal_id = auth.uid())
+);
+
+-- ============================================================
+-- TURMAS / AULAS COLETIVAS
+-- ============================================================
+CREATE TABLE IF NOT EXISTS group_classes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  personal_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  type TEXT DEFAULT 'Musculação',
+  date DATE NOT NULL,
+  time TIME NOT NULL,
+  duration_minutes INTEGER DEFAULT 60,
+  max_students INTEGER DEFAULT 15,
+  location TEXT,
+  notes TEXT,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE group_classes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Personal gerencia turmas" ON group_classes;
+CREATE POLICY "Personal gerencia turmas" ON group_classes FOR ALL USING (personal_id = auth.uid());
+
+CREATE TABLE IF NOT EXISTS group_class_attendance (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  class_id UUID REFERENCES group_classes(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  status TEXT DEFAULT 'confirmado',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  UNIQUE(class_id, student_id)
+);
+ALTER TABLE group_class_attendance ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Personal gerencia presenca em turmas" ON group_class_attendance;
+CREATE POLICY "Personal gerencia presenca em turmas" ON group_class_attendance FOR ALL USING (
+  class_id IN (SELECT id FROM group_classes WHERE personal_id = auth.uid())
+);
+
+-- ============================================================
+-- CONFIGURAÇÕES DO PERSONAL (WHITE-LABEL)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS personal_settings (
+  personal_id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  brand_name TEXT,
+  tagline TEXT,
+  logo_url TEXT,
+  accent_color TEXT DEFAULT '#818CF8',
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+ALTER TABLE personal_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Personal gerencia proprias configuracoes" ON personal_settings;
+CREATE POLICY "Personal gerencia proprias configuracoes" ON personal_settings FOR ALL USING (personal_id = auth.uid());

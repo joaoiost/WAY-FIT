@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Dumbbell, TrendingUp, Clock, Play, Loader, Bell, BellOff, ChevronRight, Flame, Star, Camera, MessageCircle, Activity, Award, Zap, Target, Edit2, Check } from 'lucide-react';
 import WaterTracker from '../../components/UI/WaterTracker';
+import XPBar from '../../components/UI/XPBar';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { trainingPlans, appointments } from '../../data/mockData';
@@ -73,6 +74,7 @@ export default function StudentDashboard() {
   const [editingGoal, setEditingGoal] = useState(false);
   const [goalInput, setGoalInput] = useState('');
   const [waterGoalMl, setWaterGoalMl] = useState(2000);
+  const [xpTotal, setXpTotal] = useState(0);
 
   const now = new Date();
   const todayDay = now.getDay();
@@ -137,6 +139,8 @@ export default function StudentDashboard() {
               }
               setStreak(s);
             }
+
+            setXpTotal(sessions.length * 50);
 
             const planList = plans || [];
             setAllPlans(planList);
@@ -215,6 +219,13 @@ export default function StudentDashboard() {
           {now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
       </div>
+
+      {/* ── XP Bar ── */}
+      {xpTotal > 0 && (
+        <div onClick={() => navigate('/aluno/conquistas')} style={{ cursor: 'pointer', marginBottom: 14 }}>
+          <XPBar totalXP={xpTotal} compact />
+        </div>
+      )}
 
       {/* ── Streak (destaque) ── */}
       {streak > 0 && (

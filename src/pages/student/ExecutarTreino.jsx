@@ -710,6 +710,15 @@ export default function ExecutarTreino() {
               </div>
             ))}
           </div>
+          {allSetsDone && sets.length > 0 && parseFloat(sets[0]?.load || 0) > 0 && (
+            <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: '#F0FDF4', border: '1px solid #86EFAC', display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span style={{ fontSize: 18 }}>💪</span>
+              <div>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#10B981' }}>Sugestão de progressão!</p>
+                <p style={{ margin: 0, fontSize: 11, color: '#059669' }}>Você concluiu todas as séries. Tente +2.5kg na próxima sessão.</p>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Exercise mini-map */}

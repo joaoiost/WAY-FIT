@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingDown, TrendingUp, Plus, Ruler, Scale, X, Loader } from 'lucide-react';
+import { TrendingDown, TrendingUp, Plus, Ruler, Scale, X, Loader, Zap, BarChart2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -34,7 +34,7 @@ export default function Progresso() {
 
       const [{ data }, { data: logs }] = await Promise.all([
         supabase.from('student_measurements').select('*').eq('student_id', student.id).order('recorded_at'),
-        supabase.from('exercise_logs').select('exercise_name, load_actual, created_at').eq('student_id', student.id).not('load_actual', 'is', null).eq('done', true).order('created_at').limit(500),
+        supabase.from('exercise_logs').select('exercise_name, load_actual, reps_planned, sets_planned, created_at').eq('student_id', student.id).not('load_actual', 'is', null).eq('done', true).order('created_at').limit(500),
       ]);
 
       const normalized = (data || []).map(m => ({ ...m, date: m.recorded_at || m.date }));
@@ -254,6 +254,83 @@ export default function Progresso() {
           )}
         </div>
       )}
+
+      {/* 1RM Estimation */}
+      {exerciseLogs.length > 0 && (() => {
+        function calc1RM(w, r) { return w > 0 && r > 0 ? Math.round(w * (1 + r / 30) * 10) / 10 : 0; }
+        const exMap = {};
+        exerciseLogs.forEach(log => {
+          const est = calc1RM(parseFloat(log.load_actual) || 0, parseInt(log.reps_planned) || 0);
+          if (est > 0 && (!exMap[log.exercise_name] || est > exMap[log.exercise_name].est1rm)) {
+            exMap[log.exercise_name] = { name: log.exercise_name, load: log.load_actual, reps: log.reps_planned, est1rm: est };
+          }
+        });
+        const top = Object.values(exMap).sort((a, b) => b.est1rm - a.est1rm).slice(0, 8);
+        if (top.length === 0) return null;
+        return (
+          <div style={{ background: 'white', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+              <Zap size={16} color="#F59E0B" />
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Estimativa de Força (1RM)</h3>
+              <span style={{ marginLeft: 'auto', fontSize: 10, color: '#9CA3AF', fontStyle: 'italic' }}>Fórmula de Epley</span>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {top.map((item, i) => (
+                <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: '#F9FAFB' }}>
+                  <span style={{ fontSize: 11, fontWeight: 900, color: '#D1D5DB', minWidth: 20 }}>#{i + 1}</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>base: {item.load}kg × {item.reps} reps</p>
+                  </div>
+                  <span style={{ fontSize: 18, fontWeight: 900, color: '#3B82F6', flexShrink: 0 }}>{item.est1rm}kg</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* Weekly Volume Chart */}
+      {exerciseLogs.length >= 3 && (() => {
+        function getWeekKey(d) { const dt = new Date(d); dt.setDate(dt.getDate() - dt.getDay()); return dt.toISOString().slice(0, 10); }
+        const wv = {};
+        exerciseLogs.forEach(log => {
+          const w = getWeekKey(log.created_at);
+          wv[w] = (wv[w] || 0) + (parseFloat(log.load_actual) || 0) * (parseInt(log.reps_planned) || 0);
+        });
+        const weeks = Object.keys(wv).sort().slice(-8);
+        const vals = weeks.map(w => wv[w]);
+        const maxV = Math.max(...vals, 1);
+        if (weeks.length < 2) return null;
+        const thisWeek = wv[getWeekKey(new Date().toISOString())] || 0;
+        return (
+          <div style={{ background: 'white', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+              <BarChart2 size={16} color="#8B5CF6" />
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Volume Semanal</h3>
+            </div>
+            <p style={{ margin: '0 0 12px', fontSize: 12, color: '#9CA3AF' }}>Esta semana: {Math.round(thisWeek / 100) / 10}t de volume total</p>
+            <svg viewBox="0 0 300 110" style={{ width: '100%', height: 120, display: 'block' }} preserveAspectRatio="none">
+              {[0.25, 0.5, 0.75, 1].map(pct => (
+                <line key={pct} x1={0} y1={90 - pct * 86} x2={300} y2={90 - pct * 86} stroke="#F3F4F6" strokeWidth={0.8} />
+              ))}
+              {weeks.map((week, i) => {
+                const gap = 300 / weeks.length;
+                const barW = gap * 0.55;
+                const x = gap * i + gap / 2 - barW / 2;
+                const barH = vals[i] > 0 ? Math.max(4, (vals[i] / maxV) * 86) : 2;
+                const label = new Date(week + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }).replace('. de ', '/').replace('.', '').slice(0, 6);
+                return (
+                  <g key={week}>
+                    <rect x={x} y={90 - barH} width={barW} height={barH} fill="#8B5CF6" opacity={0.75} rx={3} />
+                    <text x={gap * i + gap / 2} y={106} textAnchor="middle" fontSize={7} fill="#9CA3AF">{label}</text>
+                  </g>
+                );
+              })}
+            </svg>
+          </div>
+        );
+      })()}
 
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(false)}>

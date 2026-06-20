@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, Plus, X, ZoomIn, Calendar, GitCompare } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -58,6 +58,55 @@ function PhotoCard({ photo, onView, onDelete }) {
           {photo.weight && <span style={{ fontSize: 11, color: '#3B82F6', fontWeight: 700 }}>{photo.weight}</span>}
         </div>
       </div>
+    </div>
+  );
+}
+
+function BeforeAfterSlider({ before, after }) {
+  const [position, setPosition] = useState(50);
+  const containerRef = useRef(null);
+  const dragging = useRef(false);
+
+  function updatePos(clientX) {
+    const el = containerRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const pct = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    setPosition(pct);
+  }
+
+  return (
+    <div ref={containerRef}
+      onMouseDown={e => { dragging.current = true; updatePos(e.clientX); }}
+      onMouseMove={e => dragging.current && updatePos(e.clientX)}
+      onMouseUp={() => { dragging.current = false; }}
+      onMouseLeave={() => { dragging.current = false; }}
+      onTouchStart={e => updatePos(e.touches[0].clientX)}
+      onTouchMove={e => { e.preventDefault(); updatePos(e.touches[0].clientX); }}
+      style={{ position: 'relative', width: '100%', height: 320, borderRadius: 16, overflow: 'hidden', cursor: 'ew-resize', userSelect: 'none', background: '#1a1a2e' }}>
+      {/* Before layer */}
+      {before.url ? (
+        <img src={before.url} alt="Antes" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+      ) : (
+        <div style={{ position: 'absolute', inset: 0, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF' }}>Sem foto</div>
+      )}
+      {/* After layer (clipped) */}
+      <div style={{ position: 'absolute', inset: 0, clipPath: `inset(0 ${100 - position}% 0 0)` }}>
+        {after.url ? (
+          <img src={after.url} alt="Depois" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+        ) : (
+          <div style={{ position: 'absolute', inset: 0, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF' }}>Sem foto</div>
+        )}
+      </div>
+      {/* Divider */}
+      <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${position}%`, width: 3, background: 'white', transform: 'translateX(-50%)', pointerEvents: 'none', boxShadow: '0 0 8px rgba(0,0,0,0.4)' }}>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 36, height: 36, borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.25)', fontSize: 14, fontWeight: 900, color: '#374151' }}>⇔</div>
+      </div>
+      {/* Labels */}
+      <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.55)', color: 'white', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, pointerEvents: 'none' }}>ANTES</div>
+      <div style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(129,140,248,0.85)', color: 'white', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, pointerEvents: 'none' }}>DEPOIS</div>
+      {before.date && <div style={{ position: 'absolute', bottom: 12, left: 12, background: 'rgba(0,0,0,0.55)', color: 'white', fontSize: 10, padding: '2px 8px', borderRadius: 12, pointerEvents: 'none' }}>{new Date(before.date + 'T12:00:00').toLocaleDateString('pt-BR')}</div>}
+      {after.date && <div style={{ position: 'absolute', bottom: 12, right: 12, background: 'rgba(0,0,0,0.55)', color: 'white', fontSize: 10, padding: '2px 8px', borderRadius: 12, pointerEvents: 'none' }}>{new Date(after.date + 'T12:00:00').toLocaleDateString('pt-BR')}</div>}
     </div>
   );
 }
@@ -263,6 +312,19 @@ export default function FotosProgresso() {
               </div>
             </div>
           </div>
+
+          {/* Slider */}
+          {photoA && photoB && (
+            <div style={{ marginBottom: 20 }}>
+              <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>Arraste para comparar</p>
+              <BeforeAfterSlider before={photoA} after={photoB} />
+            </div>
+          )}
+          {(!photoA || !photoB) && (
+            <div style={{ background: '#F9FAFB', borderRadius: 12, padding: '32px 20px', textAlign: 'center', marginBottom: 20, border: '2px dashed #E5E7EB' }}>
+              <p style={{ margin: 0, fontSize: 14, color: '#9CA3AF' }}>Selecione duas fotos para ver o slider de comparação</p>
+            </div>
+          )}
 
           {/* Comparison view */}
           <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }} className="compare-grid">

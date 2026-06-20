@@ -212,10 +212,10 @@ export default function StudentDashboard() {
 
       {/* ── Header ── */}
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#111827', letterSpacing: '-0.3px' }}>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--gray-900)', letterSpacing: '-0.3px' }}>
           {greeting()}, {firstName}! {streak >= 3 ? '🔥' : '👋'}
         </h2>
-        <p style={{ margin: '3px 0 0', fontSize: 13, color: '#6B7280', textTransform: 'capitalize' }}>
+        <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--gray-400)', textTransform: 'capitalize' }}>
           {now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
         </p>
       </div>
@@ -236,11 +236,11 @@ export default function StudentDashboard() {
 
       {/* ── Banners (colapsados, não acumulam) ── */}
       {pushState === 'idle' && !pushDismissed && isPushSupported() && (
-        <div style={{ background: '#EFF6FF', border: '1px solid #BFDBFE', borderRadius: 12, padding: '11px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <Bell size={18} color="#3B82F6" style={{ flexShrink: 0 }} />
-          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#1D4ED8', flex: 1 }}>Ative notificações do seu personal</p>
-          <button onClick={handleEnableNotifications} style={{ background: '#3B82F6', color: 'white', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Ativar</button>
-          <button onClick={() => { setPushDismissed(true); localStorage.setItem('push_banner_dismissed', '1'); }} style={{ background: 'none', border: 'none', color: '#93C5FD', cursor: 'pointer', padding: 4, fontSize: 16, flexShrink: 0 }}>✕</button>
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '11px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
+          <Bell size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
+          <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-900)', flex: 1 }}>Ative notificações do seu personal</p>
+          <button onClick={handleEnableNotifications} style={{ background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Ativar</button>
+          <button onClick={() => { setPushDismissed(true); localStorage.setItem('push_banner_dismissed', '1'); }} style={{ background: 'none', border: 'none', color: 'var(--gray-400)', cursor: 'pointer', padding: 4, fontSize: 16, flexShrink: 0 }}>✕</button>
         </div>
       )}
       {installPrompt && !installDismissed && (
@@ -262,16 +262,16 @@ export default function StudentDashboard() {
       {/* ── Stats rápidas ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10, marginBottom: 16 }}>
         {[
-          { label: 'Esta semana', value: `${weekSessions}x`, icon: Dumbbell, color: '#3B82F6', bg: '#EFF6FF', desc: 'treinos' },
-          { label: 'Frequência', value: attendanceRate !== null ? `${attendanceRate}%` : '—', icon: TrendingUp, color: '#10B981', bg: '#ECFDF5', desc: 'no mês' },
-          { label: 'Próxima aula', value: nextAppt ? `${nextAppt.date.slice(8)}/${nextAppt.date.slice(5, 7)}` : '—', icon: Calendar, color: '#8B5CF6', bg: '#F5F3FF', desc: nextAppt?.time?.slice(0, 5) || 'sem data' },
-        ].map(({ label, value, icon: Icon, color, bg, desc }) => (
-          <div key={label} style={{ background: 'white', borderRadius: 14, padding: '14px 14px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', border: '1px solid #F1F5F9' }}>
-            <div style={{ width: 32, height: 32, borderRadius: 9, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
+          { label: 'Esta semana', value: `${weekSessions}x`, icon: Dumbbell, color: 'var(--blue)' },
+          { label: 'Frequência', value: attendanceRate !== null ? `${attendanceRate}%` : '—', icon: TrendingUp, color: 'var(--green)' },
+          { label: 'Próxima aula', value: nextAppt ? `${nextAppt.date.slice(8)}/${nextAppt.date.slice(5, 7)}` : '—', icon: Calendar, color: 'var(--accent)' },
+        ].map(({ label, value, icon: Icon, color }) => (
+          <div key={label} style={{ background: 'var(--bg-surface)', borderRadius: 14, padding: '14px 10px', border: '1px solid var(--border)' }}>
+            <div style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--gray-50)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 8 }}>
               <Icon size={16} color={color} />
             </div>
-            <p style={{ margin: '0 0 1px', fontSize: 20, fontWeight: 900, color: '#111827', lineHeight: 1 }}>{value}</p>
-            <p style={{ margin: 0, fontSize: 10, color: '#9CA3AF', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
+            <p style={{ margin: '0 0 1px', fontSize: 20, fontWeight: 900, color: 'var(--gray-900)', lineHeight: 1 }}>{value}</p>
+            <p style={{ margin: 0, fontSize: 10, color: 'var(--gray-400)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</p>
           </div>
         ))}
       </div>
@@ -356,23 +356,23 @@ export default function StudentDashboard() {
       {/* ── Acesso rápido ── */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 16 }}>
         {[
-          { label: 'Meus Treinos', desc: `${allPlans.length} programa${allPlans.length !== 1 ? 's' : ''}`, href: '/aluno/treinos', color: '#8B5CF6', bg: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)', icon: Dumbbell },
-          { label: 'Progresso', desc: 'Medidas e evolução', href: '/aluno/progresso', color: '#10B981', bg: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)', icon: TrendingUp },
-          { label: 'Log Alimentar', desc: 'Refeições de hoje', href: '/aluno/log-alimentar', color: '#F59E0B', bg: 'linear-gradient(135deg, #FFFBEB, #FEF3C7)', icon: Salad },
-          { label: 'Desafios', desc: 'Metas e conquistas', href: '/aluno/desafios', color: '#EF4444', bg: 'linear-gradient(135deg, #FFF1F2, #FFE4E6)', icon: Trophy },
-          { label: 'Fotos', desc: 'Sua transformação', href: '/aluno/fotos', color: '#3B82F6', bg: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', icon: Camera },
-          { label: 'Mensagens', desc: personalName ? `com ${personalName.split(' ')[0]}` : 'do personal', href: '/aluno/chat', color: '#06B6D4', bg: 'linear-gradient(135deg, #ECFEFF, #CFFAFE)', icon: MessageCircle },
+          { label: 'Meus Treinos', desc: `${allPlans.length} programa${allPlans.length !== 1 ? 's' : ''}`, href: '/aluno/treinos', color: '#8B5CF6', icon: Dumbbell },
+          { label: 'Progresso', desc: 'Medidas e evolução', href: '/aluno/progresso', color: '#10B981', icon: TrendingUp },
+          { label: 'Log Alimentar', desc: 'Refeições de hoje', href: '/aluno/log-alimentar', color: '#F59E0B', icon: Salad },
+          { label: 'Desafios', desc: 'Metas e conquistas', href: '/aluno/desafios', color: '#EF4444', icon: Trophy },
+          { label: 'Fotos', desc: 'Sua transformação', href: '/aluno/fotos', color: '#3B82F6', icon: Camera },
+          { label: 'Mensagens', desc: personalName ? `com ${personalName.split(' ')[0]}` : 'do personal', href: '/aluno/chat', color: '#06B6D4', icon: MessageCircle },
         ].map(item => (
           <button key={item.href} onClick={() => navigate(item.href)}
-            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 16, background: item.bg, border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'transform 0.12s' }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}>
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: item.color + '20', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 16, background: 'var(--bg-surface)', border: `1.5px solid ${item.color}35`, cursor: 'pointer', textAlign: 'left', transition: 'transform 0.12s, border-color 0.12s' }}
+            onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.02)'; e.currentTarget.style.borderColor = item.color + '70'; }}
+            onMouseLeave={e => { e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.borderColor = item.color + '35'; }}>
+            <div style={{ width: 40, height: 40, borderRadius: 12, background: item.color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <item.icon size={20} color={item.color} />
             </div>
             <div style={{ minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</p>
-              <p style={{ margin: 0, fontSize: 11, color: '#6B7280', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.desc}</p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--gray-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.label}</p>
+              <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.desc}</p>
             </div>
           </button>
         ))}
@@ -380,12 +380,12 @@ export default function StudentDashboard() {
 
       {/* ── Próxima aula ── */}
       {nextAppt && (
-        <div style={{ background: 'white', borderRadius: 16, padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '1px solid #F1F5F9', marginBottom: 16 }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '16px 18px', border: '1px solid var(--border)', marginBottom: 16 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-            <Calendar size={15} color="#3B82F6" />
-            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#111827' }}>Próxima Aula</h3>
+            <Calendar size={15} color="var(--accent)" />
+            <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--gray-900)' }}>Próxima Aula</h3>
           </div>
-          <div style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, border: '1px solid #DBEAFE' }}>
+          <div style={{ background: 'var(--gray-50)', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, border: '1px solid var(--border)' }}>
             <div style={{ width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <span style={{ fontSize: 16, fontWeight: 900, color: 'white', lineHeight: 1 }}>{nextAppt.date.slice(8)}</span>
               <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.8)', fontWeight: 700 }}>
@@ -393,14 +393,14 @@ export default function StudentDashboard() {
               </span>
             </div>
             <div style={{ flex: 1 }}>
-              <p style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 800, color: '#111827' }}>{nextAppt.type || nextAppt.session_type}</p>
-              <p style={{ margin: 0, fontSize: 12, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 5 }}>
+              <p style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 800, color: 'var(--gray-900)' }}>{nextAppt.type || nextAppt.session_type}</p>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)', display: 'flex', alignItems: 'center', gap: 5 }}>
                 <Clock size={11} /> {nextAppt.time?.slice(0, 5)}
                 {personalName && <span>· com {personalName.split(' ')[0]}</span>}
               </p>
             </div>
             <button onClick={() => navigate('/aluno/agenda')}
-              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '7px 12px', borderRadius: 20, background: '#EFF6FF', border: 'none', color: '#3B82F6', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+              style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '7px 12px', borderRadius: 20, background: 'var(--accent-bg)', border: 'none', color: 'var(--accent-text)', fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
               Agenda <ChevronRight size={12} />
             </button>
           </div>
@@ -412,15 +412,15 @@ export default function StudentDashboard() {
 
       {/* ── Objetivo + Meta de peso ── */}
       {(studentGoal || currentWeight || goalWeight) && (
-        <div style={{ background: 'white', borderRadius: 16, padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)', border: '1px solid #F1F5F9', marginBottom: 16 }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '16px 18px', border: '1px solid var(--border)', marginBottom: 16 }}>
           {studentGoal && (
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: (currentWeight || goalWeight) ? 14 : 0 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#8B5CF6,#3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Star size={18} color="white" fill="white" />
               </div>
               <div>
-                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Objetivo</p>
-                <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827' }}>{studentGoal}</p>
+                <p style={{ margin: 0, fontSize: 10, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Objetivo</p>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'var(--gray-900)' }}>{studentGoal}</p>
               </div>
             </div>
           )}
@@ -451,11 +451,11 @@ export default function StudentDashboard() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Target size={14} color="#3B82F6" />
-                    <span style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>Meta de peso</span>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-900)' }}>Meta de peso</span>
                   </div>
                   {!editingGoal ? (
                     <button onClick={() => { setEditingGoal(true); setGoalInput(goalWeight ? String(goalWeight) : ''); }}
-                      style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: '#3B82F6', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: '2px 6px' }}>
+                      style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: 'var(--accent)', fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: '2px 6px' }}>
                       <Edit2 size={12} /> {hasGoal ? 'Editar' : 'Definir meta'}
                     </button>
                   ) : (
@@ -466,9 +466,9 @@ export default function StudentDashboard() {
                         onChange={e => setGoalInput(e.target.value)}
                         placeholder="Ex: 75"
                         autoFocus
-                        style={{ width: 70, padding: '4px 8px', borderRadius: 8, border: '1.5px solid #3B82F6', fontSize: 13, fontWeight: 700, textAlign: 'center', outline: 'none', color: '#111827' }}
+                        style={{ width: 70, padding: '4px 8px', borderRadius: 8, border: '1.5px solid var(--accent)', fontSize: 13, fontWeight: 700, textAlign: 'center', outline: 'none', color: 'var(--gray-900)', background: 'var(--bg-page)' }}
                       />
-                      <span style={{ fontSize: 12, color: '#6B7280' }}>kg</span>
+                      <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>kg</span>
                       <button onClick={() => {
                         const v = parseFloat(goalInput);
                         if (v > 0) {
@@ -477,7 +477,7 @@ export default function StudentDashboard() {
                           localStorage.setItem(key, String(v));
                         }
                         setEditingGoal(false);
-                      }} style={{ background: '#3B82F6', border: 'none', borderRadius: 8, padding: '5px 10px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+                      }} style={{ background: 'var(--accent)', border: 'none', borderRadius: 8, padding: '5px 10px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
                         <Check size={13} />
                       </button>
                     </div>
@@ -487,11 +487,11 @@ export default function StudentDashboard() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: hasGoal ? 10 : 0 }}>
                   <div style={{ flex: 1 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-                      <span style={{ fontSize: 12, color: '#6B7280' }}>Atual: <strong style={{ color: '#111827' }}>{hasCurrent ? `${currentWeight}kg` : '—'}</strong></span>
-                      <span style={{ fontSize: 12, color: '#6B7280' }}>Meta: <strong style={{ color: '#3B82F6' }}>{hasGoal ? `${goalWeight}kg` : '—'}</strong></span>
+                      <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>Atual: <strong style={{ color: 'var(--gray-900)' }}>{hasCurrent ? `${currentWeight}kg` : '—'}</strong></span>
+                      <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>Meta: <strong style={{ color: 'var(--accent)' }}>{hasGoal ? `${goalWeight}kg` : '—'}</strong></span>
                     </div>
                     {hasGoal && (
-                      <div style={{ height: 8, borderRadius: 99, background: '#F1F5F9', overflow: 'hidden', position: 'relative' }}>
+                      <div style={{ height: 8, borderRadius: 99, background: 'var(--border)', overflow: 'hidden', position: 'relative' }}>
                         <div style={{
                           height: '100%', borderRadius: 99, transition: 'width 0.6s ease',
                           width: `${reached ? 100 : pct}%`,
@@ -504,7 +504,7 @@ export default function StudentDashboard() {
                 </div>
 
                 {hasGoal && hasCurrent && (
-                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: reached ? '#10B981' : (isLosing ? '#F59E0B' : '#8B5CF6') }}>
+                  <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: reached ? 'var(--green)' : (isLosing ? 'var(--yellow)' : 'var(--accent)') }}>
                     {reached
                       ? '🎉 Meta atingida! Parabéns!'
                       : isLosing

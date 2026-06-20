@@ -64,7 +64,7 @@ function PersonalRoute() {
   return (
     <SidebarProvider>
       <NotificationsProvider>
-        <div style={{ display: 'flex', background: '#F8FAFC', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', minHeight: '100vh' }}>
           <Sidebar />
           <div className="layout-content">
             <Header />
@@ -86,7 +86,7 @@ function StudentRoute() {
   return (
     <SidebarProvider>
       <NotificationsProvider>
-        <div style={{ display: 'flex', background: '#F8FAFC', minHeight: '100vh' }}>
+        <div style={{ display: 'flex', minHeight: '100vh' }}>
           <StudentSidebar />
           <div className="layout-content">
             <Header />

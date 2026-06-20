@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Dumbbell, TrendingUp, Clock, Play, Loader, Bell, BellOff, ChevronRight, Flame, Star, Camera, MessageCircle, Activity, Award, Zap, Target, Edit2, Check } from 'lucide-react';
+import { Calendar, Dumbbell, TrendingUp, Clock, Play, Loader, Bell, BellOff, ChevronRight, Flame, Star, Camera, MessageCircle, Activity, Award, Zap, Target, Edit2, Check, Salad, Trophy } from 'lucide-react';
 import WaterTracker from '../../components/UI/WaterTracker';
 import XPBar from '../../components/UI/XPBar';
 import { useAuth } from '../../context/AuthContext';
@@ -358,8 +358,10 @@ export default function StudentDashboard() {
         {[
           { label: 'Meus Treinos', desc: `${allPlans.length} programa${allPlans.length !== 1 ? 's' : ''}`, href: '/aluno/treinos', color: '#8B5CF6', bg: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)', icon: Dumbbell },
           { label: 'Progresso', desc: 'Medidas e evolução', href: '/aluno/progresso', color: '#10B981', bg: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)', icon: TrendingUp },
+          { label: 'Log Alimentar', desc: 'Refeições de hoje', href: '/aluno/log-alimentar', color: '#F59E0B', bg: 'linear-gradient(135deg, #FFFBEB, #FEF3C7)', icon: Salad },
+          { label: 'Desafios', desc: 'Metas e conquistas', href: '/aluno/desafios', color: '#EF4444', bg: 'linear-gradient(135deg, #FFF1F2, #FFE4E6)', icon: Trophy },
           { label: 'Fotos', desc: 'Sua transformação', href: '/aluno/fotos', color: '#3B82F6', bg: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)', icon: Camera },
-          { label: 'Mensagens', desc: personalName ? `com ${personalName.split(' ')[0]}` : 'do personal', href: '/aluno/chat', color: '#F59E0B', bg: 'linear-gradient(135deg, #FFFBEB, #FEF3C7)', icon: MessageCircle },
+          { label: 'Mensagens', desc: personalName ? `com ${personalName.split(' ')[0]}` : 'do personal', href: '/aluno/chat', color: '#06B6D4', bg: 'linear-gradient(135deg, #ECFEFF, #CFFAFE)', icon: MessageCircle },
         ].map(item => (
           <button key={item.href} onClick={() => navigate(item.href)}
             style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderRadius: 16, background: item.bg, border: 'none', cursor: 'pointer', textAlign: 'left', transition: 'transform 0.12s' }}

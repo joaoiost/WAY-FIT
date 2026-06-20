@@ -2,7 +2,7 @@ import { NavLink, useNavigate, Link } from 'react-router-dom';
 import {
   Zap, LayoutDashboard, Users, Calendar, Dumbbell,
   DollarSign, Bell, LogOut, X, Settings, ClipboardList,
-  MessageCircle, Salad, Apple, BookOpen,
+  MessageCircle, Salad, Apple, BookOpen, UsersRound, SlidersHorizontal,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
@@ -16,6 +16,7 @@ const NAV = [
       { to: '/dashboard/treinos',   icon: Dumbbell,        label: 'Treinos'   },
       { to: '/dashboard/agenda',    icon: Calendar,        label: 'Agenda'    },
       { to: '/dashboard/cartilhas', icon: BookOpen,        label: 'Cartilhas' },
+      { to: '/dashboard/turmas',    icon: UsersRound,      label: 'Turmas'    },
     ],
   },
   {
@@ -32,7 +33,8 @@ const NAV = [
       { to: '/dashboard/financeiro', icon: DollarSign,    label: 'Financeiro'    },
       { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência'    },
       { to: '/dashboard/whatsapp',   icon: Bell,          label: 'Notificações'  },
-      { to: '/dashboard/perfil',     icon: Settings,      label: 'Meu Perfil'    },
+      { to: '/dashboard/perfil',          icon: Settings,            label: 'Meu Perfil'    },
+      { to: '/dashboard/configuracoes',   icon: SlidersHorizontal,   label: 'Configurações' },
     ],
   },
 ];

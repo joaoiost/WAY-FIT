@@ -1,21 +1,15 @@
-import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Dumbbell, Calendar, TrendingUp, MoreHorizontal } from 'lucide-react';
-import { useSidebar } from '../../context/SidebarContext';
+import { NavLink } from 'react-router-dom';
+import { LayoutDashboard, Dumbbell, Salad, MessageCircle, TrendingUp } from 'lucide-react';
 
 const TABS = [
-  { to: '/aluno/dashboard', icon: LayoutDashboard, label: 'Início',  end: true },
-  { to: '/aluno/treinos',   icon: Dumbbell,        label: 'Treinos' },
-  { to: '/aluno/agenda',    icon: Calendar,        label: 'Agenda'  },
-  { to: '/aluno/progresso', icon: TrendingUp,      label: 'Progresso' },
+  { to: '/aluno/dashboard',   icon: LayoutDashboard, label: 'Início',   end: true },
+  { to: '/aluno/treinos',     icon: Dumbbell,        label: 'Treinos'  },
+  { to: '/aluno/alimentacao', icon: Salad,           label: 'Nutrição' },
+  { to: '/aluno/chat',        icon: MessageCircle,   label: 'Chat'     },
+  { to: '/aluno/progresso',   icon: TrendingUp,      label: 'Progresso'},
 ];
 
-const TAB_PATHS = new Set(TABS.map(t => t.to));
-
 export default function StudentBottomNav() {
-  const { setOpen } = useSidebar();
-  const { pathname } = useLocation();
-  const isMoreActive = pathname.startsWith('/aluno/') && !TAB_PATHS.has(pathname);
-
   return (
     <nav className="student-bottom-nav">
       {TABS.map(({ to, icon: Icon, label, end }) => (
@@ -32,15 +26,6 @@ export default function StudentBottomNav() {
           )}
         </NavLink>
       ))}
-
-      <button className="bottom-nav-tab" onClick={() => setOpen(true)}>
-        <div className="bottom-nav-pill" style={{ background: isMoreActive ? 'var(--accent)' : 'transparent' }}>
-          <MoreHorizontal size={18} color={isMoreActive ? 'white' : 'var(--gray-400)'} strokeWidth={isMoreActive ? 2.5 : 1.8} />
-        </div>
-        <span className="bottom-nav-label" style={{ color: isMoreActive ? 'var(--accent)' : 'var(--gray-400)', fontWeight: isMoreActive ? 700 : 500 }}>
-          Mais
-        </span>
-      </button>
     </nav>
   );
 }

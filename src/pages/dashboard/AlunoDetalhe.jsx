@@ -13,6 +13,36 @@ const TYPE_COLORS = {
 const AVATAR_COLORS = ['#3B82F6', '#10B981', '#8B5CF6', '#F59E0B', '#EF4444', '#EC4899', '#06B6D4'];
 function avatarColor(id) { return AVATAR_COLORS[String(id).charCodeAt(0) % AVATAR_COLORS.length]; }
 
+const METRIC_LABELS = { weight: 'Peso (kg)', waist: 'Cintura (cm)', chest: 'Peito (cm)', arm: 'Braço (cm)', hip: 'Quadril (cm)', body_fat: 'BF (%)' };
+const METRIC_UNITS = { weight: 'kg', waist: 'cm', chest: 'cm', arm: 'cm', hip: 'cm', body_fat: '%' };
+
+function MiniChart({ data, field }) {
+  const color = 'var(--accent)';
+  const vals = data.map(d => parseFloat(d[field]) || 0).filter(v => v > 0);
+  if (vals.length < 2) return null;
+  const min = Math.min(...vals);
+  const max = Math.max(...vals);
+  const range = max - min || 1;
+  const W = 300; const H = 70; const PAD = 10;
+  const points = vals.map((v, i) => {
+    const x = PAD + (i / (vals.length - 1)) * (W - PAD * 2);
+    const y = H - PAD - ((v - min) / range) * (H - PAD * 2);
+    return `${x},${y}`;
+  });
+  const polyline = points.join(' ');
+  const area = `${PAD},${H - PAD} ${polyline} ${W - PAD},${H - PAD}`;
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: 70, display: 'block' }} preserveAspectRatio="none">
+      <polygon points={area} fill="rgba(129,140,248,0.12)" />
+      <polyline points={polyline} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+      {points.map((pt, i) => {
+        const [x, y] = pt.split(',').map(Number);
+        return <circle key={i} cx={x} cy={y} r="3" fill={color} />;
+      })}
+    </svg>
+  );
+}
+
 function StatBox({ icon: Icon, label, value, color, bg }) {
   return (
     <div className="kpi-card" style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'default' }}>
@@ -50,6 +80,8 @@ export default function AlunoDetalhe() {
 
   const [scheduleModal, setScheduleModal] = useState(false);
   const [schedForm, setSchedForm] = useState({ date: new Date().toISOString().slice(0, 10), time: '08:00', type: 'Musculação' });
+
+  const [chartMetric, setChartMetric] = useState('weight');
 
   const [editModal, setEditModal] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -234,7 +266,7 @@ export default function AlunoDetalhe() {
           <button onClick={() => navigate(`/dashboard/alunos/${id}/avaliacao`)} className="btn-secondary">
             <Activity size={14} /> Avaliação
           </button>
-          <button onClick={() => navigate(`/dashboard/alunos/${id}/alimentacao`)} className="btn-secondary" style={{ color: '#059669', borderColor: '#BBF7D0', background: '#F0FDF4' }}>
+          <button onClick={() => navigate(`/dashboard/alunos/${id}/nutricao`)} className="btn-secondary" style={{ color: '#059669', borderColor: '#BBF7D0', background: '#F0FDF4' }}>
             <Utensils size={14} /> Nutrição
           </button>
           <button onClick={() => window.open(`/dashboard/alunos/${id}/relatorio`, '_blank')} className="btn-secondary">
@@ -561,25 +593,74 @@ export default function AlunoDetalhe() {
           </div>
 
           {/* Measurements */}
-          {measurements.length > 0 && (
-            <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-                <BarChart2 size={16} color="#10B981" />
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Última Medição</h3>
-                <span style={{ marginLeft: 'auto', fontSize: 11, color: '#9CA3AF' }}>{new Date(lastMeasure.date+'T12:00:00').toLocaleDateString('pt-BR')}</span>
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 10 }}>
-                {[['Peso','weight','kg'],['Cintura','waist','cm'],['Gordura','body_fat','%'],['Peito','chest','cm'],['Braço','arm','cm'],['Quadril','hip','cm']].map(([label,key,unit]) =>
-                  lastMeasure[key] ? (
-                    <div key={key} style={{ textAlign: 'center', background: '#F9FAFB', borderRadius: 8, padding: '8px 4px' }}>
-                      <p style={{ margin: 0, fontSize: 16, fontWeight: 800, color: '#111827' }}>{lastMeasure[key]}{unit}</p>
-                      <p style={{ margin: '2px 0 0', fontSize: 10, color: '#9CA3AF', fontWeight: 600 }}>{label}</p>
+          {measurements.length > 0 && (() => {
+            const firstM = measurements[0];
+            const deltaWeight = lastMeasure.weight && firstM.weight ? (parseFloat(lastMeasure.weight) - parseFloat(firstM.weight)).toFixed(1) : null;
+            const chartData = [...measurements].sort((a, b) => new Date(a.date) - new Date(b.date));
+            const firstDate = chartData[0]?.date ? new Date(chartData[0].date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
+            const lastDate = chartData[chartData.length - 1]?.date ? new Date(chartData[chartData.length - 1].date + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }) : '';
+            const hasChart = chartData.filter(d => parseFloat(d[chartMetric]) > 0).length >= 2;
+            return (
+              <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, border: '1px solid var(--border)' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                  <BarChart2 size={16} color="var(--accent)" />
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>Evolução de Medições</h3>
+                  <span style={{ marginLeft: 'auto', fontSize: 11, color: 'var(--gray-400)' }}>{measurements.length} registro{measurements.length !== 1 ? 's' : ''}</span>
+                </div>
+
+                {/* Current values grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 16 }}>
+                  {[['Peso','weight','kg'],['Cintura','waist','cm'],['BF','body_fat','%'],['Peito','chest','cm'],['Braço','arm','cm'],['Quadril','hip','cm']].map(([label,key,unit]) =>
+                    lastMeasure[key] ? (
+                      <div key={key} style={{ textAlign: 'center', background: 'var(--bg-page)', borderRadius: 8, padding: '8px 4px', border: '1px solid var(--border)' }}>
+                        <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'var(--gray-900)' }}>{lastMeasure[key]}{unit}</p>
+                        <p style={{ margin: '2px 0 0', fontSize: 10, color: 'var(--gray-400)', fontWeight: 600 }}>{label}</p>
+                      </div>
+                    ) : null
+                  )}
+                </div>
+
+                {/* Delta */}
+                {deltaWeight !== null && (
+                  <p style={{ margin: '0 0 14px', fontSize: 12, color: parseFloat(deltaWeight) < 0 ? 'var(--green)' : parseFloat(deltaWeight) > 0 ? 'var(--red)' : 'var(--gray-400)', fontWeight: 600 }}>
+                    {parseFloat(deltaWeight) > 0 ? '+' : ''}{deltaWeight}kg desde o início
+                  </p>
+                )}
+
+                {/* Metric selector pills */}
+                {chartData.length >= 2 && (
+                  <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 10 }}>
+                    {Object.entries(METRIC_LABELS).map(([key, label]) => (
+                      <button key={key} onClick={() => setChartMetric(key)}
+                        style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 20,
+                          background: chartMetric === key ? 'var(--accent)' : 'var(--bg-page)',
+                          color: chartMetric === key ? 'white' : 'var(--gray-400)',
+                          border: `1px solid ${chartMetric === key ? 'var(--accent)' : 'var(--border)'}`,
+                          cursor: 'pointer' }}>
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Chart */}
+                {hasChart ? (
+                  <div style={{ position: 'relative' }}>
+                    <MiniChart data={chartData} field={chartMetric} />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4 }}>
+                      <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>{firstDate}</span>
+                      <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>{lastDate}</span>
                     </div>
-                  ) : null
+                  </div>
+                ) : (
+                  <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)', fontStyle: 'italic' }}>
+                    Adicione mais medições para ver evolução
+                  </p>
                 )}
               </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Notes / goal */}
           {(student.goal || student.notes) && (

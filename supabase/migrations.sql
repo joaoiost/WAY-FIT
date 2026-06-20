@@ -377,3 +377,48 @@ DROP POLICY IF EXISTS "Personal vê hidratação dos alunos" ON water_logs;
 CREATE POLICY "Personal vê hidratação dos alunos" ON water_logs FOR SELECT USING (
   EXISTS (SELECT 1 FROM students s WHERE s.id = water_logs.student_id AND s.personal_id = auth.uid())
 );
+
+-- ============================================================
+-- Feature: Metas de macros no plano alimentar
+-- ============================================================
+ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS goal_calories NUMERIC;
+ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS goal_protein_g NUMERIC;
+ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS goal_carbs_g NUMERIC;
+ALTER TABLE meal_plans ADD COLUMN IF NOT EXISTS goal_fat_g NUMERIC;
+
+-- ============================================================
+-- Feature: Observações por refeição
+-- ============================================================
+ALTER TABLE meal_plan_meals ADD COLUMN IF NOT EXISTS notes TEXT;
+
+-- ============================================================
+-- Feature: Anamnese nutricional completa
+-- ============================================================
+CREATE TABLE IF NOT EXISTS nutrition_anamnesis (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID UNIQUE REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  goal TEXT,
+  allergies TEXT,
+  restrictions TEXT,
+  preferences TEXT,
+  water_goal_ml INTEGER DEFAULT 2000,
+  notes TEXT,
+  weight NUMERIC(5,2),
+  height INTEGER,
+  age INTEGER,
+  sex TEXT CHECK (sex IN ('masculino', 'feminino')),
+  activity_level TEXT DEFAULT 'moderado',
+  conditions TEXT,
+  medications TEXT,
+  workout_time TEXT,
+  meal_count INTEGER DEFAULT 5,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE nutrition_anamnesis ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Personal gerencia anamnese nutricional" ON nutrition_anamnesis;
+CREATE POLICY "Personal gerencia anamnese nutricional" ON nutrition_anamnesis FOR ALL USING (personal_id = auth.uid());
+DROP POLICY IF EXISTS "Aluno ve propria anamnese nutricional" ON nutrition_anamnesis;
+CREATE POLICY "Aluno ve propria anamnese nutricional" ON nutrition_anamnesis FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = nutrition_anamnesis.student_id AND s.user_id = auth.uid())
+);

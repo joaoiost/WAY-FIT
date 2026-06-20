@@ -1,78 +1,212 @@
 import { useState, useEffect } from 'react';
-import { Utensils, ChevronDown, ChevronUp, Loader, AlertCircle } from 'lucide-react';
+import { Utensils, ChevronDown, ChevronUp, Loader, AlertCircle, Droplets } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function calcMealTotals(foods) {
+  return foods.reduce(
+    (acc, f) => ({
+      cal:  acc.cal  + (parseFloat(f.calories)  || 0),
+      prot: acc.prot + (parseFloat(f.protein_g) || 0),
+      carb: acc.carb + (parseFloat(f.carbs_g)   || 0),
+      fat:  acc.fat  + (parseFloat(f.fat_g)     || 0),
+    }),
+    { cal: 0, prot: 0, carb: 0, fat: 0 },
+  );
+}
+
+function mealTimeIcon(time) {
+  if (!time) return 'Refeicao';
+  const [h] = time.split(':').map(Number);
+  if (h >= 5  && h < 10) return 'Manha';
+  if (h >= 10 && h < 12) return 'Lanche';
+  if (h >= 12 && h < 15) return 'Almoco';
+  if (h >= 15 && h < 18) return 'Tarde';
+  if (h >= 18 && h < 21) return 'Jantar';
+  return 'Noite';
+}
+
+// ─── MacroBar (dark variant for summary card) ─────────────────────────────────
 
 function MacroBar({ label, value, goal, color, bg }) {
   const pct = goal > 0 ? Math.min(100, Math.round((value / goal) * 100)) : 0;
   return (
     <div style={{ flex: 1, minWidth: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 5 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
-        <span style={{ fontSize: 12, fontWeight: 800, color }}>{value}{goal ? <span style={{ color: '#9CA3AF', fontWeight: 500 }}>/{goal}</span> : ''}</span>
+        <span style={{ fontSize: 10, fontWeight: 700, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
+        <span style={{ fontSize: 11, fontWeight: 800, color }}>
+          {Math.round(value)}{goal ? <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: 500 }}>/{Math.round(goal)}</span> : ''}
+        </span>
       </div>
-      <div style={{ height: 7, borderRadius: 99, background: bg || '#F1F5F9' }}>
-        <div style={{ height: '100%', borderRadius: 99, background: color, width: `${pct}%`, minWidth: value > 0 ? 6 : 0 }} />
+      <div style={{ height: 5, borderRadius: 99, background: bg || 'rgba(255,255,255,0.1)' }}>
+        <div style={{ height: '100%', borderRadius: 99, background: color, width: `${pct}%`, minWidth: value > 0 ? 4 : 0 }} />
       </div>
     </div>
   );
 }
 
+// ─── MealCard (student view) ──────────────────────────────────────────────────
+
 function MealCard({ meal }) {
   const [open, setOpen] = useState(true);
-  const totals = meal.items.reduce((acc, it) => ({
-    kcal: acc.kcal + (parseFloat(it.kcal) || 0),
-    protein: acc.protein + (parseFloat(it.protein) || 0),
-    carbs: acc.carbs + (parseFloat(it.carbs) || 0),
-    fat: acc.fat + (parseFloat(it.fat) || 0),
-  }), { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+  const foods  = meal.meal_plan_foods || [];
+  const totals = calcMealTotals(foods);
+  const period = mealTimeIcon(meal.time_of_day);
+
+  const PERIOD_COLORS = {
+    'Manha':  { bg: 'linear-gradient(135deg,#FEF3C7,#FDE68A)', icon: '#D97706' },
+    'Lanche': { bg: 'linear-gradient(135deg,#ECFDF5,#D1FAE5)', icon: '#059669' },
+    'Almoco': { bg: 'linear-gradient(135deg,#EFF6FF,#DBEAFE)', icon: '#2563EB' },
+    'Tarde':  { bg: 'linear-gradient(135deg,#FDF4FF,#F3E8FF)', icon: '#9333EA' },
+    'Jantar': { bg: 'linear-gradient(135deg,#FFF1F2,#FFE4E6)', icon: '#E11D48' },
+    'Noite':  { bg: 'linear-gradient(135deg,#F0F9FF,#E0F2FE)', icon: '#0284C7' },
+    'Refeicao': { bg: 'linear-gradient(135deg,#F8FAFC,#F1F5F9)', icon: '#64748B' },
+  };
+  const pc = PERIOD_COLORS[period] || PERIOD_COLORS['Refeicao'];
 
   return (
-    <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.06)', marginBottom: 12 }}>
-      <div onClick={() => setOpen(o => !o)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '14px 16px', cursor: 'pointer', borderBottom: open ? '1px solid #F9FAFB' : 'none' }}>
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg,#ECFDF5,#D1FAE5)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Utensils size={16} color="#059669" />
+    <div style={{ background: 'var(--bg-surface, white)', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border, #E5E7EB)', boxShadow: '0 1px 6px rgba(0,0,0,0.06)', marginBottom: 12 }}>
+      {/* Header */}
+      <div
+        onClick={() => setOpen(o => !o)}
+        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', cursor: 'pointer', borderBottom: open ? '1px solid var(--border-light, #F3F4F6)' : 'none' }}
+      >
+        <div style={{ width: 38, height: 38, borderRadius: 11, background: pc.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Utensils size={17} color={pc.icon} />
         </div>
-        <div style={{ flex: 1 }}>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#111827' }}>{meal.name}</p>
-          <p style={{ margin: '1px 0 0', fontSize: 12, color: '#9CA3AF' }}>{meal.items.filter(i => i.name?.trim()).length} alimentos · {Math.round(totals.kcal)} kcal</p>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--gray-900, #111827)' }}>{meal.name}</p>
+            {meal.time_of_day && (
+              <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--gray-400, #9CA3AF)', background: 'var(--gray-50, #F9FAFB)', padding: '2px 7px', borderRadius: 6, border: '1px solid var(--border-light, #F3F4F6)' }}>
+                {meal.time_of_day}
+              </span>
+            )}
+          </div>
+          <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-400, #9CA3AF)' }}>
+            {foods.length} alimento{foods.length !== 1 ? 's' : ''} · <span style={{ color: '#EF4444', fontWeight: 700 }}>{Math.round(totals.cal)} kcal</span>
+          </p>
         </div>
-        <div style={{ display: 'flex', gap: 10, marginRight: 4 }}>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#EF4444' }}>P:{Math.round(totals.protein)}g</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#3B82F6' }}>C:{Math.round(totals.carbs)}g</span>
-          <span style={{ fontSize: 11, fontWeight: 700, color: '#8B5CF6' }}>G:{Math.round(totals.fat)}g</span>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexShrink: 0 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#6366F1' }}>{Math.round(totals.prot)}g P</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#F59E0B' }}>{Math.round(totals.carb)}g C</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: '#10B981' }}>{Math.round(totals.fat)}g G</span>
+          {open ? <ChevronUp size={16} color="var(--gray-300, #D1D5DB)" /> : <ChevronDown size={16} color="var(--gray-300, #D1D5DB)" />}
         </div>
-        {open ? <ChevronUp size={16} color="#D1D5DB" /> : <ChevronDown size={16} color="#D1D5DB" />}
       </div>
 
+      {/* Meal notes */}
+      {open && meal.notes && (
+        <div style={{ padding: '8px 16px', background: '#FFFBEB', borderBottom: '1px solid #FDE68A', display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <AlertCircle size={13} color="#D97706" style={{ flexShrink: 0, marginTop: 1 }} />
+          <p style={{ margin: 0, fontSize: 12, color: '#92400E', lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>{meal.notes}</p>
+        </div>
+      )}
+
+      {/* Foods list */}
       {open && (
-        <div style={{ padding: '0 0 8px' }}>
-          {meal.items.filter(i => i.name?.trim()).map((it, idx) => (
-            <div key={it.id || idx} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderBottom: '1px solid #F9FAFB' }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#D1D5DB', flexShrink: 0 }} />
-              <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#111827' }}>{it.name}</span>
-              <span style={{ fontSize: 13, color: '#6B7280', fontWeight: 600, flexShrink: 0 }}>{it.quantity} {it.unit}</span>
-              {it.kcal && <span style={{ fontSize: 11, color: '#F59E0B', fontWeight: 700, background: '#FFFBEB', padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}>{it.kcal} kcal</span>}
+        <div style={{ padding: '4px 0 8px' }}>
+          {foods.length === 0 ? (
+            <p style={{ margin: 0, padding: '10px 16px', fontSize: 13, color: 'var(--gray-400, #9CA3AF)', fontStyle: 'italic' }}>Nenhum alimento cadastrado nesta refeicao.</p>
+          ) : foods.map((food, idx) => (
+            <div
+              key={food.id || idx}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 16px', borderBottom: idx < foods.length - 1 ? '1px solid var(--border-light, #F9FAFB)' : 'none' }}
+            >
+              <div style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--gray-300, #D1D5DB)', flexShrink: 0 }} />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-900, #111827)' }}>{food.name}</p>
+                <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400, #9CA3AF)' }}>
+                  {food.quantity_g ? `${food.quantity_g}g` : ''}
+                  {food.protein_g  ? ` · ${Math.round(food.protein_g)}g P` : ''}
+                  {food.carbs_g    ? ` · ${Math.round(food.carbs_g)}g C`   : ''}
+                  {food.fat_g      ? ` · ${Math.round(food.fat_g)}g G`     : ''}
+                </p>
+              </div>
+              {food.calories != null && (
+                <span style={{ fontSize: 11, color: '#F59E0B', fontWeight: 700, background: '#FFFBEB', padding: '2px 8px', borderRadius: 20, flexShrink: 0 }}>
+                  {Math.round(food.calories)} kcal
+                </span>
+              )}
             </div>
           ))}
+
+          {/* Meal macro footer */}
+          {foods.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, padding: '8px 16px 2px', borderTop: '1px dashed var(--border-light, #F3F4F6)', marginTop: 4 }}>
+              {[
+                { label: 'Total',    value: `${Math.round(totals.cal)} kcal`,  color: '#EF4444' },
+                { label: 'Proteina', value: `${Math.round(totals.prot)}g`,     color: '#6366F1' },
+                { label: 'Carb',     value: `${Math.round(totals.carb)}g`,     color: '#F59E0B' },
+                { label: 'Gordura',  value: `${Math.round(totals.fat)}g`,      color: '#10B981' },
+              ].map(m => (
+                <div key={m.label} style={{ flex: 1, textAlign: 'center' }}>
+                  <p style={{ margin: 0, fontSize: 11, fontWeight: 800, color: m.color }}>{m.value}</p>
+                  <p style={{ margin: 0, fontSize: 9, fontWeight: 600, color: 'var(--gray-400, #9CA3AF)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{m.label}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
     </div>
   );
 }
 
+// ─── Main page ────────────────────────────────────────────────────────────────
+
 export default function MeuPlanoAlimentar() {
   const { user } = useAuth();
-  const [plan, setPlan] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [plan,     setPlan]     = useState(null);
+  const [meals,    setMeals]    = useState([]);
+  const [anamnese, setAnamnese] = useState(null);
+  const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
     if (!hasSupabase || !user) { setLoading(false); return; }
     (async () => {
-      const { data: student } = await supabase.from('students').select('id').eq('user_id', user.id).maybeSingle();
+      // Get student record
+      const { data: student } = await supabase
+        .from('students')
+        .select('id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
       if (!student) { setLoading(false); return; }
-      const { data } = await supabase.from('meal_plans').select('*').eq('student_id', student.id).order('updated_at', { ascending: false }).limit(1).maybeSingle();
-      setPlan(data || null);
+
+      // Load active meal plan
+      const { data: planData } = await supabase
+        .from('meal_plans')
+        .select('*')
+        .eq('student_id', student.id)
+        .eq('is_active', true)
+        .order('updated_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!planData) { setLoading(false); return; }
+      setPlan(planData);
+
+      // Load meals from relational tables (the correct way)
+      const { data: mealsData } = await supabase
+        .from('meal_plan_meals')
+        .select('*, meal_plan_foods(*)')
+        .eq('meal_plan_id', planData.id)
+        .order('order_index');
+
+      setMeals(mealsData || []);
+
+      // Load anamnese for allergies / notes display
+      const { data: ana } = await supabase
+        .from('nutrition_anamnesis')
+        .select('allergies, notes, water_goal_ml')
+        .eq('student_id', student.id)
+        .maybeSingle();
+
+      setAnamnese(ana);
+
       setLoading(false);
     })();
   }, [user?.id]);
@@ -89,70 +223,109 @@ export default function MeuPlanoAlimentar() {
       <div style={{ width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg,#ECFDF5,#D1FAE5)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
         <Utensils size={34} color="#059669" />
       </div>
-      <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 900, color: '#111827' }}>Nenhum plano alimentar</h3>
-      <p style={{ margin: 0, fontSize: 14, color: '#6B7280', lineHeight: 1.6 }}>Seu personal ainda não cadastrou um plano alimentar para você.</p>
+      <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 900, color: 'var(--gray-900, #111827)' }}>Nenhum plano alimentar</h3>
+      <p style={{ margin: 0, fontSize: 14, color: 'var(--gray-500, #6B7280)', lineHeight: 1.6 }}>Seu personal ainda nao cadastrou um plano alimentar para voce.</p>
     </div>
   );
 
-  const totals = (plan.meals || []).reduce((acc, meal) =>
-    (meal.items || []).reduce((a, it) => ({
-      kcal: a.kcal + (parseFloat(it.kcal) || 0),
-      protein: a.protein + (parseFloat(it.protein) || 0),
-      carbs: a.carbs + (parseFloat(it.carbs) || 0),
-      fat: a.fat + (parseFloat(it.fat) || 0),
-    }), acc),
-    { kcal: 0, protein: 0, carbs: 0, fat: 0 }
+  // Calculate totals from real relational data
+  const allFoods = meals.flatMap(m => m.meal_plan_foods || []);
+  const totals = allFoods.reduce(
+    (acc, f) => ({
+      cal:  acc.cal  + (parseFloat(f.calories)  || 0),
+      prot: acc.prot + (parseFloat(f.protein_g) || 0),
+      carb: acc.carb + (parseFloat(f.carbs_g)   || 0),
+      fat:  acc.fat  + (parseFloat(f.fat_g)     || 0),
+    }),
+    { cal: 0, prot: 0, carb: 0, fat: 0 },
   );
+
+  const hasGoals = plan.goal_calories || plan.goal_protein_g || plan.goal_carbs_g || plan.goal_fat_g;
 
   return (
     <div className="page-padding" style={{ flex: 1, maxWidth: 700, margin: '0 auto' }}>
+
       {/* Header */}
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#111827' }}>{plan.name || 'Plano Alimentar'}</h2>
-        <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--gray-900, #111827)' }}>
+          {plan.name || 'Plano Alimentar'}
+        </h2>
+        <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--gray-400, #9CA3AF)' }}>
           Atualizado em {new Date(plan.updated_at).toLocaleDateString('pt-BR')}
         </p>
       </div>
 
-      {/* Macro summary card */}
+      {/* Allergy banner (from anamnese) */}
+      {anamnese?.allergies && (
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, marginBottom: 16 }}>
+          <AlertCircle size={16} color="#D97706" style={{ flexShrink: 0, marginTop: 1 }} />
+          <div>
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Atencao — Alergias</p>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#92400E', lineHeight: 1.5 }}>{anamnese.allergies}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Macro summary card (dark gradient) */}
       <div style={{ background: 'linear-gradient(135deg,#0F172A,#1E3A5F)', borderRadius: 20, padding: '20px', marginBottom: 20, boxShadow: '0 8px 32px rgba(0,0,0,0.2)' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: 16 }}>
+        <p style={{ margin: '0 0 14px', fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Resumo diário
+        </p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 12, marginBottom: hasGoals ? 16 : 0 }}>
           {[
-            { label: 'Calorias', value: Math.round(totals.kcal), goal: plan.goal_calories, unit: 'kcal', color: '#F59E0B' },
-            { label: 'Proteína', value: Math.round(totals.protein), goal: plan.goal_protein, unit: 'g', color: '#EF4444' },
-            { label: 'Carboidrato', value: Math.round(totals.carbs), goal: plan.goal_carbs, unit: 'g', color: '#3B82F6' },
-            { label: 'Gordura', value: Math.round(totals.fat), goal: plan.goal_fat, unit: 'g', color: '#8B5CF6' },
+            { label: 'Calorias',   value: Math.round(totals.cal),  unit: 'kcal', color: '#F59E0B', goal: plan.goal_calories  },
+            { label: 'Proteína',   value: Math.round(totals.prot), unit: 'g',    color: '#EF4444', goal: plan.goal_protein_g },
+            { label: 'Carboidr.',  value: Math.round(totals.carb), unit: 'g',    color: '#3B82F6', goal: plan.goal_carbs_g   },
+            { label: 'Gordura',    value: Math.round(totals.fat),  unit: 'g',    color: '#8B5CF6', goal: plan.goal_fat_g     },
           ].map(m => (
             <div key={m.label} style={{ textAlign: 'center' }}>
               <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: m.color, lineHeight: 1 }}>{m.value}</p>
-              <p style={{ margin: '2px 0 1px', fontSize: 10, color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{m.unit}</p>
-              <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.6)', fontWeight: 600 }}>{m.label}</p>
-              {m.goal && <p style={{ margin: '2px 0 0', fontSize: 10, color: 'rgba(255,255,255,0.35)' }}>meta: {m.goal}</p>}
+              <p style={{ margin: '2px 0 1px', fontSize: 10, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{m.unit}</p>
+              <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.55)', fontWeight: 600 }}>{m.label}</p>
+              {m.goal != null && <p style={{ margin: '2px 0 0', fontSize: 10, color: 'rgba(255,255,255,0.3)' }}>meta: {Math.round(m.goal)}</p>}
             </div>
           ))}
         </div>
-        {(plan.goal_calories || plan.goal_protein || plan.goal_carbs || plan.goal_fat) && (
-          <div style={{ display: 'flex', gap: 10 }}>
-            <MacroBar label="Kcal" value={Math.round(totals.kcal)} goal={plan.goal_calories} color="#F59E0B" bg="rgba(245,158,11,0.2)" />
-            <MacroBar label="Prot." value={Math.round(totals.protein)} goal={plan.goal_protein} color="#EF4444" bg="rgba(239,68,68,0.2)" />
-            <MacroBar label="Carb." value={Math.round(totals.carbs)} goal={plan.goal_carbs} color="#3B82F6" bg="rgba(59,130,246,0.2)" />
-            <MacroBar label="Gord." value={Math.round(totals.fat)} goal={plan.goal_fat} color="#8B5CF6" bg="rgba(139,92,246,0.2)" />
+
+        {/* Progress bars (only if goals are set) */}
+        {hasGoals && (
+          <div style={{ display: 'flex', gap: 10, paddingTop: 4 }}>
+            <MacroBar label="kcal"  value={Math.round(totals.cal)}  goal={plan.goal_calories}  color="#F59E0B" bg="rgba(245,158,11,0.2)"   />
+            <MacroBar label="prot"  value={Math.round(totals.prot)} goal={plan.goal_protein_g} color="#EF4444" bg="rgba(239,68,68,0.2)"    />
+            <MacroBar label="carb"  value={Math.round(totals.carb)} goal={plan.goal_carbs_g}   color="#3B82F6" bg="rgba(59,130,246,0.2)"   />
+            <MacroBar label="gord"  value={Math.round(totals.fat)}  goal={plan.goal_fat_g}     color="#8B5CF6" bg="rgba(139,92,246,0.2)"   />
           </div>
         )}
       </div>
 
-      {/* Refeições */}
-      {(plan.meals || []).filter(m => m.items?.some(i => i.name?.trim())).map(meal => (
-        <MealCard key={meal.id} meal={meal} />
-      ))}
+      {/* Water goal pill (from anamnese) */}
+      {anamnese?.water_goal_ml && (
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 14px', background: 'var(--bg-surface, white)', border: '1px solid var(--border, #E5E7EB)', borderRadius: 20, marginBottom: 20 }}>
+          <Droplets size={14} color="#3B82F6" />
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600, #4B5563)' }}>
+            Meta de agua: <strong style={{ color: '#3B82F6' }}>{(anamnese.water_goal_ml / 1000).toFixed(1)}L</strong> / dia
+          </span>
+        </div>
+      )}
 
-      {/* Observações */}
-      {plan.notes && (
+      {/* Meals */}
+      {meals.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--gray-400, #9CA3AF)', fontSize: 14 }}>
+          Nenhuma refeicao cadastrada neste plano.
+        </div>
+      ) : (
+        meals.map(meal => (
+          <MealCard key={meal.id} meal={meal} />
+        ))
+      )}
+
+      {/* General anamnese notes */}
+      {anamnese?.notes && (
         <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, padding: '14px 16px', marginTop: 8, marginBottom: 20, display: 'flex', gap: 10 }}>
           <AlertCircle size={16} color="#D97706" style={{ flexShrink: 0, marginTop: 2 }} />
           <div>
-            <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Observações</p>
-            <p style={{ margin: 0, fontSize: 13, color: '#92400E', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{plan.notes}</p>
+            <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Observacoes do personal</p>
+            <p style={{ margin: 0, fontSize: 13, color: '#92400E', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{anamnese.notes}</p>
           </div>
         </div>
       )}

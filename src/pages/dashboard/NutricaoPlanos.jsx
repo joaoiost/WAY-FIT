@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Salad, Search, ChevronRight, Plus, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { Salad, Search, ChevronRight, Clock, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
@@ -65,39 +65,40 @@ export default function NutricaoPlanos() {
           <p className="page-subtitle">Gerencie a nutrição dos seus alunos</p>
         </div>
         <div className="page-actions">
-          <button onClick={() => navigate('/dashboard/nutricao/alimentos')} className="btn-secondary">
-            Banco de Alimentos
+          <button onClick={() => navigate('/dashboard/nutricao/alimentos')} className="btn-secondary" style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <BookOpen size={15} />
+            <span className="hide-mobile">Banco de Alimentos</span>
           </button>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="kpi-grid" style={{ gridTemplateColumns: 'repeat(3,1fr)', marginBottom: 20 }}>
+      <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
         {[
-          { label: 'Alunos ativos', value: students.length, cls: 'icon-box-accent' },
-          { label: 'Com plano', value: withPlan, cls: 'icon-box-green' },
-          { label: 'Sem plano', value: withoutPlan, cls: 'icon-box-yellow' },
+          { label: 'Ativos', value: students.length },
+          { label: 'Com plano', value: withPlan },
+          { label: 'Sem plano', value: withoutPlan },
         ].map(s => (
-          <div key={s.label} className="kpi-card" style={{ cursor: 'default' }}>
-            <p className="kpi-card-value">{s.value}</p>
+          <div key={s.label} className="kpi-card" style={{ cursor: 'default', flex: 1, padding: '12px 14px' }}>
+            <p className="kpi-card-value" style={{ fontSize: 22 }}>{s.value}</p>
             <p className="kpi-card-label">{s.label}</p>
           </div>
         ))}
       </div>
 
       {/* Filters */}
-      <div className="toolbar">
-        <div className="search-bar" style={{ flex: 1, minWidth: 200 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
+        <div className="search-bar">
           <Search size={14} color="var(--gray-400)" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar aluno..." />
         </div>
-        <div className="filter-pills">
+        <div className="filter-pills" style={{ flexWrap: 'nowrap', overflowX: 'auto', paddingBottom: 2 }}>
           {[
             { key: 'todos', label: 'Todos' },
             { key: 'com_plano', label: 'Com plano' },
             { key: 'sem_plano', label: 'Sem plano' },
           ].map(f => (
-            <button key={f.key} onClick={() => setFilter(f.key)} className={`pill${filter === f.key ? ' active' : ''}`}>
+            <button key={f.key} onClick={() => setFilter(f.key)} className={`pill${filter === f.key ? ' active' : ''}`} style={{ flexShrink: 0 }}>
               {f.label}
             </button>
           ))}
@@ -143,8 +144,9 @@ export default function NutricaoPlanos() {
               <button
                 onClick={e => { e.stopPropagation(); navigate(`/dashboard/alunos/${student.id}/nutricao`); }}
                 className={plan ? 'btn-secondary' : 'btn-primary'}
-                style={{ fontSize: 12, padding: '6px 14px', flexShrink: 0 }}>
-                {plan ? 'Editar plano' : '+ Criar plano'} <ChevronRight size={13} />
+                style={{ fontSize: 12, padding: '6px 12px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4 }}>
+                <span className="hide-mobile">{plan ? 'Editar' : 'Criar'}</span>
+                <ChevronRight size={13} />
               </button>
             </div>
           );

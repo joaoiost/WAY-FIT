@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Plus, Trash2, Save, Check, Loader, ChevronDown, ChevronUp, Copy, Utensils } from 'lucide-react';
+import { ArrowLeft, Plus, Trash2, Save, Check, Loader, ChevronDown, Copy, Utensils } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
@@ -63,21 +63,31 @@ function MealSection({ meal, onChange, onDelete, defaultOpen = true }) {
 
   return (
     <div style={{ background: 'white', borderRadius: 14, overflow: 'hidden', border: '1px solid #E5E7EB', marginBottom: 12 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', cursor: 'pointer', borderBottom: open ? '1px solid #F3F4F6' : 'none' }} onClick={() => setOpen(o => !o)}>
-        <div style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,#F0FDF4,#DCFCE7)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: open ? '1px solid #F3F4F6' : 'none' }}>
+        <div onClick={() => setOpen(o => !o)} style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,#F0FDF4,#DCFCE7)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
           <Utensils size={15} color="#16A34A" />
         </div>
-        <input value={meal.name} onChange={e => { e.stopPropagation(); onChange({ ...meal, name: e.target.value }); }} onClick={e => e.stopPropagation()}
-          style={{ flex: 1, border: 'none', background: 'transparent', fontSize: 14, fontWeight: 700, color: '#111827', outline: 'none', cursor: 'text' }} />
-        <div style={{ display: 'flex', gap: 12, marginRight: 8 }}>
-          {[['kcal', '#F59E0B'], ['P', '#EF4444'], ['C', '#3B82F6'], ['G', '#8B5CF6']].map(([k, c]) => (
-            <span key={k} style={{ fontSize: 11, fontWeight: 700, color: c }}>{k === 'kcal' ? `${Math.round(totals.kcal)}kcal` : k === 'P' ? `P:${Math.round(totals.protein)}g` : k === 'C' ? `C:${Math.round(totals.carbs)}g` : `G:${Math.round(totals.fat)}g`}</span>
-          ))}
+        <div onClick={() => setOpen(o => !o)} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
+          <input value={meal.name} onChange={e => { e.stopPropagation(); onChange({ ...meal, name: e.target.value }); }} onClick={e => e.stopPropagation()}
+            style={{ width: '100%', border: 'none', background: 'transparent', fontSize: 14, fontWeight: 700, color: '#111827', outline: 'none', cursor: 'text', pointerEvents: 'auto' }} />
+          <div style={{ display: 'flex', gap: 10, marginTop: 2, flexWrap: 'wrap' }}>
+            {[[Math.round(totals.kcal), 'kcal', '#F59E0B'], [Math.round(totals.protein), 'P', '#EF4444'], [Math.round(totals.carbs), 'C', '#3B82F6'], [Math.round(totals.fat), 'G', '#8B5CF6']].map(([val, label, color]) => (
+              <span key={label} style={{ fontSize: 11, fontWeight: 700, color }}>{label === 'kcal' ? `${val} kcal` : `${label}: ${val}g`}</span>
+            ))}
+          </div>
         </div>
-        <button onClick={e => { e.stopPropagation(); onDelete(); }} style={{ width: 28, height: 28, borderRadius: 7, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <Trash2 size={13} color="#EF4444" />
+        <button onClick={e => { e.stopPropagation(); onDelete(); }}
+          style={{ width: 34, height: 34, borderRadius: 9, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}
+          onMouseEnter={e => e.currentTarget.style.background = '#FEE2E2'}
+          onMouseLeave={e => e.currentTarget.style.background = '#FEF2F2'}>
+          <Trash2 size={15} color="#EF4444" />
         </button>
-        {open ? <ChevronUp size={16} color="#9CA3AF" /> : <ChevronDown size={16} color="#9CA3AF" />}
+        <button onClick={() => setOpen(o => !o)}
+          style={{ width: 34, height: 34, borderRadius: 9, background: '#F9FAFB', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}
+          onMouseEnter={e => e.currentTarget.style.background = '#F3F4F6'}
+          onMouseLeave={e => e.currentTarget.style.background = '#F9FAFB'}>
+          <ChevronDown size={17} color="#9CA3AF" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease' }} />
+        </button>
       </div>
 
       {open && (

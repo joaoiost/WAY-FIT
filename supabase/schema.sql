@@ -319,6 +319,8 @@ CREATE TRIGGER on_auth_user_created
 -- Colunas extras em tabelas existentes
 -- ============================================================
 ALTER TABLE training_plans ADD COLUMN IF NOT EXISTS days TEXT[] DEFAULT '{}';
+-- Templates de cartilha não têm aluno associado (student_id nullable)
+ALTER TABLE training_plans ALTER COLUMN student_id DROP NOT NULL;
 ALTER TABLE exercises      ADD COLUMN IF NOT EXISTS load TEXT DEFAULT '';
 
 -- ============================================================

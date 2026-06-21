@@ -149,8 +149,8 @@ function LoginForm({ role, onBack, accentColor, accentGrad, onSuccess }) {
       <div>
         <label style={{ display: 'block', fontSize: 13, fontWeight: 600, color: '#374151', marginBottom: 5 }}>Email</label>
         <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com" required autoFocus
-          style={{ width: '100%', padding: '12px 14px', borderRadius: 11, border: '1.5px solid #E5E7EB', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#F9FAFB', color: '#111827', transition: 'border-color .15s, background .15s' }}
-          onFocus={e => { e.target.style.borderColor = accentColor; e.target.style.background = 'white'; e.target.style.boxShadow = `0 0 0 3px ${accentColor}1A`; }}
+          style={{ width: '100%', padding: '12px 14px', borderRadius: 11, border: '1.5px solid #E5E7EB', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#F9FAFB', color: '#111827', WebkitTextFillColor: '#111827', transition: 'border-color .15s, background .15s' }}
+          onFocus={e => { e.target.style.borderColor = accentColor; e.target.style.background = 'white'; e.target.style.boxShadow = `0 0 0 3px ${accentColor}1A`; e.target.style.color = '#111827'; e.target.style.webkitTextFillColor = '#111827'; }}
           onBlur={e => { e.target.style.borderColor = '#E5E7EB'; e.target.style.background = '#F9FAFB'; e.target.style.boxShadow = 'none'; }} />
       </div>
 
@@ -161,8 +161,8 @@ function LoginForm({ role, onBack, accentColor, accentGrad, onSuccess }) {
         </div>
         <div style={{ position: 'relative' }}>
           <input type={showPass ? 'text' : 'password'} value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••" required
-            style={{ width: '100%', padding: '12px 42px 12px 14px', borderRadius: 11, border: '1.5px solid #E5E7EB', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#F9FAFB', color: '#111827', transition: 'border-color .15s, background .15s' }}
-            onFocus={e => { e.target.style.borderColor = accentColor; e.target.style.background = 'white'; e.target.style.boxShadow = `0 0 0 3px ${accentColor}1A`; }}
+            style={{ width: '100%', padding: '12px 42px 12px 14px', borderRadius: 11, border: '1.5px solid #E5E7EB', fontSize: 14, outline: 'none', boxSizing: 'border-box', background: '#F9FAFB', color: '#111827', WebkitTextFillColor: '#111827', transition: 'border-color .15s, background .15s' }}
+            onFocus={e => { e.target.style.borderColor = accentColor; e.target.style.background = 'white'; e.target.style.boxShadow = `0 0 0 3px ${accentColor}1A`; e.target.style.color = '#111827'; e.target.style.webkitTextFillColor = '#111827'; }}
             onBlur={e => { e.target.style.borderColor = '#E5E7EB'; e.target.style.background = '#F9FAFB'; e.target.style.boxShadow = 'none'; }} />
           <button type="button" onClick={() => setShowPass(v => !v)}
             style={{ position: 'absolute', right: 12, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', padding: 0 }}>

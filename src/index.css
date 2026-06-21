@@ -606,9 +606,10 @@ input, select, textarea {
   background: var(--gray-100);
   font-family: inherit;
   color: var(--gray-900);
+  -webkit-text-fill-color: var(--gray-900);
 }
 select option { background: var(--bg-surface); color: var(--gray-900); }
-input::placeholder, textarea::placeholder { color: var(--gray-400); }
+input::placeholder, textarea::placeholder { color: var(--gray-400); -webkit-text-fill-color: var(--gray-400); }
 input:focus, select:focus, textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(99,102,241,0.12);

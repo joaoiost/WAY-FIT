@@ -464,7 +464,7 @@ export default function Alunos() {
             </div>
             <div onClick={() => navigate(`/dashboard/alunos/${s.id}`)} className="list-row-body" style={{ cursor:'pointer' }}>
               <div style={{ display:'flex', alignItems:'center', gap:7, flexWrap:'wrap' }}>
-                <span className="list-row-title" style={{ fontSize:15 }}>{s.name.split(' ')[0]} {s.name.split(' ').slice(-1)[0]}</span>
+                <span className="list-row-title" style={{ fontSize:15 }}>{(s.name||'').split(' ')[0]} {(s.name||'').split(' ').slice(-1)[0]}</span>
                 <Badge status={s.status} />
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:3 }}>
@@ -507,7 +507,7 @@ export default function Alunos() {
       </Modal>
 
       {/* Quick Schedule Modal */}
-      <Modal isOpen={!!quickSchedule} onClose={() => setQuickSchedule(null)} title={`Agendar aula${quickSchedule ? ` — ${quickSchedule.name.split(' ')[0]}` : ''}`} maxWidth="400px">
+      <Modal isOpen={!!quickSchedule} onClose={() => setQuickSchedule(null)} title={`Agendar aula${quickSchedule ? ` — ${(quickSchedule.name||'').split(' ')[0]}` : ''}`} maxWidth="400px">
         <form onSubmit={handleQuickSchedule}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>

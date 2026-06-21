@@ -127,8 +127,11 @@ CREATE TABLE IF NOT EXISTS messages (
   from_role TEXT NOT NULL CHECK (from_role IN ('personal', 'student')),
   text TEXT NOT NULL,
   sent_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ GENERATED ALWAYS AS (sent_at) STORED,
   read BOOLEAN DEFAULT FALSE
 );
+
+ALTER TABLE messages ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ GENERATED ALWAYS AS (sent_at) STORED;
 
 -- Fotos de progresso
 CREATE TABLE IF NOT EXISTS progress_photos (

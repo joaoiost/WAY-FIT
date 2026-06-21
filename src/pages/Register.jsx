@@ -23,8 +23,12 @@ export default function Register() {
     const result = await register({ name: form.name, email: form.email, password: form.password, role: 'personal', phone: form.phone });
     setLoading(false);
     if (result.success) {
-      setSuccess(true);
-      setTimeout(() => navigate('/login'), 2500);
+      if (result.needsEmailConfirmation) {
+        setSuccess(true);
+        setTimeout(() => navigate('/login'), 2500);
+      } else {
+        navigate('/onboarding');
+      }
     } else {
       setError(result.error || 'Erro ao criar conta. Tente novamente.');
     }

@@ -17,8 +17,8 @@ function MessageBubble({ msg, isMe }) {
         <div style={{
           padding: '10px 14px',
           borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-          background: isMe ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : 'white',
-          color: isMe ? 'white' : '#111827',
+          background: isMe ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : 'var(--bg-surface)',
+          color: isMe ? 'white' : 'var(--gray-900)',
           fontSize: 14, lineHeight: 1.5,
           boxShadow: isMe ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
         }}>
@@ -39,9 +39,9 @@ function DateDivider({ dateStr }) {
     : new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0' }}>
-      <div style={{ flex: 1, height: 1, background: '#F3F4F6' }} />
-      <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600 }}>{label}</span>
-      <div style={{ flex: 1, height: 1, background: '#F3F4F6' }} />
+      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+      <span style={{ fontSize: 11, color: 'var(--gray-400)', fontWeight: 600 }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
     </div>
   );
 }
@@ -231,15 +231,15 @@ export default function Chat() {
   return (
     <div className="page-padding" style={{ flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)' }}>
       <div style={{ marginBottom: 16 }}>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Chat</h2>
-        <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>Mensagens com seus alunos</p>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--gray-900)' }}>Chat</h2>
+        <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--gray-400)' }}>Mensagens com seus alunos</p>
       </div>
 
       <div style={{ display: 'flex', gap: 16, flex: 1, minHeight: 0 }}>
         {/* Student list — hidden on mobile when conv is open */}
-        <div className={`chat-sidebar${isConvOpen ? ' chat-sidebar-hidden' : ''}`} style={{ width: 280, background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0 }}>
+        <div className={`chat-sidebar${isConvOpen ? ' chat-sidebar-hidden' : ''}`} style={{ width: 280, background: 'var(--bg-surface)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0 }}>
           <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid #F3F4F6' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#F9FAFB', borderRadius: 10, padding: '8px 12px', border: '1px solid #F3F4F6' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-page)', borderRadius: 10, padding: '8px 12px', border: '1px solid var(--border)' }}>
               <Search size={14} color="#9CA3AF" />
               <input
                 value={search}
@@ -270,19 +270,19 @@ export default function Chat() {
                   onClick={() => selectStudent(student)}
                   style={{
                     width: '100%', display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '12px 14px', background: isActive ? '#EFF6FF' : 'white',
-                    border: 'none', borderBottom: '1px solid #F9FAFB', cursor: 'pointer',
+                    padding: '12px 14px', background: isActive ? 'var(--accent-bg)' : 'var(--bg-surface)',
+                    border: 'none', borderBottom: '1px solid var(--border)', cursor: 'pointer',
                     textAlign: 'left', transition: 'background 0.12s',
                   }}
-                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = '#F9FAFB'; }}
-                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'white'; }}
+                  onMouseEnter={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-page)'; }}
+                  onMouseLeave={e => { if (!isActive) e.currentTarget.style.background = 'var(--bg-surface)'; }}
                 >
                   <div style={{ width: 40, height: 40, borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: 'white', flexShrink: 0 }}>
                     {getInitials(student.name)}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                      <span style={{ fontSize: 13, fontWeight: unread ? 700 : 600, color: '#111827' }}>{student.name.split(' ')[0]}</span>
+                      <span style={{ fontSize: 13, fontWeight: unread ? 700 : 600, color: 'var(--gray-900)' }}>{student.name.split(' ')[0]}</span>
                       {lastMsg && <span style={{ fontSize: 10, color: '#9CA3AF' }}>{new Date(lastMsg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>}
                     </div>
                     <p style={{ margin: 0, fontSize: 12, color: unread ? '#374151' : '#9CA3AF', fontWeight: unread ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -301,17 +301,17 @@ export default function Chat() {
         </div>
 
         {/* Conversation panel */}
-        <div className={`chat-conv${isConvOpen ? ' chat-conv-open' : ''}`} style={{ flex: 1, background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+        <div className={`chat-conv${isConvOpen ? ' chat-conv-open' : ''}`} style={{ flex: 1, background: 'var(--bg-surface)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {!selectedId ? (
             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF', gap: 12 }}>
               <MessageCircle size={48} color="#E5E7EB" />
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#374151' }}>Selecione um aluno</p>
-              <p style={{ margin: 0, fontSize: 13 }}>Clique em um aluno para ver a conversa</p>
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--gray-700)' }}>Selecione um aluno</p>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-400)' }}>Clique em um aluno para ver a conversa</p>
             </div>
           ) : (
             <>
               {/* Conv header */}
-              <div style={{ padding: '12px 16px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
                 <button className="chat-back-btn" onClick={() => setSelectedId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#6B7280', display: 'none' }}>
                   <ArrowLeft size={20} />
                 </button>
@@ -319,13 +319,13 @@ export default function Chat() {
                   {getInitials(selectedStudent?.name || '')}
                 </div>
                 <div>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>{selectedStudent?.name}</p>
+                  <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>{selectedStudent?.name}</p>
                   <p style={{ margin: 0, fontSize: 11, color: '#10B981' }}>Online</p>
                 </div>
               </div>
 
               {/* Messages */}
-              <div style={{ flex: 1, overflowY: 'auto', padding: '16px', background: '#F8FAFC', display: 'flex', flexDirection: 'column' }}>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '16px', background: 'var(--bg-page)', display: 'flex', flexDirection: 'column' }}>
                 {loadingMsgs ? (
                   <div style={{ textAlign: 'center', marginTop: 40 }}><Loader size={20} color="#9CA3AF" /></div>
                 ) : grouped.length === 0 ? (
@@ -342,14 +342,14 @@ export default function Chat() {
               </div>
 
               {/* Input */}
-              <form onSubmit={send} style={{ padding: '12px 16px', borderTop: '1px solid #F3F4F6', display: 'flex', gap: 8 }}>
+              <form onSubmit={send} style={{ padding: '12px 16px', borderTop: '1px solid var(--border)', display: 'flex', gap: 8 }}>
                 <input
                   value={text}
                   onChange={e => setText(e.target.value)}
                   placeholder="Digite uma mensagem..."
-                  style={{ flex: 1, border: '1px solid #E5E7EB', borderRadius: 24, padding: '10px 16px', fontSize: 14, outline: 'none', background: '#F9FAFB', color: '#111827', WebkitTextFillColor: '#111827' }}
-                  onFocus={e => { e.target.style.borderColor = '#3B82F6'; e.target.style.background = '#FFFFFF'; }}
-                  onBlur={e => { e.target.style.borderColor = '#E5E7EB'; e.target.style.background = '#F9FAFB'; }}
+                  style={{ flex: 1, border: '1px solid var(--border)', borderRadius: 24, padding: '10px 16px', fontSize: 14, outline: 'none', background: 'var(--bg-page)', color: 'var(--gray-900)', WebkitTextFillColor: 'var(--gray-900)' }}
+                  onFocus={e => { e.target.style.borderColor = 'var(--accent)'; e.target.style.background = 'var(--bg-surface)'; }}
+                  onBlur={e => { e.target.style.borderColor = 'var(--border)'; e.target.style.background = 'var(--bg-page)'; }}
                 />
                 <button
                   type="submit"

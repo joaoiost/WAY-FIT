@@ -245,7 +245,7 @@ export default function Chat() {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar aluno..."
-                style={{ border: 'none', background: 'none', outline: 'none', fontSize: 13, color: '#374151', width: '100%', padding: 0 }}
+                style={{ border: 'none', background: 'none', outline: 'none', fontSize: 13, color: '#374151', WebkitTextFillColor: '#374151', width: '100%', padding: 0 }}
               />
             </div>
           </div>
@@ -347,9 +347,9 @@ export default function Chat() {
                   value={text}
                   onChange={e => setText(e.target.value)}
                   placeholder="Digite uma mensagem..."
-                  style={{ flex: 1, border: '1px solid #E5E7EB', borderRadius: 24, padding: '10px 16px', fontSize: 14, outline: 'none' }}
-                  onFocus={e => e.target.style.borderColor = '#3B82F6'}
-                  onBlur={e => e.target.style.borderColor = '#E5E7EB'}
+                  style={{ flex: 1, border: '1px solid #E5E7EB', borderRadius: 24, padding: '10px 16px', fontSize: 14, outline: 'none', background: '#F9FAFB', color: '#111827', WebkitTextFillColor: '#111827' }}
+                  onFocus={e => { e.target.style.borderColor = '#3B82F6'; e.target.style.background = '#FFFFFF'; }}
+                  onBlur={e => { e.target.style.borderColor = '#E5E7EB'; e.target.style.background = '#F9FAFB'; }}
                 />
                 <button
                   type="submit"

@@ -208,6 +208,22 @@ function WeekDots({ sessionDates }) {
   );
 }
 
+function AppBadge({ student, setInviteSheet }) {
+  if (student.user_id) {
+    return (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 20, background: '#DCFCE7', color: '#15803D', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+        <Smartphone size={9} /> App
+      </span>
+    );
+  }
+  return (
+    <button onClick={(e) => { e.stopPropagation(); setInviteSheet(student); }}
+      style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 9px', borderRadius: 20, background: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE', fontSize: 10, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+      Convidar
+    </button>
+  );
+}
+
 export default function Alunos() {
   const { user, sendInvite } = useAuth();
   const navigate = useNavigate();
@@ -336,22 +352,6 @@ export default function Alunos() {
     setQuickSchedule(null);
   };
 
-  const AppBadge = ({ student }) => {
-    if (student.user_id) {
-      return (
-        <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 20, background: '#DCFCE7', color: '#15803D', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
-          <Smartphone size={9} /> App
-        </span>
-      );
-    }
-    return (
-      <button onClick={(e) => { e.stopPropagation(); setInviteSheet(student); }}
-        style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 9px', borderRadius: 20, background: '#F5F3FF', color: '#7C3AED', border: '1px solid #DDD6FE', fontSize: 10, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
-        Convidar
-      </button>
-    );
-  };
-
   return (
     <div className="page-padding" style={{ flex: 1 }}>
       {/* Header */}
@@ -426,7 +426,7 @@ export default function Alunos() {
                     {s.plan_price && <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)' }}>R$ {Number(s.plan_price).toLocaleString('pt-BR')}</p>}
                   </td>
                   <td style={{ padding: '13px 16px' }}><Badge status={s.status} /></td>
-                  <td style={{ padding: '13px 16px' }} onClick={e => e.stopPropagation()}><AppBadge student={s} /></td>
+                  <td style={{ padding: '13px 16px' }} onClick={e => e.stopPropagation()}><AppBadge student={s} setInviteSheet={setInviteSheet} /></td>
                   <td style={{ padding: '13px 16px' }} onClick={e => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: 6 }}>
                       <button onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time: '08:00', type: 'Musculação' }); }}
@@ -475,7 +475,7 @@ export default function Alunos() {
               </div>
             </div>
             <div style={{ display:'flex', gap:6, flexShrink:0 }}>
-              <AppBadge student={s} />
+              <AppBadge student={s} setInviteSheet={setInviteSheet} />
               <button onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time:'08:00', type:'Musculação' }); }}
                 className="icon-box icon-box-md icon-box-green" style={{ border:'none', cursor:'pointer', width:34, height:34 }}>
                 <Calendar size={15} />

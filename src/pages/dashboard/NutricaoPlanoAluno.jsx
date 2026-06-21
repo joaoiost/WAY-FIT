@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
-  ArrowLeft, Plus, Trash2, Search, X, Save, ChevronDown, ChevronUp,
+  ArrowLeft, Plus, Trash2, Search, X, Save, ChevronDown,
   Droplets, AlertCircle, Check, FileText, Target, Zap,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -233,7 +233,7 @@ function FoodSearch({ foods, onAdd, onClose }) {
 
 // ─── MealCard ─────────────────────────────────────────────────────────────────
 
-function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal }) {
+function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal, onDelete }) {
   const [open, setOpen]             = useState(true);
   const [showSearch, setShowSearch] = useState(false);
   const [showNotes, setShowNotes]   = useState(false);
@@ -241,11 +241,8 @@ function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal
 
   return (
     <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
-      <div
-        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', borderBottom: open ? '1px solid var(--border-light)' : 'none', cursor: 'pointer', background: open ? 'white' : 'var(--gray-50)' }}
-        onClick={() => setOpen(o => !o)}
-      >
-        <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: open ? '1px solid var(--border-light)' : 'none', background: open ? 'white' : 'var(--gray-50)' }}>
+        <div onClick={() => setOpen(o => !o)} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>{meal.name}</p>
             <input
@@ -256,28 +253,38 @@ function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal
               style={{ fontSize: 11, color: 'var(--gray-400)', border: 'none', outline: 'none', background: 'transparent', padding: 0, width: 'auto', boxShadow: 'none', fontWeight: 600 }}
             />
           </div>
-          <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>
-            {foods.length} item{foods.length !== 1 ? 's' : ''} · <span style={{ color: MACRO_COLORS.cal, fontWeight: 700 }}>{Math.round(macros.cal)} kcal</span>
-          </p>
-        </div>
-        <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-          {[
-            { v: macros.prot, label: 'P', color: MACRO_COLORS.prot },
-            { v: macros.carb, label: 'C', color: MACRO_COLORS.carb },
-            { v: macros.fat,  label: 'G', color: MACRO_COLORS.fat  },
-          ].map(m => (
-            <span key={m.label} style={{ fontSize: 11, fontWeight: 700, color: m.color }}>
-              {Math.round(m.v)}g<span style={{ fontSize: 9, fontWeight: 500, color: 'var(--gray-400)' }}>{m.label}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2 }}>
+            <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>
+              {foods.length} item{foods.length !== 1 ? 's' : ''} · <span style={{ color: MACRO_COLORS.cal, fontWeight: 700 }}>{Math.round(macros.cal)} kcal</span>
             </span>
-          ))}
+            <span style={{ fontSize: 11, fontWeight: 700, color: MACRO_COLORS.prot }}>{Math.round(macros.prot)}g P</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: MACRO_COLORS.carb }}>{Math.round(macros.carb)}g C</span>
+            <span style={{ fontSize: 11, fontWeight: 700, color: MACRO_COLORS.fat }}>{Math.round(macros.fat)}g G</span>
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
           <button
             onClick={e => { e.stopPropagation(); setShowNotes(n => !n); }}
-            style={{ width: 26, height: 26, borderRadius: 7, background: meal.notes ? '#FFFBEB' : 'var(--gray-50)', border: `1px solid ${meal.notes ? '#FDE68A' : 'var(--border)'}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            style={{ width: 32, height: 32, borderRadius: 8, background: meal.notes ? '#FFFBEB' : 'var(--gray-50)', border: `1px solid ${meal.notes ? '#FDE68A' : 'var(--border)'}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
             title="Observações desta refeição"
           >
-            <FileText size={12} color={meal.notes ? '#D97706' : 'var(--gray-400)'} />
+            <FileText size={13} color={meal.notes ? '#D97706' : 'var(--gray-400)'} />
           </button>
-          {open ? <ChevronUp size={16} color="var(--gray-400)" /> : <ChevronDown size={16} color="var(--gray-400)" />}
+          {onDelete && (
+            <button
+              onClick={e => { e.stopPropagation(); onDelete(); }}
+              style={{ width: 32, height: 32, borderRadius: 8, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+              title="Remover refeição"
+            >
+              <Trash2 size={13} color="var(--red)" />
+            </button>
+          )}
+          <button
+            onClick={() => setOpen(o => !o)}
+            style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--gray-50)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            <ChevronDown size={16} color="var(--gray-400)" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease' }} />
+          </button>
         </div>
       </div>
 
@@ -660,22 +667,16 @@ export default function NutricaoPlanoAluno() {
           {/* Meals */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {meals.map(meal => (
-              <div key={meal._tempId} style={{ position: 'relative' }}>
-                <MealCard
-                  meal={meal}
-                  foods={mealFoods[meal._tempId] || []}
-                  allFoods={allFoods}
-                  onAddFood={addFood}
-                  onRemoveFood={foodId => removeFood(meal._tempId, foodId)}
-                  onUpdateMeal={updateMeal}
-                />
-                <button
-                  onClick={() => removeMeal(meal._tempId)}
-                  style={{ position: 'absolute', top: 10, right: 48, width: 26, height: 26, borderRadius: 7, background: '#FEE2E2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}
-                >
-                  <Trash2 size={11} color="var(--red)" />
-                </button>
-              </div>
+              <MealCard
+                key={meal._tempId}
+                meal={meal}
+                foods={mealFoods[meal._tempId] || []}
+                allFoods={allFoods}
+                onAddFood={addFood}
+                onRemoveFood={foodId => removeFood(meal._tempId, foodId)}
+                onUpdateMeal={updateMeal}
+                onDelete={() => removeMeal(meal._tempId)}
+              />
             ))}
             <button
               onClick={addMeal}

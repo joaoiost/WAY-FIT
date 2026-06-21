@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Search, X, Save, ChevronDown,
@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import tacoFoods from '../../data/taco_foods.json';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -113,7 +114,27 @@ function FoodSearch({ foods, onAdd, onClose }) {
 
   useEffect(() => { setTimeout(() => inputRef.current?.focus(), 50); }, []);
 
-  const results = foods.filter(f => f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+  // Mescla banco do personal com TACO, deduplicando por nome
+  const allFoodsMerged = useMemo(() => {
+    const customNames = new Set(foods.map(f => f.name.toLowerCase()));
+    const tacoNorm = tacoFoods
+      .filter(f => !customNames.has(f.name.toLowerCase()))
+      .map(f => ({
+        id: `taco_${f.id}`,
+        name: f.name,
+        category: f.category || 'TACO',
+        calories_per_100g: f.kcal      ?? 0,
+        protein_per_100g:  f.protein_g ?? 0,
+        carbs_per_100g:    f.carbs_g   ?? 0,
+        fat_per_100g:      f.fat_g     ?? 0,
+        fiber_per_100g:    0,
+      }));
+    return [...foods, ...tacoNorm];
+  }, [foods]);
+
+  const results = q.length < 2
+    ? []
+    : allFoodsMerged.filter(f => f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 10);
   const preview = selected
     ? {
         cal:  ((selected.calories_per_100g || 0) * qty / 100).toFixed(1),
@@ -125,8 +146,9 @@ function FoodSearch({ foods, onAdd, onClose }) {
 
   const handleAdd = () => {
     if (!selected) return;
+    const isTaco = String(selected.id).startsWith('taco_');
     onAdd({
-      food_item_id: selected.id,
+      food_item_id: isTaco ? null : selected.id,
       name:         selected.name,
       quantity_g:   qty,
       calories:     Number(preview.cal),
@@ -144,7 +166,7 @@ function FoodSearch({ foods, onAdd, onClose }) {
       onClick={onClose}
     >
       <div
-        style={{ background: 'white', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 520, padding: 20, maxHeight: '85vh', overflowY: 'auto' }}
+        style={{ background: 'var(--bg-surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 520, padding: 20, maxHeight: '85vh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
@@ -160,12 +182,18 @@ function FoodSearch({ foods, onAdd, onClose }) {
             ref={inputRef}
             value={q}
             onChange={e => { setQ(e.target.value); setSelected(null); }}
-            placeholder="Buscar no banco de alimentos..."
-            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 14, flex: 1, padding: 0, boxShadow: 'none', width: 'auto' }}
+            placeholder="Buscar alimento (TACO + banco próprio)..."
+            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 14, flex: 1, padding: 0, boxShadow: 'none', width: 'auto', color: 'var(--gray-900)', WebkitTextFillColor: 'var(--gray-900)' }}
           />
         </div>
 
-        {q && results.length === 0 && (
+        {q.length < 2 && (
+          <p style={{ margin: '4px 0 8px', fontSize: 12, color: 'var(--gray-400)', textAlign: 'center' }}>
+            Digite ao menos 2 letras para buscar entre {tacoFoods.length + foods.length} alimentos
+          </p>
+        )}
+
+        {q.length >= 2 && results.length === 0 && (
           <button
             onClick={() => { onAdd({ food_item_id: null, name: q, quantity_g: qty, calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, order_index: 0 }); onClose(); }}
             style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--gray-50)', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', marginBottom: 12 }}
@@ -178,7 +206,7 @@ function FoodSearch({ foods, onAdd, onClose }) {
           <div
             key={f.id}
             onClick={() => setSelected(f)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, marginBottom: 4, background: selected?.id === f.id ? 'var(--accent-bg)' : 'transparent', border: `1px solid ${selected?.id === f.id ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', transition: 'all 0.1s' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, marginBottom: 4, background: selected?.id === f.id ? 'var(--accent-bg)' : 'var(--bg-page)', border: `1px solid ${selected?.id === f.id ? 'var(--accent)' : 'var(--border)'}`, cursor: 'pointer', transition: 'all 0.1s' }}
           >
             <div>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-900)' }}>{f.name}</p>
@@ -189,7 +217,7 @@ function FoodSearch({ foods, onAdd, onClose }) {
         ))}
 
         {selected && (
-          <div style={{ marginTop: 14, padding: 14, background: 'var(--gray-50)', borderRadius: 12, border: '1px solid var(--border)' }}>
+          <div style={{ marginTop: 14, padding: 14, background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
             <label style={{ marginBottom: 8 }}>Quantidade</label>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <input
@@ -240,8 +268,8 @@ function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal
   const macros = calcMacros(foods);
 
   return (
-    <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: open ? '1px solid var(--border-light)' : 'none', background: open ? 'white' : 'var(--gray-50)' }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: open ? '1px solid var(--border)' : 'none', background: open ? 'var(--bg-surface)' : 'var(--bg-page)' }}>
         <div onClick={() => setOpen(o => !o)} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>{meal.name}</p>

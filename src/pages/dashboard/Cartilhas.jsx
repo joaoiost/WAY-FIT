@@ -625,7 +625,7 @@ export default function Cartilhas() {
       // Delete existing plans on the same days for this student
       const { data: existing } = await supabase.from('training_plans').select('id, days').eq('personal_id', user.id).eq('student_id', sid);
       for (const ep of (existing || [])) {
-        if ((ep.days || []).some(d => selectedDays.includes(d))) {
+        if ((ep.days || []).map(Number).some(d => selectedDays.includes(d))) {
           await supabase.from('training_plans').delete().eq('id', ep.id);
         }
       }

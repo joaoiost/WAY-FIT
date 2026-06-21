@@ -113,7 +113,7 @@ export default function AlunoDetalhe() {
         supabase.from('appointments').select('*').eq('student_id', id).order('date', { ascending: false }).limit(20),
         supabase.from('attendances').select('*').eq('student_id', id).gte('date', monthStart).order('date'),
         supabase.from('payments').select('*').eq('student_id', id).order('due_date', { ascending: false }).limit(10),
-        supabase.from('student_measurements').select('*').eq('student_id', id).order('recorded_at').limit(10),
+        supabase.from('measurements').select('*').eq('student_id', id).order('date').limit(10),
         supabase.from('anamneses').select('*').eq('student_id', id).maybeSingle(),
         supabase.from('session_ratings').select('*').eq('student_id', id).order('date', { ascending: false }).limit(30),
         supabase.from('workout_sessions').select('id, date, plan_name, plan_type, exercises_done, exercises_total, finished_at').eq('student_id', id).order('date', { ascending: false }).limit(30),

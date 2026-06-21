@@ -838,7 +838,7 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose })
   const [week, setWeek] = useState(() => {
     const w = {};
     DAYS.forEach(d => {
-      const p = currentPlans.find(pl => (pl.days || []).includes(d.v));
+      const p = currentPlans.find(pl => (pl.days || []).map(Number).includes(d.v));
       w[d.v] = p ? { type: 'plan', tpl: p } : { type: 'empty' };
     });
     return w;
@@ -1147,7 +1147,7 @@ export default function Treinos() {
     if (!hasSupabase) return;
     const exs = [...(tpl.exercises || [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
     for (const sid of studentIds) {
-      const overlapping = plans.filter(p => p.student_id === sid && (p.days || []).some(d => selectedDays.includes(d)));
+      const overlapping = plans.filter(p => p.student_id === sid && (p.days || []).map(Number).some(d => selectedDays.includes(d)));
       for (const op of overlapping) await supabase.from('training_plans').delete().eq('id', op.id);
       setPlans(prev => prev.filter(p => !overlapping.find(o => o.id === p.id)));
       const { data: plan, error } = await supabase.from('training_plans').insert({

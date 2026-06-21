@@ -219,7 +219,7 @@ export default function MeusTreinos() {
       });
     });
   }, [expanded, plans]);
-  const getPlanDays = (plan) => plan.days || [];
+  const getPlanDays = (plan) => (plan.days || []).map(Number);
   const isTodayPlan = (plan) => { const days = getPlanDays(plan); return days.length > 0 && days.includes(today); };
 
   const todayPlan = plans.find(isTodayPlan);

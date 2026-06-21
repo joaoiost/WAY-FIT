@@ -211,7 +211,7 @@ export default function Historico() {
         {[
           { label: 'Treinos este mês', value: totalThisMonth, Icon: Calendar,   color: '#3B82F6', bg: '#EFF6FF' },
           { label: 'Total de treinos', value: totalAll,        Icon: Dumbbell,   color: '#8B5CF6', bg: '#F5F3FF' },
-          { label: 'Completos',        value: completedAll || totalAll, Icon: CheckCircle, color: '#10B981', bg: '#ECFDF5' },
+          { label: 'Completos',        value: completedAll, Icon: CheckCircle, color: '#10B981', bg: '#ECFDF5' },
         ].map(({ label, value, Icon, color, bg }) => (
           <div key={label} style={{ background: 'white', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

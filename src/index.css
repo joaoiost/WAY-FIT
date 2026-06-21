@@ -610,6 +610,22 @@ input, select, textarea {
 }
 select option { background: var(--bg-surface); color: var(--gray-900); }
 input::placeholder, textarea::placeholder { color: var(--gray-400); -webkit-text-fill-color: var(--gray-400); }
+
+/* Login form inputs — light background, dark text (overrides dark theme) */
+.input-light {
+  background: #F9FAFB !important;
+  color: #111827 !important;
+  -webkit-text-fill-color: #111827 !important;
+  caret-color: #111827 !important;
+  border-color: #E5E7EB !important;
+}
+.input-light:focus {
+  background: #FFFFFF !important;
+}
+.input-light::placeholder {
+  color: #9CA3AF !important;
+  -webkit-text-fill-color: #9CA3AF !important;
+}
 input:focus, select:focus, textarea:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px rgba(99,102,241,0.12);

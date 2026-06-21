@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { DollarSign, TrendingUp, Clock, CheckCircle, Download, Zap, X, AlertCircle, Plus, MessageCircle, Key } from 'lucide-react';
-import { exportFinanceiroPDF, exportFinanceiroExcel } from '../../utils/export';
+// Export utilities loaded dynamically to avoid including jsPDF/xlsx in the main bundle
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import Badge from '../../components/UI/Badge';
 import { payments as mockPayments, monthlyRevenue as mockMonthlyRevenue } from '../../data/mockData';
@@ -381,10 +381,10 @@ export default function Financeiro() {
           <button className="btn-primary" onClick={() => setGenModal(true)} disabled={generating} style={{ opacity: generating ? 0.7 : 1 }}>
             <Zap size={15} /> {generating ? 'Gerando...' : `Gerar cobranças de ${currentMonthLabel.split(' ')[0]}`}
           </button>
-          <button className="btn-secondary" onClick={() => exportFinanceiroPDF(payments.map(p => ({ ...p, studentName: p.student_name || p.studentName, dueDate: p.due_date || p.dueDate, paidDate: p.paid_date || p.paidDate })), monthlyRevenue)}>
+          <button className="btn-secondary" onClick={async () => { const { exportFinanceiroPDF } = await import('../../utils/export'); exportFinanceiroPDF(payments.map(p => ({ ...p, studentName: p.student_name || p.studentName, dueDate: p.due_date || p.dueDate, paidDate: p.paid_date || p.paidDate })), monthlyRevenue); }}>
             <Download size={15} /> PDF
           </button>
-          <button className="btn-secondary" onClick={() => exportFinanceiroExcel(payments.map(p => ({ ...p, studentName: p.student_name || p.studentName, dueDate: p.due_date || p.dueDate, paidDate: p.paid_date || p.paidDate })))}>
+          <button className="btn-secondary" onClick={async () => { const { exportFinanceiroExcel } = await import('../../utils/export'); exportFinanceiroExcel(payments.map(p => ({ ...p, studentName: p.student_name || p.studentName, dueDate: p.due_date || p.dueDate, paidDate: p.paid_date || p.paidDate }))); }}>
             <Download size={15} /> Excel
           </button>
         </div>

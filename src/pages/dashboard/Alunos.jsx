@@ -5,7 +5,7 @@ import Avatar from '../../components/UI/Avatar';
 import Badge from '../../components/UI/Badge';
 import Modal from '../../components/UI/Modal';
 import { students as mockStudents } from '../../data/mockData';
-import { exportAlunosPDF, exportAlunosExcel } from '../../utils/export';
+// Export utilities loaded dynamically to avoid including jsPDF/xlsx in the main bundle
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
@@ -363,7 +363,7 @@ export default function Alunos() {
           </p>
         </div>
         <div className="page-actions">
-          <button className="btn-secondary hide-mobile" onClick={() => exportAlunosPDF(filtered)}>
+          <button className="btn-secondary hide-mobile" onClick={async () => { const { exportAlunosPDF } = await import('../../utils/export'); exportAlunosPDF(filtered); }}>
             <Download size={14} /> PDF
           </button>
           <button className="btn-primary" onClick={openAdd}>

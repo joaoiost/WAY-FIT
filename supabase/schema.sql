@@ -314,3 +314,403 @@ DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created
   AFTER INSERT ON auth.users
   FOR EACH ROW EXECUTE FUNCTION handle_new_user();
+
+-- ============================================================
+-- Colunas extras em tabelas existentes
+-- ============================================================
+ALTER TABLE training_plans ADD COLUMN IF NOT EXISTS days TEXT[] DEFAULT '{}';
+ALTER TABLE exercises      ADD COLUMN IF NOT EXISTS load TEXT DEFAULT '';
+
+-- ============================================================
+-- Aulas em grupo (Turmas)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS group_classes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL,
+  type TEXT DEFAULT 'Funcional',
+  date DATE NOT NULL,
+  time TIME NOT NULL,
+  duration_minutes INTEGER DEFAULT 60,
+  max_students INTEGER DEFAULT 10,
+  location TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS group_class_attendance (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  class_id UUID REFERENCES group_classes(id) ON DELETE CASCADE NOT NULL,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  status TEXT DEFAULT 'confirmado',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(class_id, student_id)
+);
+
+-- ============================================================
+-- Nutrição
+-- ============================================================
+CREATE TABLE IF NOT EXISTS meal_plans (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL DEFAULT 'Plano Alimentar',
+  goal TEXT DEFAULT '',
+  is_active BOOLEAN DEFAULT TRUE,
+  goal_calories NUMERIC DEFAULT 0,
+  goal_protein_g NUMERIC DEFAULT 0,
+  goal_carbs_g NUMERIC DEFAULT 0,
+  goal_fat_g NUMERIC DEFAULT 0,
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS food_items (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  personal_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  category TEXT DEFAULT 'Geral',
+  calories_per_100g NUMERIC DEFAULT 0,
+  protein_per_100g NUMERIC DEFAULT 0,
+  carbs_per_100g NUMERIC DEFAULT 0,
+  fat_per_100g NUMERIC DEFAULT 0,
+  fiber_per_100g NUMERIC DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS meal_plan_meals (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  meal_plan_id UUID REFERENCES meal_plans(id) ON DELETE CASCADE NOT NULL,
+  name TEXT NOT NULL DEFAULT 'Refeição',
+  time_of_day TEXT DEFAULT '08:00',
+  order_index INTEGER DEFAULT 0,
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS meal_plan_foods (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  meal_id UUID REFERENCES meal_plan_meals(id) ON DELETE CASCADE NOT NULL,
+  food_item_id UUID REFERENCES food_items(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  quantity_g NUMERIC DEFAULT 100,
+  calories NUMERIC DEFAULT 0,
+  protein_g NUMERIC DEFAULT 0,
+  carbs_g NUMERIC DEFAULT 0,
+  fat_g NUMERIC DEFAULT 0,
+  order_index INTEGER DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS nutrition_anamnesis (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL UNIQUE,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  goal TEXT DEFAULT '',
+  allergies TEXT DEFAULT '',
+  restrictions TEXT DEFAULT '',
+  preferences TEXT DEFAULT '',
+  water_goal_ml INTEGER DEFAULT 2000,
+  notes TEXT DEFAULT '',
+  weight NUMERIC,
+  height INTEGER,
+  age INTEGER,
+  sex TEXT DEFAULT 'M',
+  activity_level TEXT DEFAULT 'moderado',
+  conditions TEXT DEFAULT '',
+  medications TEXT DEFAULT '',
+  workout_time TEXT DEFAULT '',
+  meal_count INTEGER DEFAULT 3,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS food_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  meal_type TEXT DEFAULT 'Café da manhã',
+  food_name TEXT NOT NULL,
+  quantity_g NUMERIC DEFAULT 100,
+  kcal NUMERIC DEFAULT 0,
+  protein_g NUMERIC DEFAULT 0,
+  carbs_g NUMERIC DEFAULT 0,
+  fat_g NUMERIC DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- ============================================================
+-- Treinos executados (Histórico / ExecutarTreino)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS workout_sessions (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  plan_id UUID REFERENCES training_plans(id) ON DELETE SET NULL,
+  plan_name TEXT DEFAULT '',
+  plan_type TEXT DEFAULT '',
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  started_at TIMESTAMPTZ DEFAULT NOW(),
+  finished_at TIMESTAMPTZ,
+  exercises_total INTEGER DEFAULT 0,
+  exercises_done INTEGER DEFAULT 0,
+  rating INTEGER,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS exercise_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  session_id UUID REFERENCES workout_sessions(id) ON DELETE CASCADE NOT NULL,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  exercise_id UUID REFERENCES exercises(id) ON DELETE SET NULL,
+  exercise_name TEXT NOT NULL,
+  sets_planned INTEGER DEFAULT 0,
+  reps_planned TEXT DEFAULT '',
+  load_planned TEXT DEFAULT '',
+  load_actual TEXT,
+  sets_data JSONB DEFAULT '[]',
+  done BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS session_ratings (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+  feeling TEXT DEFAULT '',
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(student_id, date)
+);
+
+-- ============================================================
+-- Frequência
+-- ============================================================
+CREATE TABLE IF NOT EXISTS attendances (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  status TEXT DEFAULT 'present',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(student_id, date)
+);
+
+-- ============================================================
+-- Conquistas e Desafios (Gamificação)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS student_achievements (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  achievement_key TEXT NOT NULL,
+  unlocked_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(student_id, achievement_key)
+);
+
+CREATE TABLE IF NOT EXISTS challenges (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  description TEXT DEFAULT '',
+  type TEXT NOT NULL,
+  target_value NUMERIC DEFAULT 1,
+  xp_reward INTEGER DEFAULT 100,
+  start_date DATE,
+  end_date DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE TABLE IF NOT EXISTS student_challenges (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  challenge_id UUID REFERENCES challenges(id) ON DELETE CASCADE NOT NULL,
+  progress NUMERIC DEFAULT 0,
+  completed_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(student_id, challenge_id)
+);
+
+-- ============================================================
+-- Medições simplificadas para Conquistas
+-- ============================================================
+CREATE TABLE IF NOT EXISTS student_measurements (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  weight NUMERIC NOT NULL,
+  recorded_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Logs de água
+CREATE TABLE IF NOT EXISTS water_logs (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  intake_ml NUMERIC DEFAULT 0,
+  goal_ml NUMERIC DEFAULT 2000,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(student_id, date)
+);
+
+-- ============================================================
+-- RLS para tabelas novas
+-- ============================================================
+ALTER TABLE group_classes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE group_class_attendance ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meal_plans ENABLE ROW LEVEL SECURITY;
+ALTER TABLE food_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meal_plan_meals ENABLE ROW LEVEL SECURITY;
+ALTER TABLE meal_plan_foods ENABLE ROW LEVEL SECURITY;
+ALTER TABLE nutrition_anamnesis ENABLE ROW LEVEL SECURITY;
+ALTER TABLE food_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE workout_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE exercise_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE session_ratings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE attendances ENABLE ROW LEVEL SECURITY;
+ALTER TABLE student_achievements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE challenges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE student_challenges ENABLE ROW LEVEL SECURITY;
+ALTER TABLE student_measurements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE water_logs ENABLE ROW LEVEL SECURITY;
+
+-- Group classes
+DROP POLICY IF EXISTS "Personal gerencia aulas" ON group_classes;
+DROP POLICY IF EXISTS "Aluno vê próprias aulas" ON group_classes;
+CREATE POLICY "Personal gerencia aulas" ON group_classes FOR ALL USING (personal_id = auth.uid());
+CREATE POLICY "Aluno vê próprias aulas" ON group_classes FOR SELECT USING (
+  EXISTS (SELECT 1 FROM group_class_attendance gca JOIN students s ON s.id = gca.student_id
+          WHERE gca.class_id = group_classes.id AND s.user_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Personal gerencia presença em aulas" ON group_class_attendance;
+DROP POLICY IF EXISTS "Aluno vê própria presença" ON group_class_attendance;
+CREATE POLICY "Personal gerencia presença em aulas" ON group_class_attendance FOR ALL USING (
+  EXISTS (SELECT 1 FROM group_classes gc WHERE gc.id = group_class_attendance.class_id AND gc.personal_id = auth.uid())
+);
+CREATE POLICY "Aluno vê própria presença" ON group_class_attendance FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = group_class_attendance.student_id AND s.user_id = auth.uid())
+);
+
+-- Meal plans
+DROP POLICY IF EXISTS "Personal gerencia planos alimentares" ON meal_plans;
+DROP POLICY IF EXISTS "Aluno vê próprio plano alimentar" ON meal_plans;
+CREATE POLICY "Personal gerencia planos alimentares" ON meal_plans FOR ALL USING (personal_id = auth.uid());
+CREATE POLICY "Aluno vê próprio plano alimentar" ON meal_plans FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = meal_plans.student_id AND s.user_id = auth.uid())
+);
+
+-- Food items (personal cria, aluno pode ler)
+DROP POLICY IF EXISTS "Personal gerencia alimentos" ON food_items;
+DROP POLICY IF EXISTS "Aluno lê alimentos" ON food_items;
+CREATE POLICY "Personal gerencia alimentos" ON food_items FOR ALL USING (personal_id = auth.uid() OR personal_id IS NULL);
+CREATE POLICY "Aluno lê alimentos" ON food_items FOR SELECT USING (true);
+
+-- Meal plan meals/foods
+DROP POLICY IF EXISTS "Personal gerencia refeições" ON meal_plan_meals;
+DROP POLICY IF EXISTS "Aluno vê próprias refeições" ON meal_plan_meals;
+CREATE POLICY "Personal gerencia refeições" ON meal_plan_meals FOR ALL USING (
+  EXISTS (SELECT 1 FROM meal_plans mp WHERE mp.id = meal_plan_meals.meal_plan_id AND mp.personal_id = auth.uid())
+);
+CREATE POLICY "Aluno vê próprias refeições" ON meal_plan_meals FOR SELECT USING (
+  EXISTS (SELECT 1 FROM meal_plans mp JOIN students s ON s.id = mp.student_id
+          WHERE mp.id = meal_plan_meals.meal_plan_id AND s.user_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Personal gerencia alimentos das refeições" ON meal_plan_foods;
+DROP POLICY IF EXISTS "Aluno vê alimentos das refeições" ON meal_plan_foods;
+CREATE POLICY "Personal gerencia alimentos das refeições" ON meal_plan_foods FOR ALL USING (
+  EXISTS (SELECT 1 FROM meal_plan_meals mm JOIN meal_plans mp ON mp.id = mm.meal_plan_id
+          WHERE mm.id = meal_plan_foods.meal_id AND mp.personal_id = auth.uid())
+);
+CREATE POLICY "Aluno vê alimentos das refeições" ON meal_plan_foods FOR SELECT USING (
+  EXISTS (SELECT 1 FROM meal_plan_meals mm JOIN meal_plans mp ON mp.id = mm.meal_plan_id
+          JOIN students s ON s.id = mp.student_id
+          WHERE mm.id = meal_plan_foods.meal_id AND s.user_id = auth.uid())
+);
+
+-- Nutrition anamnesis
+DROP POLICY IF EXISTS "Personal gerencia anamnese nutricional" ON nutrition_anamnesis;
+DROP POLICY IF EXISTS "Aluno vê própria anamnese nutricional" ON nutrition_anamnesis;
+CREATE POLICY "Personal gerencia anamnese nutricional" ON nutrition_anamnesis FOR ALL USING (personal_id = auth.uid());
+CREATE POLICY "Aluno vê própria anamnese nutricional" ON nutrition_anamnesis FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = nutrition_anamnesis.student_id AND s.user_id = auth.uid())
+);
+
+-- Food logs
+DROP POLICY IF EXISTS "Aluno gerencia log alimentar" ON food_logs;
+DROP POLICY IF EXISTS "Personal vê log alimentar" ON food_logs;
+CREATE POLICY "Aluno gerencia log alimentar" ON food_logs FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = food_logs.student_id AND s.user_id = auth.uid())
+);
+CREATE POLICY "Personal vê log alimentar" ON food_logs FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = food_logs.student_id AND s.personal_id = auth.uid())
+);
+
+-- Workout sessions
+DROP POLICY IF EXISTS "Aluno gerencia próprias sessões" ON workout_sessions;
+DROP POLICY IF EXISTS "Personal vê sessões dos alunos" ON workout_sessions;
+CREATE POLICY "Aluno gerencia próprias sessões" ON workout_sessions FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = workout_sessions.student_id AND s.user_id = auth.uid())
+);
+CREATE POLICY "Personal vê sessões dos alunos" ON workout_sessions FOR SELECT USING (personal_id = auth.uid());
+
+-- Exercise logs
+DROP POLICY IF EXISTS "Aluno gerencia próprios logs de exercícios" ON exercise_logs;
+DROP POLICY IF EXISTS "Personal vê logs de exercícios" ON exercise_logs;
+CREATE POLICY "Aluno gerencia próprios logs de exercícios" ON exercise_logs FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = exercise_logs.student_id AND s.user_id = auth.uid())
+);
+CREATE POLICY "Personal vê logs de exercícios" ON exercise_logs FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = exercise_logs.student_id AND s.personal_id = auth.uid())
+);
+
+-- Session ratings
+DROP POLICY IF EXISTS "Aluno gerencia avaliações de sessão" ON session_ratings;
+CREATE POLICY "Aluno gerencia avaliações de sessão" ON session_ratings FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = session_ratings.student_id AND s.user_id = auth.uid())
+);
+
+-- Attendances
+DROP POLICY IF EXISTS "Personal gerencia frequência" ON attendances;
+DROP POLICY IF EXISTS "Aluno vê própria frequência" ON attendances;
+CREATE POLICY "Personal gerencia frequência" ON attendances FOR ALL USING (personal_id = auth.uid());
+CREATE POLICY "Aluno vê própria frequência" ON attendances FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = attendances.student_id AND s.user_id = auth.uid())
+);
+
+-- Achievements
+DROP POLICY IF EXISTS "Aluno gerencia próprias conquistas" ON student_achievements;
+DROP POLICY IF EXISTS "Personal vê conquistas dos alunos" ON student_achievements;
+CREATE POLICY "Aluno gerencia próprias conquistas" ON student_achievements FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = student_achievements.student_id AND s.user_id = auth.uid())
+);
+CREATE POLICY "Personal vê conquistas dos alunos" ON student_achievements FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = student_achievements.student_id AND s.personal_id = auth.uid())
+);
+
+-- Challenges (leitura pública)
+DROP POLICY IF EXISTS "Leitura pública de desafios" ON challenges;
+CREATE POLICY "Leitura pública de desafios" ON challenges FOR SELECT USING (true);
+
+-- Student challenges
+DROP POLICY IF EXISTS "Aluno gerencia próprios desafios" ON student_challenges;
+CREATE POLICY "Aluno gerencia próprios desafios" ON student_challenges FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = student_challenges.student_id AND s.user_id = auth.uid())
+);
+
+-- Student measurements
+DROP POLICY IF EXISTS "Aluno gerencia próprias medições simples" ON student_measurements;
+DROP POLICY IF EXISTS "Personal vê medições simples dos alunos" ON student_measurements;
+CREATE POLICY "Aluno gerencia próprias medições simples" ON student_measurements FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = student_measurements.student_id AND s.user_id = auth.uid())
+);
+CREATE POLICY "Personal vê medições simples dos alunos" ON student_measurements FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = student_measurements.student_id AND s.personal_id = auth.uid())
+);
+
+-- Water logs
+DROP POLICY IF EXISTS "Aluno gerencia log de água" ON water_logs;
+DROP POLICY IF EXISTS "Personal vê log de água" ON water_logs;
+CREATE POLICY "Aluno gerencia log de água" ON water_logs FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = water_logs.student_id AND s.user_id = auth.uid())
+);
+CREATE POLICY "Personal vê log de água" ON water_logs FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = water_logs.student_id AND s.personal_id = auth.uid())
+);

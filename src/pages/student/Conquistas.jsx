@@ -66,12 +66,12 @@ export default function Conquistas() {
 
   async function loadData() {
     const [sessRes, measRes, waterRes, foodRes, photoRes, chalRes] = await Promise.all([
-      supabase.from('workout_sessions').select('id,started_at,rating').eq('student_id', user.id),
-      supabase.from('student_measurements').select('weight,recorded_at').eq('student_id', user.id).order('recorded_at'),
-      supabase.from('water_logs').select('intake_ml,goal_ml,date').eq('student_id', user.id),
-      supabase.from('food_logs').select('date').eq('student_id', user.id).then(r => r).catch(() => ({ data: [] })),
-      supabase.from('progress_photos').select('id').eq('student_id', user.id),
-      supabase.from('student_challenges').select('completed_at').eq('student_id', user.id).not('completed_at', 'is', null).then(r => r).catch(() => ({ data: [] })),
+      supabase.from('workout_sessions').select('id,started_at,rating').eq('student_id', user.studentId),
+      supabase.from('student_measurements').select('weight,recorded_at').eq('student_id', user.studentId).order('recorded_at'),
+      supabase.from('water_logs').select('intake_ml,goal_ml,date').eq('student_id', user.studentId),
+      supabase.from('food_logs').select('date').eq('student_id', user.studentId).then(r => r).catch(() => ({ data: [] })),
+      supabase.from('progress_photos').select('id').eq('student_id', user.studentId),
+      supabase.from('student_challenges').select('completed_at').eq('student_id', user.studentId).not('completed_at', 'is', null).then(r => r).catch(() => ({ data: [] })),
     ]);
 
     const sessions = sessRes.data || [];
@@ -101,7 +101,7 @@ export default function Conquistas() {
 
     // save newly unlocked achievements
     const toSave = ACHIEVEMENTS.filter(a => a.check(s)).map(a => ({
-      student_id: user.id,
+      student_id: user.studentId,
       achievement_key: a.key,
       unlocked_at: new Date().toISOString(),
     }));

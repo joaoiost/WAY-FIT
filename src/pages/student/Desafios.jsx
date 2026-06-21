@@ -50,10 +50,10 @@ export default function Desafios() {
   async function loadData() {
     const [chalRes, scRes, sessRes, waterRes, foodRes] = await Promise.all([
       supabase.from('challenges').select('*').order('end_date'),
-      supabase.from('student_challenges').select('*').eq('student_id', user.id).then(r => r).catch(() => ({ data: [] })),
-      supabase.from('workout_sessions').select('started_at').eq('student_id', user.id),
-      supabase.from('water_logs').select('date,intake_ml,goal_ml').eq('student_id', user.id),
-      supabase.from('food_logs').select('date').eq('student_id', user.id).then(r => r).catch(() => ({ data: [] })),
+      supabase.from('student_challenges').select('*').eq('student_id', user.studentId).then(r => r).catch(() => ({ data: [] })),
+      supabase.from('workout_sessions').select('started_at').eq('student_id', user.studentId),
+      supabase.from('water_logs').select('date,intake_ml,goal_ml').eq('student_id', user.studentId),
+      supabase.from('food_logs').select('date').eq('student_id', user.studentId).then(r => r).catch(() => ({ data: [] })),
     ]);
 
     const chs = chalRes.data || [];
@@ -75,7 +75,7 @@ export default function Desafios() {
     });
     for (const ch of toComplete) {
       await supabase.from('student_challenges').upsert({
-        student_id: user.id,
+        student_id: user.studentId,
         challenge_id: ch.id,
         progress: pm[ch.id],
         completed_at: new Date().toISOString(),
@@ -83,7 +83,7 @@ export default function Desafios() {
     }
 
     if (toComplete.length) {
-      const { data: updated } = await supabase.from('student_challenges').select('*').eq('student_id', user.id);
+      const { data: updated } = await supabase.from('student_challenges').select('*').eq('student_id', user.studentId);
       setStudentChallenges(updated || []);
     } else {
       setStudentChallenges(scs);

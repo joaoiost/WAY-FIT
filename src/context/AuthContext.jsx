@@ -49,6 +49,7 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function loadProfile(authUser) {
+    setLoading(true);
     let { data: profile } = await supabase.from('profiles').select('*').eq('id', authUser.id).single();
 
     if (!profile) {

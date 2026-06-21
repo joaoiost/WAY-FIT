@@ -56,8 +56,8 @@ export default function LogAlimentar() {
   async function loadData() {
     setLoading(true);
     const [logsRes, planRes] = await Promise.all([
-      supabase.from('food_logs').select('*').eq('student_id', user.id).eq('date', date).order('created_at'),
-      supabase.from('meal_plans').select('goal_calories,goal_protein_g,goal_carbs_g,goal_fat_g').eq('student_id', user.id).eq('is_active', true).maybeSingle(),
+      supabase.from('food_logs').select('*').eq('student_id', user.studentId).eq('date', date).order('created_at'),
+      supabase.from('meal_plans').select('goal_calories,goal_protein_g,goal_carbs_g,goal_fat_g').eq('student_id', user.studentId).eq('is_active', true).maybeSingle(),
     ]);
     setLogs(logsRes.data || []);
     setMacroGoals(planRes.data || null);
@@ -86,7 +86,7 @@ export default function LogAlimentar() {
     let entry;
     if (customMode) {
       entry = {
-        student_id: user.id,
+        student_id: user.studentId,
         personal_id: personalId,
         date,
         meal_type: addingMeal,
@@ -99,7 +99,7 @@ export default function LogAlimentar() {
       };
     } else {
       entry = {
-        student_id: user.id,
+        student_id: user.studentId,
         personal_id: personalId,
         date,
         meal_type: addingMeal,

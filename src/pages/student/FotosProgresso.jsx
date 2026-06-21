@@ -226,8 +226,8 @@ export default function FotosProgresso() {
     <div className="page-padding" style={{ flex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Fotos de Progresso</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>{photos.length} registros fotográficos</p>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--gray-900)' }}>Fotos de Progresso</h2>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--gray-400)' }}>{photos.length} registros fotográficos</p>
         </div>
         <button className="btn-primary" onClick={() => setModal(true)}>
           <Plus size={16} /> Adicionar Foto

@@ -203,8 +203,8 @@ export default function Historico() {
   return (
     <div className="page-padding" style={{ flex: 1 }}>
       <div style={{ marginBottom: 24 }}>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Histórico de Treinos</h2>
-        <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>{totalAll} treino{totalAll !== 1 ? 's' : ''} registrado{totalAll !== 1 ? 's' : ''}</p>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--gray-900)' }}>Histórico de Treinos</h2>
+        <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--gray-400)' }}>{totalAll} treino{totalAll !== 1 ? 's' : ''} registrado{totalAll !== 1 ? 's' : ''}</p>
       </div>
 
       <div className="grid-3" style={{ marginBottom: 20 }}>

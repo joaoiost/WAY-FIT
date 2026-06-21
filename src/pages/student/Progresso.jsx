@@ -117,8 +117,8 @@ export default function Progresso() {
     <div className="page-padding" style={{ flex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Progresso</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>{measurements.length} medições registradas</p>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--gray-900)' }}>Progresso</h2>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--gray-400)' }}>{measurements.length} medições registradas</p>
         </div>
         <button className="btn-primary" onClick={() => setModal(true)}>
           <Plus size={16} /> Registrar Medidas

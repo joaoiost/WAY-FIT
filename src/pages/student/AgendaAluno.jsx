@@ -156,8 +156,8 @@ export default function AgendaAluno() {
     <div className="page-padding" style={{ flex: 1 }}>
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Minha Agenda</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--gray-900)' }}>Minha Agenda</h2>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--gray-400)' }}>
             {upcoming.length} aula{upcoming.length !== 1 ? 's' : ''} agendada{upcoming.length !== 1 ? 's' : ''}
           </p>
         </div>

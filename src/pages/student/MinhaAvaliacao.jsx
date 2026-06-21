@@ -91,8 +91,8 @@ export default function MinhaAvaliacao() {
   return (
     <div className="page-padding" style={{ flex: 1, maxWidth: 700, margin: '0 auto' }}>
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#111827' }}>Minha Avaliação</h2>
-        <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>{history.length} avaliação{history.length !== 1 ? 'ões' : ''} registrada{history.length !== 1 ? 's' : ''}</p>
+        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--gray-900)' }}>Minha Avaliação</h2>
+        <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--gray-400)' }}>{history.length} avaliação{history.length !== 1 ? 'ões' : ''} registrada{history.length !== 1 ? 's' : ''}</p>
       </div>
 
       {/* Seletor de data */}

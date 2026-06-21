@@ -195,8 +195,8 @@ export default function Anamnese() {
     <div className="page-padding" style={{ flex: 1 }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Ficha de Saúde</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>Visível apenas para o seu personal</p>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--gray-900)' }}>Ficha de Saúde</h2>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--gray-400)' }}>Visível apenas para o seu personal</p>
         </div>
         <button onClick={save} className="btn-primary" disabled={saving}>
           {saving ? <><Loader size={16} /> Salvando...</> : saved ? <><CheckCircle size={16} /> Salvo!</> : <><Save size={16} /> Salvar</>}

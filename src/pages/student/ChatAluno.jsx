@@ -192,16 +192,16 @@ export default function ChatAluno() {
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', height: 'calc(100vh - 64px)', maxHeight: 'calc(100vh - 64px)' }}>
       {/* Header */}
-      <div style={{ background: 'white', borderBottom: '1px solid #F1F5F9', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 12 }}>
         <PersonalAvatar avatar={personalAvatar} initials={personalInitials} size={42} />
         <div style={{ flex: 1 }}>
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>{personalName}</p>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>{personalName}</p>
           <p style={{ margin: 0, fontSize: 12, color: '#10B981', fontWeight: 600 }}>Personal Trainer</p>
         </div>
       </div>
 
       {/* Messages */}
-      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', background: '#F8FAFC' }}>
+      <div style={{ flex: 1, overflowY: 'auto', padding: '16px 20px', background: 'var(--bg-page)' }}>
         {loading ? (
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 40 }}>
             <Loader size={24} color="#3B82F6" style={{ animation: 'spin 1s linear infinite' }} />
@@ -220,12 +220,12 @@ export default function ChatAluno() {
       </div>
 
       {/* Input */}
-      <form onSubmit={send} style={{ background: 'white', borderTop: '1px solid #F1F5F9', padding: '12px 20px', display: 'flex', gap: 10 }}>
+      <form onSubmit={send} style={{ background: 'var(--bg-surface)', borderTop: '1px solid var(--border)', padding: '12px 20px', display: 'flex', gap: 10 }}>
         <input
           value={text}
           onChange={e => setText(e.target.value)}
           placeholder="Digite uma mensagem..."
-          style={{ flex: 1, height: 44, borderRadius: 22, padding: '0 16px', fontSize: 14, border: '1px solid #E5E7EB', background: '#F9FAFB' }}
+          style={{ flex: 1, height: 44, borderRadius: 22, padding: '0 16px', fontSize: 14, border: '1px solid var(--border)', background: 'var(--bg-page)', color: 'var(--gray-900)' }}
         />
         <button type="submit" disabled={!text.trim() || sending} className="btn-primary" style={{ width: 44, height: 44, padding: 0, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, opacity: text.trim() && !sending ? 1 : 0.5 }}>
           {sending ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Send size={18} />}

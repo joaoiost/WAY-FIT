@@ -32,7 +32,7 @@ function computeProgress(challenge, sessions, waterLogs, foodLogs) {
 function daysLeft(endDate) {
   if (!endDate) return null;
   const diff = Math.ceil((new Date(endDate + 'T23:59:59') - new Date()) / 86400000);
-  return diff;
+  return Math.max(0, diff);
 }
 
 export default function Desafios() {

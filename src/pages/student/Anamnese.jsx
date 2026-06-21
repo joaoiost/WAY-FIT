@@ -14,6 +14,28 @@ const EMPTY = {
 
 const DISEASES = ['Hipertensão', 'Diabetes', 'Cardiopatia', 'Artrite', 'Osteoporose', 'Asma', 'Obesidade', 'Colesterol alto'];
 const INJURIES = ['Coluna lombar', 'Coluna cervical', 'Joelho esquerdo', 'Joelho direito', 'Ombro esquerdo', 'Ombro direito', 'Tornozelo', 'Quadril'];
+
+function Field({ label, children }) {
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+      <label>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+function CheckGroup({ items, field, cols = 2, form, onToggle }) {
+  return (
+    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 8 }}>
+      {items.map(item => (
+        <label key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, border: `1px solid ${form[field].includes(item) ? '#3B82F6' : '#E5E7EB'}`, cursor: 'pointer', background: form[field].includes(item) ? '#EFF6FF' : 'white', transition: 'all 0.15s', margin: 0, fontWeight: 400, fontSize: 13 }}>
+          <input type="checkbox" checked={form[field].includes(item)} onChange={() => onToggle(field, item)} style={{ width: 'auto', padding: 0, border: 'none', boxShadow: 'none', accentColor: '#3B82F6' }} />
+          {item}
+        </label>
+      ))}
+    </div>
+  );
+}
 const SECTIONS = [
   { id: 'basics', label: 'Dados Pessoais', icon: '👤' },
   { id: 'health', label: 'Saúde', icon: '❤️' },
@@ -79,24 +101,6 @@ export default function Anamnese() {
     setTimeout(() => setSaved(false), 3000);
   };
 
-  const Field = ({ label, children }) => (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      <label>{label}</label>
-      {children}
-    </div>
-  );
-
-  const CheckGroup = ({ items, field, cols = 2 }) => (
-    <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 8 }}>
-      {items.map(item => (
-        <label key={item} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 12px', borderRadius: 8, border: `1px solid ${form[field].includes(item) ? '#3B82F6' : '#E5E7EB'}`, cursor: 'pointer', background: form[field].includes(item) ? '#EFF6FF' : 'white', transition: 'all 0.15s', margin: 0, fontWeight: 400, fontSize: 13 }}>
-          <input type="checkbox" checked={form[field].includes(item)} onChange={() => toggleArr(field, item)} style={{ width: 'auto', padding: 0, border: 'none', boxShadow: 'none', accentColor: '#3B82F6' }} />
-          {item}
-        </label>
-      ))}
-    </div>
-  );
-
   const sections = {
     basics: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -113,7 +117,7 @@ export default function Anamnese() {
     health: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Field label="Doenças pré-existentes">
-          <CheckGroup items={DISEASES} field="diseases" cols={2} />
+          <CheckGroup items={DISEASES} field="diseases" cols={2} form={form} onToggle={toggleArr} />
         </Field>
         <Field label="Outras doenças"><input value={form.otherDisease} onChange={e => set('otherDisease', e.target.value)} placeholder="Descreva se houver..." /></Field>
         <Field label="Medicamentos em uso"><textarea value={form.medications} onChange={e => set('medications', e.target.value)} placeholder="Nome dos medicamentos e dosagem..." rows={2} /></Field>
@@ -124,7 +128,7 @@ export default function Anamnese() {
     injuries: (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
         <Field label="Lesões ou dores atuais/recentes">
-          <CheckGroup items={INJURIES} field="injuries" cols={2} />
+          <CheckGroup items={INJURIES} field="injuries" cols={2} form={form} onToggle={toggleArr} />
         </Field>
         <Field label="Detalhes das lesões"><textarea value={form.injuryDetails} onChange={e => set('injuryDetails', e.target.value)} placeholder="Tipo de lesão, quando aconteceu, tratamento..." rows={3} /></Field>
         <Field label="Limitações físicas"><textarea value={form.limitations} onChange={e => set('limitations', e.target.value)} placeholder="Movimentos ou exercícios que não consegue realizar..." rows={2} /></Field>

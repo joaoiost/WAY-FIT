@@ -278,13 +278,13 @@ export default function Notificacoes() {
           days_of_week: form.days_of_week, send_hour: form.send_hour,
           send_minute: form.send_minute, student_ids: form.student_ids,
         })
-        .eq('id', form.id).select().single();
+        .eq('id', form.id).select().maybeSingle();
       if (data) setSchedules(prev => prev.map(s => s.id === data.id ? data : s));
     } else {
       const { data } = await supabase
         .from('scheduled_notifications')
         .insert({ ...form, personal_id: user.id })
-        .select().single();
+        .select().maybeSingle();
       if (data) setSchedules(prev => [data, ...prev]);
     }
 

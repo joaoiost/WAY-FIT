@@ -44,7 +44,7 @@ export default function LogAlimentar() {
 
   useEffect(() => {
     if (!user) return;
-    supabase.from('students').select('personal_id').eq('id', user.id).single()
+    supabase.from('students').select('personal_id').eq('user_id', user.id).maybeSingle()
       .then(({ data }) => setPersonalId(data?.personal_id || null));
   }, [user?.id]);
 
@@ -57,7 +57,7 @@ export default function LogAlimentar() {
     setLoading(true);
     const [logsRes, planRes] = await Promise.all([
       supabase.from('food_logs').select('*').eq('student_id', user.id).eq('date', date).order('created_at'),
-      supabase.from('meal_plans').select('goal_calories,goal_protein_g,goal_carbs_g,goal_fat_g').eq('student_id', user.id).eq('is_active', true).single(),
+      supabase.from('meal_plans').select('goal_calories,goal_protein_g,goal_carbs_g,goal_fat_g').eq('student_id', user.id).eq('is_active', true).maybeSingle(),
     ]);
     setLogs(logsRes.data || []);
     setMacroGoals(planRes.data || null);

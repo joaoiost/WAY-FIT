@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Bell, Menu, CheckCheck, Search, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import { useNotifications } from '../../context/NotificationsContext';
@@ -194,9 +195,9 @@ export default function Header() {
                   </div>
                 ) : notifications.map(n => (
                   <div key={n.id} onClick={() => markRead(n.id)}
-                    style={{ display: 'flex', gap: 12, padding: '11px 14px', cursor: 'pointer', background: n.read ? 'white' : '#F8F9FF', borderBottom: '1px solid var(--border-light)', transition: 'background 0.12s' }}
+                    style={{ display: 'flex', gap: 12, padding: '11px 14px', cursor: 'pointer', background: n.read ? 'var(--bg-surface)' : 'var(--accent-bg)', borderBottom: '1px solid var(--border-light)', transition: 'background 0.12s' }}
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--gray-50)'}
-                    onMouseLeave={e => e.currentTarget.style.background = n.read ? 'white' : '#F8F9FF'}
+                    onMouseLeave={e => e.currentTarget.style.background = n.read ? 'var(--bg-surface)' : 'var(--accent-bg)'}
                   >
                     <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TYPE_COLORS[n.type] || 'var(--gray-400)'}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>
                       {n.icon}
@@ -217,12 +218,12 @@ export default function Header() {
         </div>
 
         {/* Avatar */}
-        <a href="/dashboard/perfil" className="header-avatar" title="Meu perfil">
+        <Link to={user?.role === 'student' ? '/aluno/saude' : '/dashboard/perfil'} className="header-avatar" title="Meu perfil">
           {user?.avatarUrl
             ? <img src={user.avatarUrl} alt="avatar" />
             : <span>{initials}</span>
           }
-        </a>
+        </Link>
       </div>
     </header>
   );

@@ -105,7 +105,7 @@ export default function StudentDashboard() {
               supabase.from('workout_sessions').select('date').eq('student_id', student.id).order('date', { ascending: false }).limit(90),
               supabase.from('workout_sessions').select('id').eq('student_id', student.id).gte('date', weekAgo),
               supabase.from('physical_assessments').select('data').eq('student_id', student.id).order('created_at', { ascending: true }),
-              supabase.from('nutrition_anamnesis').select('water_goal').eq('student_id', student.id).maybeSingle(),
+              supabase.from('nutrition_anamnesis').select('water_goal_ml').eq('student_id', student.id).maybeSingle(),
             ]);
 
             const sessions = sessionsResult?.data || [];
@@ -121,7 +121,7 @@ export default function StudentDashboard() {
             if (savedGoal) { setGoalWeight(parseFloat(savedGoal)); setGoalInput(savedGoal); }
 
             /* Water goal: nutritionist-set > weight-based (35ml/kg) > default 2L */
-            const nutriWater = nutritionAnam?.data?.water_goal;
+            const nutriWater = nutritionAnam?.data?.water_goal_ml;
             if (nutriWater && parseFloat(nutriWater) > 0) {
               setWaterGoalMl(Math.round(parseFloat(nutriWater) * 1000));
             } else if (latestWeight) {
@@ -144,7 +144,7 @@ export default function StudentDashboard() {
 
             const planList = plans || [];
             setAllPlans(planList);
-            setTodayPlan(planList.find(p => (p.days || []).includes(todayDay)) || planList[0] || null);
+            setTodayPlan(planList.find(p => (p.days || []).map(Number).includes(todayDay)) || planList[0] || null);
             setNextAppt(appts?.[0] || null);
             setPersonalName(profile?.name || '');
 

@@ -424,7 +424,7 @@ button, a { touch-action: manipulation; font-family: inherit; }
   right: 0;
   top: calc(100% + 8px);
   width: 360px;
-  background: white;
+  background: var(--bg-surface);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
@@ -437,7 +437,7 @@ button, a { touch-action: manipulation; font-family: inherit; }
   top: calc(100% + 6px);
   right: 0;
   width: 260px;
-  background: white;
+  background: var(--bg-surface);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
@@ -1404,6 +1404,7 @@ label {
 /* Backgrounds brancos / cinza-claro → superfície escura */
 [style*="background: white"]   { background: var(--bg-surface) !important; }
 [style*="background: #F9FAFB"] { background: var(--gray-50)    !important; }
+[style*="background: #F8F9FF"] { background: var(--accent-bg)  !important; }
 [style*="background: #F3F4F6"] { background: var(--gray-100)   !important; }
 [style*="background: #F7F8FA"] { background: var(--bg-page)    !important; }
 

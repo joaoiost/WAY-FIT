@@ -400,6 +400,8 @@ export default function NutricaoPlanoAluno() {
   const [anamnese,   setAnamnese]   = useState(ANAMNESE_INIT);
   const [macroGoals, setMacroGoals] = useState({ calories: '', protein: '', carbs: '', fat: '' });
   const [tab,        setTab]        = useState('plano');
+  const [adherence,  setAdherence]  = useState([]);
+  const [adhLoading, setAdhLoading] = useState(false);
   const [loading,    setLoading]    = useState(true);
   const [saving,     setSaving]     = useState(false);
   const [saved,      setSaved]      = useState(false);
@@ -571,6 +573,39 @@ export default function NutricaoPlanoAluno() {
     setSaving(false);
   };
 
+  const loadAdherence = async () => {
+    if (!hasSupabase || !id) return;
+    setAdhLoading(true);
+    const today = new Date().toISOString().slice(0, 10);
+    const start = new Date(Date.now() - 13 * 86400000).toISOString().slice(0, 10);
+    const { data: logs } = await supabase
+      .from('food_logs').select('date,kcal,protein_g,carbs_g,fat_g')
+      .eq('student_id', id).gte('date', start).lte('date', today);
+
+    const byDate = {};
+    (logs || []).forEach(l => {
+      if (!byDate[l.date]) byDate[l.date] = { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 };
+      byDate[l.date].kcal      += l.kcal      || 0;
+      byDate[l.date].protein_g += l.protein_g || 0;
+      byDate[l.date].carbs_g   += l.carbs_g   || 0;
+      byDate[l.date].fat_g     += l.fat_g     || 0;
+    });
+
+    const days = [];
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+      const wd = new Date(d + 'T12:00:00');
+      days.push({
+        date: d,
+        label: wd.toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit' }),
+        ...(byDate[d] || { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }),
+        logged: !!byDate[d],
+      });
+    }
+    setAdherence(days);
+    setAdhLoading(false);
+  };
+
   // ── Derived ──────────────────────────────────────────────────────────────
 
   const allFoodsList   = Object.values(mealFoods).flat();
@@ -589,7 +624,7 @@ export default function NutricaoPlanoAluno() {
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
         <button
           onClick={() => navigate('/dashboard/nutricao')}
-          style={{ width: 36, height: 36, borderRadius: 9, border: '1.5px solid var(--border)', background: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          style={{ width: 36, height: 36, borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--bg-surface)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
         >
           <ArrowLeft size={17} color="var(--gray-600)" />
         </button>
@@ -611,11 +646,11 @@ export default function NutricaoPlanoAluno() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--gray-100)', borderRadius: 10, padding: 4 }}>
-        {[{ key: 'plano', label: 'Plano Alimentar' }, { key: 'anamnese', label: 'Anamnese' }].map(t => (
+        {[{ key: 'plano', label: 'Plano' }, { key: 'anamnese', label: 'Anamnese' }, { key: 'aderencia', label: 'Aderência' }].map(t => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
-            style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab === t.key ? 700 : 500, background: tab === t.key ? 'white' : 'transparent', color: tab === t.key ? 'var(--accent-text)' : 'var(--gray-500)', boxShadow: tab === t.key ? 'var(--shadow-xs)' : 'none', transition: 'all 0.15s' }}
+            onClick={() => { setTab(t.key); if (t.key === 'aderencia' && !adherence.length) loadAdherence(); }}
+            style={{ flex: 1, padding: '8px 0', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: tab === t.key ? 700 : 500, background: tab === t.key ? 'var(--bg-surface)' : 'transparent', color: tab === t.key ? 'var(--accent-text)' : 'var(--gray-500)', boxShadow: tab === t.key ? 'var(--shadow-xs)' : 'none', transition: 'all 0.15s' }}
           >
             {t.label}
           </button>
@@ -637,7 +672,7 @@ export default function NutricaoPlanoAluno() {
           )}
 
           {/* Totals bar */}
-          <div style={{ background: 'white', borderRadius: 14, padding: '16px 20px', border: '1px solid var(--border)', marginBottom: 14, boxShadow: 'var(--shadow-xs)' }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, padding: '16px 20px', border: '1px solid var(--border)', marginBottom: 14, boxShadow: 'var(--shadow-xs)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
               <div>
                 <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total diário</p>
@@ -663,7 +698,7 @@ export default function NutricaoPlanoAluno() {
           </div>
 
           {/* Meta do Plano card */}
-          <div style={{ background: 'white', borderRadius: 14, padding: '16px 20px', border: '1px solid var(--border)', marginBottom: 16, boxShadow: 'var(--shadow-xs)' }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, padding: '16px 20px', border: '1px solid var(--border)', marginBottom: 16, boxShadow: 'var(--shadow-xs)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
               <Target size={16} color="var(--accent)" />
               <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: 'var(--gray-900)' }}>Meta do Plano</p>
@@ -716,12 +751,127 @@ export default function NutricaoPlanoAluno() {
         </>
       )}
 
+      {/* ── ADERÊNCIA TAB ─────────────────────────────────────────────────── */}
+      {tab === 'aderencia' && (
+        <div>
+          {adhLoading ? (
+            <div className="loading-screen"><div className="spinner" /></div>
+          ) : (
+            <>
+              {/* Summary */}
+              {adherence.length > 0 && (() => {
+                const loggedDays = adherence.filter(d => d.logged).length;
+                const total = adherence.length;
+                const pct = Math.round((loggedDays / total) * 100);
+                const avgKcal = loggedDays > 0 ? Math.round(adherence.filter(d => d.logged).reduce((s, d) => s + d.kcal, 0) / loggedDays) : 0;
+                return (
+                  <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
+                    {[
+                      { label: 'Aderência', value: `${pct}%`, sub: `${loggedDays}/${total} dias` },
+                      { label: 'Média kcal', value: avgKcal, sub: macroGoals.calories ? `meta: ${macroGoals.calories}` : 'sem meta' },
+                      { label: 'Dias sem log', value: total - loggedDays, sub: 'últimos 14 dias' },
+                    ].map(s => (
+                      <div key={s.label} className="kpi-card" style={{ flex: 1, cursor: 'default', padding: '12px 10px', textAlign: 'center' }}>
+                        <p className="kpi-card-value" style={{ fontSize: 20 }}>{s.value}</p>
+                        <p className="kpi-card-label">{s.label}</p>
+                        <p style={{ margin: 0, fontSize: 10, color: 'var(--gray-400)' }}>{s.sub}</p>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
+
+              {/* Calorie bar chart — últimos 14 dias */}
+              {macroGoals.calories && (
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, marginBottom: 16 }}>
+                  <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                    Calorias vs Meta ({macroGoals.calories} kcal)
+                  </p>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', gap: 4, height: 80 }}>
+                    {adherence.map(d => {
+                      const pct = macroGoals.calories ? Math.min(100, Math.round((d.kcal / Number(macroGoals.calories)) * 100)) : 0;
+                      const over = d.kcal > Number(macroGoals.calories);
+                      const isToday = d.date === new Date().toISOString().slice(0, 10);
+                      return (
+                        <div key={d.date} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, height: '100%', justifyContent: 'flex-end' }} title={`${d.label}: ${Math.round(d.kcal)} kcal`}>
+                          <div style={{ width: '100%', height: `${Math.max(2, pct)}%`, background: !d.logged ? 'var(--border)' : over ? 'var(--red)' : 'var(--accent)', borderRadius: '3px 3px 0 0', opacity: isToday ? 1 : 0.7 }} />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                    {adherence.map(d => {
+                      const isToday = d.date === new Date().toISOString().slice(0, 10);
+                      return (
+                        <div key={d.date} style={{ flex: 1, textAlign: 'center', fontSize: 8, color: isToday ? 'var(--accent)' : 'var(--gray-400)', fontWeight: isToday ? 800 : 500, overflow: 'hidden' }}>
+                          {d.label.split(',')[0]}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Day-by-day list */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {[...adherence].reverse().map(d => {
+                  const isToday = d.date === new Date().toISOString().slice(0, 10);
+                  const kcalGoal = macroGoals.calories ? Number(macroGoals.calories) : null;
+                  const pct = kcalGoal && d.logged ? Math.min(100, Math.round((d.kcal / kcalGoal) * 100)) : null;
+                  const over = kcalGoal && d.kcal > kcalGoal;
+                  return (
+                    <div key={d.date} style={{ background: 'var(--bg-surface)', border: `1px solid ${isToday ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 12, padding: '12px 14px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: d.logged ? 8 : 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: isToday ? 'var(--accent)' : 'var(--gray-600)', textTransform: 'capitalize' }}>
+                            {d.label}
+                          </span>
+                          {isToday && <span style={{ fontSize: 10, background: 'var(--accent)', color: 'white', borderRadius: 20, padding: '1px 6px', fontWeight: 700 }}>hoje</span>}
+                        </div>
+                        {d.logged ? (
+                          <span style={{ fontSize: 13, fontWeight: 800, color: over ? 'var(--red)' : 'var(--gray-900)' }}>
+                            {Math.round(d.kcal)} kcal
+                            {kcalGoal && <span style={{ fontSize: 11, color: 'var(--gray-400)', fontWeight: 500 }}> / {kcalGoal}</span>}
+                          </span>
+                        ) : (
+                          <span style={{ fontSize: 12, color: 'var(--gray-400)', fontStyle: 'italic' }}>sem registro</span>
+                        )}
+                      </div>
+                      {d.logged && (
+                        <>
+                          {pct !== null && (
+                            <div style={{ height: 4, borderRadius: 99, background: 'var(--border)', overflow: 'hidden', marginBottom: 6 }}>
+                              <div style={{ height: '100%', width: `${pct}%`, background: over ? 'var(--red)' : 'var(--accent)', borderRadius: 99 }} />
+                            </div>
+                          )}
+                          <div style={{ display: 'flex', gap: 10 }}>
+                            {[
+                              { label: 'P', value: Math.round(d.protein_g), color: '#6366F1' },
+                              { label: 'C', value: Math.round(d.carbs_g),   color: '#F59E0B' },
+                              { label: 'G', value: Math.round(d.fat_g),     color: '#10B981' },
+                            ].map(m => (
+                              <span key={m.label} style={{ fontSize: 11, color: m.color, fontWeight: 700 }}>
+                                {m.label}: {m.value}g
+                              </span>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
       {/* ── ANAMNESE TAB ──────────────────────────────────────────────────── */}
       {tab === 'anamnese' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
           {/* Dados Físicos */}
-          <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', padding: 20 }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', padding: 20 }}>
             <SectionTitle>Dados Físicos</SectionTitle>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
               <div>
@@ -754,7 +904,7 @@ export default function NutricaoPlanoAluno() {
           </div>
 
           {/* Nível de Atividade */}
-          <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', padding: 20 }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', padding: 20 }}>
             <SectionTitle>Nível de Atividade</SectionTitle>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {ACTIVITY_LEVELS.map(a => (
@@ -776,7 +926,7 @@ export default function NutricaoPlanoAluno() {
           </div>
 
           {/* Calculadora TMB */}
-          <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', padding: 20 }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', padding: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 14 }}>
               <Zap size={15} color="#F59E0B" />
               <SectionTitle>Calculadora TMB (Mifflin-St Jeor)</SectionTitle>
@@ -854,7 +1004,7 @@ export default function NutricaoPlanoAluno() {
           </div>
 
           {/* Alimentação */}
-          <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <SectionTitle>Alimentação</SectionTitle>
             <div>
               <label>Objetivo nutricional</label>
@@ -891,7 +1041,7 @@ export default function NutricaoPlanoAluno() {
           </div>
 
           {/* Saúde */}
-          <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <SectionTitle>Saúde</SectionTitle>
             <div>
               <label>Doenças / condições</label>
@@ -904,7 +1054,7 @@ export default function NutricaoPlanoAluno() {
           </div>
 
           {/* Observações gerais */}
-          <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', padding: 20 }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', padding: 20 }}>
             <SectionTitle>Observações gerais</SectionTitle>
             <textarea
               value={anamnese.notes}

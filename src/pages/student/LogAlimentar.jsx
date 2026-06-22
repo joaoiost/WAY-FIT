@@ -1,23 +1,25 @@
 import { useState, useEffect } from 'react';
-import { Search, Plus, Trash2, ChevronDown, ChevronUp, X, Utensils, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, Trash2, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, Droplets, Copy, BookOpen } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import tacoFoods from '../../data/taco_foods.json';
 
 const MEALS = [
-  { key: 'cafe',       label: 'Café da manhã', emoji: '☀️' },
-  { key: 'lanche1',   label: 'Lanche manhã',  emoji: '🍌' },
-  { key: 'pre_treino',label: 'Pré-treino',    emoji: '⚡' },
-  { key: 'almoco',    label: 'Almoço',        emoji: '🍱' },
-  { key: 'lanche2',   label: 'Lanche tarde',  emoji: '🥤' },
-  { key: 'jantar',    label: 'Jantar',        emoji: '🌙' },
-  { key: 'pos_treino',label: 'Pós-treino',    emoji: '💪' },
-  { key: 'ceia',      label: 'Ceia',          emoji: '🌛' },
+  { key: 'cafe',        label: 'Café da manhã', emoji: '☀️' },
+  { key: 'lanche1',    label: 'Lanche manhã',  emoji: '🍌' },
+  { key: 'pre_treino', label: 'Pré-treino',    emoji: '⚡' },
+  { key: 'almoco',     label: 'Almoço',        emoji: '🍱' },
+  { key: 'lanche2',    label: 'Lanche tarde',  emoji: '🥤' },
+  { key: 'jantar',     label: 'Jantar',        emoji: '🌙' },
+  { key: 'pos_treino', label: 'Pós-treino',    emoji: '💪' },
+  { key: 'ceia',       label: 'Ceia',          emoji: '🌛' },
 ];
 
 const MACRO_COLORS = { kcal: '#F59E0B', protein_g: '#3B82F6', carbs_g: '#10B981', fat_g: '#F87171' };
 const MACRO_LABELS = { kcal: 'Kcal', protein_g: 'Prot', carbs_g: 'Carb', fat_g: 'Gord' };
 const MACRO_UNITS  = { kcal: 'kcal', protein_g: 'g', carbs_g: 'g', fat_g: 'g' };
+const GLASS_ML = 250;
 
 function todayStr() { return new Date().toISOString().slice(0, 10); }
 function fmtDate(d) {
@@ -29,18 +31,21 @@ function nextDay(d) { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDat
 
 export default function LogAlimentar() {
   const { user } = useAuth();
-  const [date, setDate] = useState(todayStr());
-  const [logs, setLogs] = useState([]);
-  const [macroGoals, setMacroGoals] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [addingMeal, setAddingMeal] = useState(null);
+  const [date, setDate]               = useState(todayStr());
+  const [logs, setLogs]               = useState([]);
+  const [macroGoals, setMacroGoals]   = useState(null);
+  const [waterIntake, setWaterIntake] = useState(0);
+  const [waterGoal, setWaterGoal]     = useState(2000);
+  const [loading, setLoading]         = useState(true);
+  const [copying, setCopying]         = useState(false);
+  const [addingMeal, setAddingMeal]   = useState(null);
   const [expandedMeal, setExpandedMeal] = useState('cafe');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFood, setSelectedFood] = useState(null);
-  const [qty, setQty] = useState('100');
-  const [customMode, setCustomMode] = useState(false);
-  const [customFood, setCustomFood] = useState({ name: '', qty: '100', kcal: '', protein_g: '', carbs_g: '', fat_g: '' });
-  const [personalId, setPersonalId] = useState(null);
+  const [qty, setQty]                 = useState('100');
+  const [customMode, setCustomMode]   = useState(false);
+  const [customFood, setCustomFood]   = useState({ name: '', qty: '100', kcal: '', protein_g: '', carbs_g: '', fat_g: '' });
+  const [personalId, setPersonalId]   = useState(null);
 
   useEffect(() => {
     if (!user) return;
@@ -55,20 +60,47 @@ export default function LogAlimentar() {
 
   async function loadData() {
     setLoading(true);
-    const [logsRes, planRes] = await Promise.all([
+    const [logsRes, planRes, waterRes, anaRes] = await Promise.all([
       supabase.from('food_logs').select('*').eq('student_id', user.studentId).eq('date', date).order('created_at'),
       supabase.from('meal_plans').select('goal_calories,goal_protein_g,goal_carbs_g,goal_fat_g').eq('student_id', user.studentId).eq('is_active', true).maybeSingle(),
+      supabase.from('water_logs').select('intake_ml').eq('student_id', user.studentId).eq('date', date).maybeSingle(),
+      supabase.from('nutrition_anamnesis').select('water_goal_ml').eq('student_id', user.studentId).maybeSingle(),
     ]);
     setLogs(logsRes.data || []);
     setMacroGoals(planRes.data || null);
+    setWaterIntake(waterRes.data?.intake_ml || 0);
+    setWaterGoal(anaRes.data?.water_goal_ml || 2000);
     setLoading(false);
   }
 
+  async function updateWater(newMl) {
+    const ml = Math.max(0, newMl);
+    setWaterIntake(ml);
+    await supabase.from('water_logs').upsert(
+      { student_id: user.studentId, personal_id: personalId, date, intake_ml: ml, goal_ml: waterGoal },
+      { onConflict: 'student_id,date' }
+    );
+  }
+
+  async function copyYesterday() {
+    setCopying(true);
+    const { data: yLogs } = await supabase.from('food_logs')
+      .select('meal_type,food_name,quantity_g,kcal,protein_g,carbs_g,fat_g')
+      .eq('student_id', user.studentId).eq('date', prevDay(date));
+    if (yLogs?.length) {
+      await supabase.from('food_logs').insert(
+        yLogs.map(l => ({ ...l, student_id: user.studentId, personal_id: personalId, date }))
+      );
+    }
+    setCopying(false);
+    loadData();
+  }
+
   const totals = logs.reduce((acc, l) => ({
-    kcal: acc.kcal + (l.kcal || 0),
+    kcal:      acc.kcal      + (l.kcal      || 0),
     protein_g: acc.protein_g + (l.protein_g || 0),
-    carbs_g: acc.carbs_g + (l.carbs_g || 0),
-    fat_g: acc.fat_g + (l.fat_g || 0),
+    carbs_g:   acc.carbs_g   + (l.carbs_g   || 0),
+    fat_g:     acc.fat_g     + (l.fat_g     || 0),
   }), { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 });
 
   const goals = macroGoals
@@ -86,37 +118,24 @@ export default function LogAlimentar() {
     let entry;
     if (customMode) {
       entry = {
-        student_id: user.studentId,
-        personal_id: personalId,
-        date,
-        meal_type: addingMeal,
-        food_name: customFood.name || 'Alimento personalizado',
-        quantity_g: q,
-        kcal: parseFloat(customFood.kcal) || 0,
-        protein_g: parseFloat(customFood.protein_g) || 0,
-        carbs_g: parseFloat(customFood.carbs_g) || 0,
-        fat_g: parseFloat(customFood.fat_g) || 0,
+        student_id: user.studentId, personal_id: personalId, date, meal_type: addingMeal,
+        food_name: customFood.name || 'Alimento personalizado', quantity_g: q,
+        kcal: parseFloat(customFood.kcal) || 0, protein_g: parseFloat(customFood.protein_g) || 0,
+        carbs_g: parseFloat(customFood.carbs_g) || 0, fat_g: parseFloat(customFood.fat_g) || 0,
       };
     } else {
       entry = {
-        student_id: user.studentId,
-        personal_id: personalId,
-        date,
-        meal_type: addingMeal,
-        food_name: selectedFood.name,
-        quantity_g: q,
-        kcal: Math.round(selectedFood.kcal * ratio),
+        student_id: user.studentId, personal_id: personalId, date, meal_type: addingMeal,
+        food_name: selectedFood.name, quantity_g: q,
+        kcal:      Math.round(selectedFood.kcal      * ratio),
         protein_g: Math.round(selectedFood.protein_g * ratio * 10) / 10,
-        carbs_g: Math.round(selectedFood.carbs_g * ratio * 10) / 10,
-        fat_g: Math.round(selectedFood.fat_g * ratio * 10) / 10,
+        carbs_g:   Math.round(selectedFood.carbs_g   * ratio * 10) / 10,
+        fat_g:     Math.round(selectedFood.fat_g     * ratio * 10) / 10,
       };
     }
     await supabase.from('food_logs').insert(entry);
-    setAddingMeal(null);
-    setSelectedFood(null);
-    setSearchQuery('');
-    setQty('100');
-    setCustomMode(false);
+    setAddingMeal(null); setSelectedFood(null); setSearchQuery('');
+    setQty('100'); setCustomMode(false);
     setCustomFood({ name: '', qty: '100', kcal: '', protein_g: '', carbs_g: '', fat_g: '' });
     loadData();
   }
@@ -126,10 +145,32 @@ export default function LogAlimentar() {
     loadData();
   }
 
+  const waterPct     = Math.min(100, Math.round((waterIntake / waterGoal) * 100));
+  const waterGlasses = Math.round(waterIntake / GLASS_ML);
+  const goalGlasses  = Math.round(waterGoal / GLASS_ML);
+  const waterColor   = waterPct >= 100 ? '#10B981' : waterPct >= 50 ? '#3B82F6' : '#60A5FA';
+
+  if (loading) return <div className="loading-screen"><div className="spinner" /></div>;
+
   return (
     <div className="page-padding" style={{ paddingBottom: 100 }}>
+
+      {/* Top bar */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+        <Link to="/aluno/alimentacao" style={{ display: 'flex', alignItems: 'center', gap: 5, color: 'var(--accent)', fontSize: 13, fontWeight: 600, textDecoration: 'none' }}>
+          <BookOpen size={14} /> Meu plano
+        </Link>
+        <h2 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>Diário</h2>
+        {logs.length === 0 ? (
+          <button onClick={copyYesterday} disabled={copying}
+            style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: '1px solid var(--border)', borderRadius: 8, padding: '5px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600, color: 'var(--gray-500)' }}>
+            <Copy size={12} /> {copying ? '...' : 'Copiar ontem'}
+          </button>
+        ) : <div style={{ width: 100 }} />}
+      </div>
+
       {/* Date nav */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
         <button onClick={() => setDate(prevDay(date))} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <ChevronLeft size={16} color="var(--gray-400)" />
         </button>
@@ -137,34 +178,78 @@ export default function LogAlimentar() {
           <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--gray-900)', textTransform: 'capitalize' }}>{fmtDate(date)}</p>
           {date === todayStr() && <p style={{ margin: 0, fontSize: 11, color: 'var(--accent)' }}>Hoje</p>}
         </div>
-        <button onClick={() => setDate(nextDay(date))} disabled={date >= todayStr()} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: date >= todayStr() ? 'not-allowed' : 'pointer', opacity: date >= todayStr() ? 0.3 : 1 }}>
+        <button onClick={() => setDate(nextDay(date))} disabled={date >= todayStr()}
+          style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, width: 36, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: date >= todayStr() ? 'not-allowed' : 'pointer', opacity: date >= todayStr() ? 0.3 : 1 }}>
           <ChevronRight size={16} color="var(--gray-400)" />
         </button>
       </div>
 
       {/* Macro summary */}
-      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, marginBottom: 16 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 12 }}>
+      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, marginBottom: 10 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 10 }}>
           <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--gray-400)' }}>Total do dia</span>
-          <span style={{ fontSize: 22, fontWeight: 900, color: 'var(--gray-900)' }}>
-            {Math.round(totals.kcal)}{goals?.kcal ? <span style={{ fontSize: 13, color: 'var(--gray-400)', fontWeight: 600 }}> / {goals.kcal} kcal</span> : ' kcal'}
+          <span style={{ fontSize: 22, fontWeight: 900, color: goals?.kcal && totals.kcal > goals.kcal ? 'var(--red)' : 'var(--gray-900)' }}>
+            {Math.round(totals.kcal)}
+            {goals?.kcal
+              ? <span style={{ fontSize: 13, color: 'var(--gray-400)', fontWeight: 600 }}> / {goals.kcal} kcal</span>
+              : <span style={{ fontSize: 13, color: 'var(--gray-400)', fontWeight: 600 }}> kcal</span>}
           </span>
         </div>
+        {goals?.kcal && (
+          <div style={{ height: 6, borderRadius: 99, background: 'var(--border)', overflow: 'hidden', marginBottom: 10 }}>
+            <div style={{ height: '100%', width: `${Math.min(100, Math.round((totals.kcal / goals.kcal) * 100))}%`, background: totals.kcal > goals.kcal ? 'var(--red)' : MACRO_COLORS.kcal, borderRadius: 99, transition: 'width 0.5s' }} />
+          </div>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
           {['protein_g', 'carbs_g', 'fat_g'].map(k => {
             const pct = goals?.[k] ? Math.min(100, Math.round((totals[k] / goals[k]) * 100)) : null;
+            const over = goals?.[k] && totals[k] > goals[k];
             return (
               <div key={k}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
                   <span style={{ fontSize: 10, fontWeight: 700, color: MACRO_COLORS[k] }}>{MACRO_LABELS[k]}</span>
-                  <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>{Math.round(totals[k] * 10) / 10}{MACRO_UNITS[k]}{goals?.[k] ? `/${goals[k]}g` : ''}</span>
+                  <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>
+                    {Math.round(totals[k] * 10) / 10}{MACRO_UNITS[k]}{goals?.[k] ? `/${goals[k]}g` : ''}
+                  </span>
                 </div>
                 <div style={{ height: 5, borderRadius: 99, background: 'var(--border)', overflow: 'hidden' }}>
-                  <div style={{ height: '100%', width: pct !== null ? `${pct}%` : '0%', background: MACRO_COLORS[k], borderRadius: 99 }} />
+                  <div style={{ height: '100%', width: pct !== null ? `${pct}%` : '0%', background: over ? 'var(--red)' : MACRO_COLORS[k], borderRadius: 99 }} />
                 </div>
               </div>
             );
           })}
+        </div>
+      </div>
+
+      {/* Water tracker */}
+      <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 16px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ width: 40, height: 40, borderRadius: 12, background: waterPct >= 100 ? 'rgba(16,185,129,0.12)' : 'rgba(59,130,246,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <Droplets size={20} color={waterColor} />
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--gray-900)' }}>Água</span>
+            <span style={{ fontSize: 12, fontWeight: 700, color: waterColor }}>
+              {(waterIntake / 1000).toFixed(1)}L
+              <span style={{ color: 'var(--gray-400)', fontWeight: 500 }}> / {(waterGoal / 1000).toFixed(1)}L</span>
+            </span>
+          </div>
+          <div style={{ height: 5, borderRadius: 99, background: 'var(--border)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${waterPct}%`, background: waterColor, borderRadius: 99, transition: 'width 0.4s' }} />
+          </div>
+          <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--gray-400)' }}>
+            {waterGlasses}/{goalGlasses} copos de {GLASS_ML}ml
+          </p>
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
+          <button onClick={() => updateWater(waterIntake - GLASS_ML)} disabled={waterIntake <= 0}
+            style={{ width: 32, height: 32, borderRadius: 9, border: '1px solid var(--border)', background: 'var(--bg-page)', cursor: waterIntake <= 0 ? 'not-allowed' : 'pointer', opacity: waterIntake <= 0 ? 0.3 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, fontWeight: 700, color: 'var(--gray-500)' }}>
+            −
+          </button>
+          <button onClick={() => updateWater(waterIntake + GLASS_ML)}
+            style={{ width: 32, height: 32, borderRadius: 9, border: 'none', background: waterColor, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontSize: 18, fontWeight: 700 }}>
+            +
+          </button>
         </div>
       </div>
 
@@ -219,7 +304,6 @@ export default function LogAlimentar() {
                 <X size={20} color="var(--gray-400)" />
               </button>
             </div>
-            {/* Tabs */}
             <div style={{ display: 'flex', gap: 0, marginBottom: 12 }}>
               {['Buscar', 'Manual'].map(t => (
                 <button key={t} onClick={() => { setCustomMode(t === 'Manual'); setSelectedFood(null); setSearchQuery(''); }}
@@ -237,7 +321,9 @@ export default function LogAlimentar() {
                   <>
                     <div className="search-bar" style={{ marginBottom: 12 }}>
                       <Search size={14} color="var(--gray-400)" />
-                      <input autoFocus value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Buscar alimento (ex: frango, arroz...)" style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--gray-900)', fontSize: 14, flex: 1 }} />
+                      <input autoFocus value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                        placeholder="Buscar alimento (ex: frango, arroz...)"
+                        style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--gray-900)', fontSize: 14, flex: 1 }} />
                     </div>
                     {searchQuery.trim().length >= 1 && (
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -262,11 +348,9 @@ export default function LogAlimentar() {
                     <button onClick={() => setSelectedFood(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', fontSize: 13, marginBottom: 10, padding: 0 }}>← Voltar</button>
                     <p style={{ margin: '0 0 4px', fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>{selectedFood.name}</p>
                     <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--gray-400)' }}>{selectedFood.category}</p>
-
                     <label style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 600 }}>Quantidade (g)</label>
                     <input type="number" value={qty} onChange={e => setQty(e.target.value)} min={1}
                       style={{ display: 'block', width: '100%', marginTop: 4, marginBottom: 14, padding: '10px 12px', borderRadius: 8, border: '1px solid var(--border)', background: 'var(--bg-page)', color: 'var(--gray-900)', fontSize: 15, fontWeight: 700, boxSizing: 'border-box' }} />
-
                     {(() => {
                       const r = (parseFloat(qty) || 100) / 100;
                       return (

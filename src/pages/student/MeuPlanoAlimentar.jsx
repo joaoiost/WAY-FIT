@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
-import { Utensils, ChevronDown, ChevronUp, Loader, AlertCircle, Droplets } from 'lucide-react';
+import { Utensils, ChevronDown, ChevronUp, Loader, AlertCircle, Droplets, PenLine } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
@@ -159,53 +160,42 @@ function MealCard({ meal }) {
 
 export default function MeuPlanoAlimentar() {
   const { user } = useAuth();
-  const [plan,     setPlan]     = useState(null);
-  const [meals,    setMeals]    = useState([]);
-  const [anamnese, setAnamnese] = useState(null);
-  const [loading,  setLoading]  = useState(true);
+  const [plan,       setPlan]       = useState(null);
+  const [meals,      setMeals]      = useState([]);
+  const [anamnese,   setAnamnese]   = useState(null);
+  const [todayTotals, setTodayTotals] = useState(null);
+  const [loading,    setLoading]    = useState(true);
 
   useEffect(() => {
     if (!hasSupabase || !user) { setLoading(false); return; }
     (async () => {
-      // Get student record
-      const { data: student } = await supabase
-        .from('students')
-        .select('id')
-        .eq('user_id', user.id)
-        .maybeSingle();
-
+      const { data: student } = await supabase.from('students').select('id').eq('user_id', user.id).maybeSingle();
       if (!student) { setLoading(false); return; }
 
-      // Load active meal plan
-      const { data: planData } = await supabase
-        .from('meal_plans')
-        .select('*')
-        .eq('student_id', student.id)
-        .eq('is_active', true)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: planData } = await supabase.from('meal_plans').select('*').eq('student_id', student.id).eq('is_active', true).order('updated_at', { ascending: false }).limit(1).maybeSingle();
 
       if (!planData) { setLoading(false); return; }
       setPlan(planData);
 
-      // Load meals from relational tables (the correct way)
-      const { data: mealsData } = await supabase
-        .from('meal_plan_meals')
-        .select('*, meal_plan_foods(*)')
-        .eq('meal_plan_id', planData.id)
-        .order('order_index');
+      const [mealsRes, anaRes, logsRes] = await Promise.all([
+        supabase.from('meal_plan_meals').select('*, meal_plan_foods(*)').eq('meal_plan_id', planData.id).order('order_index'),
+        supabase.from('nutrition_anamnesis').select('allergies, notes, water_goal_ml').eq('student_id', student.id).maybeSingle(),
+        supabase.from('food_logs').select('kcal,protein_g,carbs_g,fat_g').eq('student_id', student.id).eq('date', today),
+      ]);
 
-      setMeals(mealsData || []);
+      setMeals(mealsRes.data || []);
+      setAnamnese(anaRes.data);
 
-      // Load anamnese for allergies / notes display
-      const { data: ana } = await supabase
-        .from('nutrition_anamnesis')
-        .select('allergies, notes, water_goal_ml')
-        .eq('student_id', student.id)
-        .maybeSingle();
-
-      setAnamnese(ana);
+      const logs = logsRes.data || [];
+      if (logs.length > 0) {
+        setTodayTotals(logs.reduce((acc, l) => ({
+          kcal:      acc.kcal      + (l.kcal      || 0),
+          protein_g: acc.protein_g + (l.protein_g || 0),
+          carbs_g:   acc.carbs_g   + (l.carbs_g   || 0),
+          fat_g:     acc.fat_g     + (l.fat_g     || 0),
+        }), { kcal: 0, protein_g: 0, carbs_g: 0, fat_g: 0 }));
+      }
 
       setLoading(false);
     })();
@@ -246,14 +236,35 @@ export default function MeuPlanoAlimentar() {
     <div className="page-padding" style={{ flex: 1, maxWidth: 700, margin: '0 auto' }}>
 
       {/* Header */}
-      <div style={{ marginBottom: 20 }}>
-        <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--gray-900, #111827)' }}>
-          {plan.name || 'Plano Alimentar'}
-        </h2>
-        <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--gray-400, #9CA3AF)' }}>
-          Atualizado em {new Date(plan.updated_at).toLocaleDateString('pt-BR')}
-        </p>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20 }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 900, color: 'var(--gray-900, #111827)' }}>
+            {plan.name || 'Plano Alimentar'}
+          </h2>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--gray-400, #9CA3AF)' }}>
+            Atualizado em {new Date(plan.updated_at).toLocaleDateString('pt-BR')}
+          </p>
+        </div>
+        <Link to="/aluno/log-alimentar"
+          style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 14px', borderRadius: 10, background: 'var(--accent)', color: 'white', fontSize: 13, fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}>
+          <PenLine size={14} /> Registrar
+        </Link>
       </div>
+
+      {/* Today's progress (if any logs exist) */}
+      {todayTotals && plan.goal_calories && (
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, padding: '12px 16px', marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Hoje</span>
+            <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--gray-900)' }}>
+              {Math.round(todayTotals.kcal)} <span style={{ fontSize: 11, color: 'var(--gray-400)', fontWeight: 500 }}>/ {plan.goal_calories} kcal</span>
+            </span>
+          </div>
+          <div style={{ height: 6, borderRadius: 99, background: 'var(--border)', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${Math.min(100, Math.round((todayTotals.kcal / plan.goal_calories) * 100))}%`, background: 'var(--accent)', borderRadius: 99, transition: 'width 0.5s' }} />
+          </div>
+        </div>
+      )}
 
       {/* Allergy banner (from anamnese) */}
       {anamnese?.allergies && (

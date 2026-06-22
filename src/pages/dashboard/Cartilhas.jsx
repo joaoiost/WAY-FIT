@@ -95,12 +95,12 @@ function ExerciseRowEditor({ ex, index, onChange, onDelete, onMoveUp, onMoveDown
             style={{ width: '100%', border: 'none', outline: 'none', fontSize: 14, fontWeight: 600, color: '#111827', background: 'transparent' }}
           />
           {showSugg && suggestions.length > 0 && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, maxHeight: 200, overflowY: 'auto' }}>
+            <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface)', border: '1.5px solid var(--border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, maxHeight: 200, overflowY: 'auto' }}>
               {suggestions.slice(0, 8).map((s, i) => (
                 <button key={i} onMouseDown={() => pickSugg(s)}
-                  style={{ width: '100%', padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, borderBottom: i < Math.min(suggestions.length, 8) - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                  style={{ width: '100%', padding: '9px 14px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, display: 'flex', alignItems: 'center', gap: 8, borderBottom: i < Math.min(suggestions.length, 8) - 1 ? '1px solid var(--border-light)' : 'none' }}>
                   <span style={{ fontSize: 10, background: groupColor(s.group) + '20', color: groupColor(s.group), padding: '2px 6px', borderRadius: 20, fontWeight: 700, flexShrink: 0 }}>{s.group}</span>
-                  <span style={{ color: '#111827', fontWeight: 500 }}>{s.name}</span>
+                  <span style={{ color: 'var(--gray-900)', fontWeight: 500 }}>{s.name}</span>
                 </button>
               ))}
             </div>
@@ -457,7 +457,7 @@ function TemplateEditor({ template, onSave, onClose }) {
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }} />
 
       {/* Painel */}
-      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 520, background: 'white', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)' }}>
+      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 520, background: 'var(--bg-surface)', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)' }}>
 
         {/* Header */}
         <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>

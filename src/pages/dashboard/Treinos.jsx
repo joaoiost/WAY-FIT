@@ -160,13 +160,13 @@ function ExerciseRow({ ex, index, onChange, onDelete, onDuplicate }) {
             placeholder={`Exercício ${index + 1}...`}
             style={{ width: '100%', border: 'none', outline: 'none', fontSize: 13, fontWeight: ex.name ? 600 : 400, color: ex.name ? '#111827' : '#9CA3AF', background: 'transparent' }} />
           {showSugg && (
-            <div style={{ position: 'absolute', top: '100%', left: 0, background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 60, maxHeight: 210, overflowY: 'auto', minWidth: 270, right: 0 }}>
+            <div style={{ position: 'absolute', top: '100%', left: 0, background: 'var(--bg-surface)', border: '1.5px solid var(--border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 60, maxHeight: 210, overflowY: 'auto', minWidth: 270, right: 0 }}>
               {suggs.slice(0, 8).map((s, i) => (
                 <button key={i} onMouseDown={() => pick(s)}
-                  style={{ width: '100%', padding: '8px 12px', background: i === 0 ? '#F9FAFB' : 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, display: 'flex', gap: 8, alignItems: 'center', borderBottom: '1px solid #F3F4F6' }}>
+                  style={{ width: '100%', padding: '8px 12px', background: i === 0 ? 'var(--gray-50)' : 'none', border: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 13, display: 'flex', gap: 8, alignItems: 'center', borderBottom: '1px solid var(--border-light)' }}>
                   <span style={{ fontSize: 10, background: gc(s.group) + '20', color: gc(s.group), padding: '2px 6px', borderRadius: 20, fontWeight: 700, flexShrink: 0 }}>{s.group}</span>
-                  <span style={{ flex: 1, color: '#111827' }}>{s.name}</span>
-                  {i === 0 && <span style={{ fontSize: 10, color: '#D1D5DB' }}>↵</span>}
+                  <span style={{ flex: 1, color: 'var(--gray-900)' }}>{s.name}</span>
+                  {i === 0 && <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>↵</span>}
                 </button>
               ))}
             </div>
@@ -184,10 +184,10 @@ function ExerciseRow({ ex, index, onChange, onDelete, onDuplicate }) {
             onFocus={() => setRepsOpen(true)} onBlur={() => setTimeout(() => setRepsOpen(false), 150)}
             style={inp()} />
           {repsOpen && (
-            <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 20px rgba(0,0,0,0.12)', zIndex: 70, display: 'flex', flexWrap: 'wrap', gap: 4, padding: 8, width: 190 }}>
+            <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-surface)', border: '1.5px solid var(--border)', borderRadius: 10, boxShadow: '0 8px 20px rgba(0,0,0,0.12)', zIndex: 70, display: 'flex', flexWrap: 'wrap', gap: 4, padding: 8, width: 190 }}>
               {REPS_Q.map(r => (
                 <button key={r} onMouseDown={() => { onChange({ ...ex, reps: r }); setRepsOpen(false); }}
-                  style={{ padding: '4px 9px', borderRadius: 16, fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer', background: ex.reps === r ? '#EFF6FF' : '#F3F4F6', color: ex.reps === r ? '#3B82F6' : '#6B7280' }}>
+                  style={{ padding: '4px 9px', borderRadius: 16, fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer', background: ex.reps === r ? 'var(--accent-bg)' : 'var(--gray-100)', color: ex.reps === r ? 'var(--accent)' : 'var(--gray-500)' }}>
                   {r}
                 </button>
               ))}
@@ -201,10 +201,10 @@ function ExerciseRow({ ex, index, onChange, onDelete, onDuplicate }) {
             onFocus={() => setRestOpen(true)} onBlur={() => setTimeout(() => setRestOpen(false), 150)}
             style={inp({ color: '#10B981', fontSize: 11 })} />
           {restOpen && (
-            <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 10, boxShadow: '0 8px 20px rgba(0,0,0,0.12)', zIndex: 70, display: 'flex', flexWrap: 'wrap', gap: 4, padding: 8, width: 210 }}>
+            <div style={{ position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-surface)', border: '1.5px solid var(--border)', borderRadius: 10, boxShadow: '0 8px 20px rgba(0,0,0,0.12)', zIndex: 70, display: 'flex', flexWrap: 'wrap', gap: 4, padding: 8, width: 210 }}>
               {REST_Q.map(r => (
                 <button key={r} onMouseDown={() => { onChange({ ...ex, rest: r }); setRestOpen(false); }}
-                  style={{ padding: '4px 9px', borderRadius: 16, fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer', background: ex.rest === r ? '#F0FDF4' : '#F3F4F6', color: ex.rest === r ? '#10B981' : '#6B7280' }}>
+                  style={{ padding: '4px 9px', borderRadius: 16, fontSize: 11, fontWeight: 700, border: 'none', cursor: 'pointer', background: ex.rest === r ? 'rgba(16,185,129,0.12)' : 'var(--gray-100)', color: ex.rest === r ? '#10B981' : 'var(--gray-500)' }}>
                   {r}
                 </button>
               ))}
@@ -376,7 +376,7 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
   return (
     <>
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.4)', zIndex: 200 }} />
-      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 540, background: 'white', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)' }}>
+      <div style={{ position: 'fixed', top: 0, right: 0, bottom: 0, width: '100%', maxWidth: 540, background: 'var(--bg-surface)', zIndex: 201, display: 'flex', flexDirection: 'column', boxShadow: '-8px 0 40px rgba(0,0,0,0.15)' }}>
 
         {/* Header */}
         <div style={{ padding: '18px 22px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -643,12 +643,12 @@ function DayCell({ plan, isTarget, onAdd, onEdit, onRemove, onCopyTo }) {
           onMouseLeave={e => e.currentTarget.style.background = 'none'}>
           <Copy size={11} /> Copiar
           {copyOpen && (
-            <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', background: 'white', borderRadius: 14, boxShadow: '0 12px 32px rgba(0,0,0,0.16)', border: '1.5px solid #F1F5F9', zIndex: 50, padding: '6px 0', minWidth: 160, textAlign: 'left' }}>
-              <p style={{ margin: '0 0 4px', padding: '0 12px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Copiar para</p>
+            <div onClick={e => e.stopPropagation()} style={{ position: 'absolute', bottom: 'calc(100% + 8px)', left: '50%', transform: 'translateX(-50%)', background: 'var(--bg-surface)', borderRadius: 14, boxShadow: '0 12px 32px rgba(0,0,0,0.16)', border: '1.5px solid var(--border)', zIndex: 50, padding: '6px 0', minWidth: 160, textAlign: 'left' }}>
+              <p style={{ margin: '0 0 4px', padding: '0 12px', fontSize: 10, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Copiar para</p>
               {DAYS.map(d => (
                 <button key={d.v} onClick={() => { onCopyTo(d.v); setCopyOpen(false); }}
-                  style={{ width: '100%', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 12, fontWeight: 600, color: '#374151', display: 'flex', alignItems: 'center', gap: 8 }}
-                  onMouseEnter={e => e.currentTarget.style.background = '#F9FAFB'}
+                  style={{ width: '100%', padding: '8px 12px', border: 'none', background: 'none', cursor: 'pointer', textAlign: 'left', fontSize: 12, fontWeight: 600, color: 'var(--gray-700)', display: 'flex', alignItems: 'center', gap: 8 }}
+                  onMouseEnter={e => e.currentTarget.style.background = 'var(--gray-50)'}
                   onMouseLeave={e => e.currentTarget.style.background = 'none'}>
                   <span style={{ fontSize: 10, fontWeight: 800, color: '#9CA3AF', width: 26 }}>{d.s}</span>
                   {d.full}
@@ -871,7 +871,7 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose })
   const selColor   = selected && selected !== 'rest' ? tc(selected.type) : '#8B5CF6';
 
   return (
-    <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'white', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'var(--bg-page)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
       {/* Header */}
       <div style={{ padding: '14px 20px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>

@@ -496,10 +496,10 @@ export default function ExecutarTreino() {
   const nextInSameSuperset = ssGroup && nextEx?.superset_group === ssGroup;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#F1F5F9', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg-page)', display: 'flex', flexDirection: 'column' }}>
 
       {/* Sticky header */}
-      <div style={{ background: 'white', borderBottom: '1px solid #E5E7EB', position: 'sticky', top: 0, zIndex: 20 }}>
+      <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 56, padding: '0 16px' }}>
           <button onClick={handleQuit} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', color: '#6B7280', flexShrink: 0 }}>
             <ChevronLeft size={22} />
@@ -744,9 +744,9 @@ export default function ExecutarTreino() {
       </div>
 
       {/* Bottom nav */}
-      <div style={{ padding: '12px 16px', background: 'white', borderTop: '1px solid #E5E7EB', display: 'flex', gap: 10, position: 'sticky', bottom: 0, zIndex: 20 }}>
+      <div style={{ padding: '12px 16px', background: 'var(--bg-surface)', borderTop: '1px solid var(--border)', display: 'flex', gap: 10, position: 'sticky', bottom: 0, zIndex: 20 }}>
         <button onClick={goPrev} disabled={currentIdx === 0}
-          style={{ flex: 1, padding: '14px', borderRadius: 12, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 14, fontWeight: 700, color: '#374151', cursor: currentIdx === 0 ? 'not-allowed' : 'pointer', opacity: currentIdx === 0 ? 0.35 : 1 }}>
+          style={{ flex: 1, padding: '14px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--bg-surface)', fontSize: 14, fontWeight: 700, color: 'var(--gray-700)', cursor: currentIdx === 0 ? 'not-allowed' : 'pointer', opacity: currentIdx === 0 ? 0.35 : 1 }}>
           ← Anterior
         </button>
         <button onClick={goNext}

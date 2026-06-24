@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, FileText, Plus, ChevronDown, Check, Loader, TrendingUp, Activity, Dumbbell, Scale, Ruler } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -54,17 +54,17 @@ function classifyVO2(vo2, gender) {
 function Section({ title, icon: Icon, color, children, defaultOpen = true }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div style={{ background: 'white', borderRadius: 16, marginBottom: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 16, marginBottom: 16, border: '1px solid var(--border-light)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
       <button onClick={() => setOpen(o => !o)}
         style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '18px 20px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
         <div style={{ width: 40, height: 40, borderRadius: 12, background: color + '18', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
           <Icon size={20} color={color} />
         </div>
-        <span style={{ flex: 1, fontSize: 16, fontWeight: 800, color: '#111827' }}>{title}</span>
+        <span style={{ flex: 1, fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>{title}</span>
         <ChevronDown size={18} color="#9CA3AF" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
       </button>
       {open && (
-        <div style={{ padding: '0 20px 20px', borderTop: '1px solid #F3F4F6' }}>
+        <div style={{ padding: '0 20px 20px', borderTop: '1px solid var(--border)' }}>
           {children}
         </div>
       )}
@@ -85,7 +85,7 @@ function Field({ label, value, onChange, placeholder, type = 'text', unit, readO
           placeholder={placeholder || '—'}
           readOnly={readOnly}
           style={{
-            width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB',
+            width: '100%', padding: '10px 14px', borderRadius: 10, border: '1.5px solid var(--border)',
             fontSize: 15, fontWeight: 600, color: readOnly ? '#6B7280' : '#111827',
             background: readOnly ? '#F9FAFB' : 'white', outline: 'none', boxSizing: 'border-box',
             paddingRight: unit ? 44 : 14,
@@ -371,22 +371,22 @@ export default function AvaliacaoFisica() {
       {/* Header */}
       <div style={{ marginBottom: 24, display: 'flex', alignItems: 'flex-start', gap: 14 }}>
         <button onClick={() => navigate(`/dashboard/alunos/${studentId}`)}
-          style={{ width: 40, height: 40, borderRadius: '50%', background: 'white', border: '1px solid #E5E7EB', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
+          style={{ width: 40, height: 40, borderRadius: '50%', background: 'var(--bg-surface)', border: '1px solid var(--border)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 2 }}>
           <ArrowLeft size={18} color="#374151" />
         </button>
         <div style={{ flex: 1 }}>
-          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: '#111827' }}>Avaliação Física</h2>
+          <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--gray-900)' }}>Avaliação Física</h2>
           <p style={{ margin: '4px 0 0', fontSize: 14, color: '#9CA3AF' }}>
             {student?.name || 'Aluno'} · {history.length > 0 ? `${history.length} avaliação(ões) anterior(es)` : 'Primeira avaliação'}
           </p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
           <button onClick={generatePDF}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 12, cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#374151' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 16px', background: 'var(--bg-surface)', border: '1.5px solid var(--border)', borderRadius: 12, cursor: 'pointer', fontSize: 14, fontWeight: 700, color: 'var(--gray-700)' }}>
             <FileText size={16} color="#374151" /> Exportar PDF
           </button>
           <button onClick={save} disabled={saving}
-            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', background: saved ? '#10B981' : 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', borderRadius: 12, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 700, color: 'white' }}>
+            style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '10px 18px', background: saved ? '#10B981' : 'var(--accent)', border: 'none', borderRadius: 12, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 700, color: 'white' }}>
             {saving ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : saved ? <Check size={16} /> : <Save size={16} />}
             {saving ? 'Salvando...' : saved ? 'Salvo!' : 'Salvar'}
           </button>
@@ -395,12 +395,12 @@ export default function AvaliacaoFisica() {
 
       {/* Histórico rápido */}
       {history.length > 1 && (
-        <div style={{ background: 'white', borderRadius: 16, padding: '16px 20px', marginBottom: 16, border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '16px 20px', marginBottom: 16, border: '1px solid var(--border-light)', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
           <p style={{ margin: '0 0 10px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Avaliações anteriores</p>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
             {history.map((h, i) => (
               <button key={h.id} onClick={() => setForm({ ...EMPTY_FORM, ...h.data, date: h.date })}
-                style={{ flexShrink: 0, padding: '8px 14px', borderRadius: 10, border: '1.5px solid #E5E7EB', background: i === 0 ? '#EFF6FF' : 'white', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: i === 0 ? '#1D4ED8' : '#6B7280', whiteSpace: 'nowrap' }}>
+                style={{ flexShrink: 0, padding: '8px 14px', borderRadius: 10, border: '1.5px solid var(--border)', background: i === 0 ? '#EFF6FF' : 'white', cursor: 'pointer', fontSize: 12, fontWeight: 700, color: i === 0 ? '#1D4ED8' : '#6B7280', whiteSpace: 'nowrap' }}>
                 {h.date} {i === 0 ? '(atual)' : ''}
               </button>
             ))}
@@ -446,7 +446,7 @@ export default function AvaliacaoFisica() {
                 return (
                   <div key={d.key} style={{ background: bg, borderRadius: 12, padding: '10px 12px', border: `1px solid ${color}40` }}>
                     <p style={{ margin: '0 0 3px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.label}</p>
-                    <p style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 900, color: '#111827' }}>{d.curr} <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF' }}>{d.unit}</span></p>
+                    <p style={{ margin: '0 0 2px', fontSize: 15, fontWeight: 900, color: 'var(--gray-900)' }}>{d.curr} <span style={{ fontSize: 11, fontWeight: 600, color: '#9CA3AF' }}>{d.unit}</span></p>
                     <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color }}>
                       {arrow} {d.diff !== 0 ? `${sign}${Math.abs(d.diff).toFixed(1)} ${d.unit}` : 'Igual'}
                     </p>
@@ -478,7 +478,7 @@ export default function AvaliacaoFisica() {
           <Field label="Idade" value={form.age} onChange={v => set('age', v)} placeholder="30" type="number" unit="anos" />
           <div>
             <p style={{ margin: '0 0 5px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>IMC calculado</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: '#F9FAFB', border: '1.5px solid #E5E7EB', minHeight: 44 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: '#F9FAFB', border: '1.5px solid var(--border)', minHeight: 44 }}>
               <span style={{ fontSize: 18, fontWeight: 900, color: imc ? imcClass.color : '#9CA3AF' }}>{imc || '—'}</span>
               {imc && <ClassBadge label={imcClass.label} color={imcClass.color} />}
             </div>
@@ -493,13 +493,13 @@ export default function AvaliacaoFisica() {
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <div>
               <p style={{ margin: '0 0 5px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Massa magra</p>
-              <div style={{ padding: '10px 14px', borderRadius: 10, background: '#F9FAFB', border: '1.5px solid #E5E7EB', fontSize: 15, fontWeight: 700, color: leanMass ? '#10B981' : '#9CA3AF' }}>
+              <div style={{ padding: '10px 14px', borderRadius: 10, background: '#F9FAFB', border: '1.5px solid var(--border)', fontSize: 15, fontWeight: 700, color: leanMass ? '#10B981' : '#9CA3AF' }}>
                 {leanMass ? `${leanMass} kg` : '—'}
               </div>
             </div>
             <div>
               <p style={{ margin: '0 0 5px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Massa gorda</p>
-              <div style={{ padding: '10px 14px', borderRadius: 10, background: '#F9FAFB', border: '1.5px solid #E5E7EB', fontSize: 15, fontWeight: 700, color: fatMass ? '#F59E0B' : '#9CA3AF' }}>
+              <div style={{ padding: '10px 14px', borderRadius: 10, background: '#F9FAFB', border: '1.5px solid var(--border)', fontSize: 15, fontWeight: 700, color: fatMass ? '#F59E0B' : '#9CA3AF' }}>
                 {fatMass ? `${fatMass} kg` : '—'}
               </div>
             </div>
@@ -529,7 +529,7 @@ export default function AvaliacaoFisica() {
           </div>
           <div>
             <p style={{ margin: '0 0 5px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>VO₂ máx estimado</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: '#F9FAFB', border: '1.5px solid #E5E7EB', minHeight: 44 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 10, background: '#F9FAFB', border: '1.5px solid var(--border)', minHeight: 44 }}>
               <span style={{ fontSize: 18, fontWeight: 900, color: vo2 ? vo2Class.color : '#9CA3AF' }}>
                 {vo2 ? `${vo2} ml/kg/min` : '—'}
               </span>
@@ -591,14 +591,14 @@ export default function AvaliacaoFisica() {
             <textarea value={form.obs} onChange={e => set('obs', e.target.value)}
               placeholder="Anotações livres sobre a avaliação, comportamento do aluno, pontos de atenção..."
               rows={4}
-              style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', fontSize: 14, color: '#374151', resize: 'vertical', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border)', fontSize: 14, color: 'var(--gray-700)', resize: 'vertical', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
           <div>
             <p style={{ margin: '0 0 6px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Recomendações do personal</p>
             <textarea value={form.recommendation} onChange={e => set('recommendation', e.target.value)}
               placeholder="Estratégias, objetivos de curto/longo prazo, foco de cada fase do treinamento..."
               rows={4}
-              style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid #E5E7EB', fontSize: 14, color: '#374151', resize: 'vertical', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              style={{ width: '100%', padding: '12px 14px', borderRadius: 12, border: '1.5px solid var(--border)', fontSize: 14, color: 'var(--gray-700)', resize: 'vertical', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box' }} />
           </div>
         </div>
       </Section>
@@ -606,11 +606,11 @@ export default function AvaliacaoFisica() {
       {/* Botão salvar final */}
       <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginBottom: 40 }}>
         <button onClick={generatePDF}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 12, cursor: 'pointer', fontSize: 14, fontWeight: 700, color: '#374151' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 20px', background: 'var(--bg-surface)', border: '1.5px solid var(--border)', borderRadius: 12, cursor: 'pointer', fontSize: 14, fontWeight: 700, color: 'var(--gray-700)' }}>
           <FileText size={16} /> Exportar PDF
         </button>
         <button onClick={save} disabled={saving}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: saved ? '#10B981' : 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', borderRadius: 12, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 700, color: 'white', boxShadow: '0 4px 14px rgba(59,130,246,0.3)' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '12px 24px', background: saved ? '#10B981' : 'var(--accent)', border: 'none', borderRadius: 12, cursor: saving ? 'not-allowed' : 'pointer', fontSize: 14, fontWeight: 700, color: 'white', boxShadow: '0 4px 14px rgba(59,130,246,0.3)' }}>
           {saving ? <Loader size={16} style={{ animation: 'spin 1s linear infinite' }} /> : saved ? <Check size={16} /> : <Save size={16} />}
           {saving ? 'Salvando...' : saved ? 'Avaliação salva!' : 'Salvar avaliação'}
         </button>
@@ -620,3 +620,5 @@ export default function AvaliacaoFisica() {
     </div>
   );
 }
+
+

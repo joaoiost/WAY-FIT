@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Settings, Palette, Bell, User, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -152,7 +152,7 @@ export default function Configuracoes() {
           <div key={l} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 0', borderTop: '1px solid var(--border)' }}>
             <span style={{ fontSize: 13, color: 'var(--gray-900)' }}>{l}</span>
             <div style={{ width: 40, height: 22, borderRadius: 11, background: v ? 'var(--accent)' : 'var(--border)', position: 'relative', opacity: 0.5 }}>
-              <div style={{ position: 'absolute', top: 2, left: v ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'white', transition: 'left 0.2s' }} />
+              <div style={{ position: 'absolute', top: 2, left: v ? 20 : 2, width: 18, height: 18, borderRadius: '50%', background: 'var(--bg-surface)', transition: 'left 0.2s' }} />
             </div>
           </div>
         ))}
@@ -186,3 +186,4 @@ export default function Configuracoes() {
     </div>
   );
 }
+

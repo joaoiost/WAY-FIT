@@ -1,16 +1,16 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { Zap } from 'lucide-react';
 
 export default function Termos() {
   return (
     <div style={{ minHeight: '100vh', background: '#F8FAFC' }}>
       {/* Header */}
-      <div style={{ background: 'white', borderBottom: '1px solid #E5E7EB', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+      <div style={{ background: 'white', borderBottom: '1px solid var(--border-light)', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Zap size={15} color="white" fill="white" />
           </div>
-          <span style={{ fontSize: 16, fontWeight: 800, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>WAY FIT</span>
+          <span style={{ fontSize: 16, fontWeight: 800, background: 'var(--accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>WAY FIT</span>
         </div>
         <Link to="/login" style={{ fontSize: 13, color: '#6B7280', textDecoration: 'none' }}>← Voltar</Link>
       </div>
@@ -82,7 +82,7 @@ export default function Termos() {
           <p>Estes Termos de Uso são regidos pela legislação brasileira. Fica eleito o foro da comarca de domicílio do usuário para resolução de eventuais conflitos, conforme o Código de Defesa do Consumidor.</p>
         </Section>
 
-        <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid #E5E7EB', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+        <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid var(--border)', display: 'flex', gap: 16, flexWrap: 'wrap' }}>
           <Link to="/privacidade" style={{ color: '#3B82F6', textDecoration: 'none', fontSize: 14, fontWeight: 600 }}>Política de Privacidade →</Link>
           <Link to="/login" style={{ color: '#6B7280', textDecoration: 'none', fontSize: 14 }}>Voltar ao app</Link>
         </div>
@@ -101,3 +101,4 @@ function Section({ title, children }) {
     </div>
   );
 }
+

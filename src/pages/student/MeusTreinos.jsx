@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dumbbell, ChevronDown, ChevronUp, Play, X, Star, Loader, CheckCircle, FileText } from 'lucide-react';
+import { Dumbbell, ChevronDown, ChevronUp, Play, X, Star, Loader, CheckCircle, FileText, Zap, Trophy, CalendarOff } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
-import { trainingPlans } from '../../data/mockData';
+// mockData removed
 import { fetchExerciseVideo } from '../../lib/youtubeVideo';
 
 const TYPE_COLORS = {
@@ -81,12 +81,12 @@ function RatingModal({ plan, studentId, personalId, onClose, onSaved }) {
 
   if (done) return (
     <div className="modal-overlay">
-      <div style={{ background: 'white', borderRadius: 20, padding: 40, textAlign: 'center', maxWidth: 340, width: '100%' }}>
-        <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+      <div style={{ background: 'var(--bg-surface)', borderRadius: 20, padding: 40, textAlign: 'center', maxWidth: 340, width: '100%' }}>
+        <div style={{ width: 64, height: 64, borderRadius: '50%', background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
           <CheckCircle size={32} color="#10B981" />
         </div>
-        <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: '#111827' }}>Treino registrado!</h3>
-        <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>Seu personal poderá ver como foi a sessão</p>
+        <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800, color: 'var(--gray-900)' }}>Treino registrado!</h3>
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-400)' }}>Seu personal poderá ver como foi a sessão</p>
       </div>
     </div>
   );
@@ -94,13 +94,13 @@ function RatingModal({ plan, studentId, personalId, onClose, onSaved }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: 400 }}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #F3F4F6' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border)' }}>
           <h3 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 700 }}>Como foi o treino?</h3>
-          <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>{plan.name}</p>
+          <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-400)' }}>{plan.name}</p>
         </div>
         <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           <div style={{ textAlign: 'center' }}>
-            <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: '#374151' }}>Avalie a sessão</p>
+            <p style={{ margin: '0 0 12px', fontSize: 13, fontWeight: 600, color: 'var(--gray-700)' }}>Avalie a sessão</p>
             <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
               {[1, 2, 3, 4, 5].map(n => (
                 <button key={n} onClick={() => setStars(n)} onMouseEnter={() => setHovered(n)} onMouseLeave={() => setHovered(0)}
@@ -111,18 +111,18 @@ function RatingModal({ plan, studentId, personalId, onClose, onSaved }) {
             </div>
           </div>
           <div>
-            <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 600, color: '#374151' }}>Como você se sentiu?</p>
+            <p style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 600, color: 'var(--gray-700)' }}>Como você se sentiu?</p>
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               {FEELINGS.map(f => (
                 <button key={f.value} onClick={() => setFeeling(f.value)}
-                  style={{ padding: '8px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: feeling === f.value ? '#EFF6FF' : '#F3F4F6', color: feeling === f.value ? '#3B82F6' : '#6B7280', outline: feeling === f.value ? '2px solid #3B82F6' : '2px solid transparent', transition: 'all 0.15s' }}>
+                  style={{ padding: '8px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: feeling === f.value ? 'var(--accent-bg)' : 'var(--gray-100)', color: feeling === f.value ? 'var(--accent-text)' : 'var(--gray-400)', outline: feeling === f.value ? '2px solid var(--accent)' : '2px solid transparent', transition: 'all 0.15s' }}>
                   {f.emoji} {f.label}
                 </button>
               ))}
             </div>
           </div>
           <div>
-            <label style={{ fontSize: 13, fontWeight: 600, color: '#374151', display: 'block', marginBottom: 6 }}>Observações (opcional)</label>
+            <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Observações (opcional)</label>
             <textarea value={notes} onChange={e => setNotes(e.target.value)}
               placeholder="Como foi a intensidade, alguma dor, algum exercício difícil..." rows={2} style={{ resize: 'vertical', fontSize: 13 }} />
           </div>
@@ -194,7 +194,7 @@ export default function MeusTreinos() {
         setLoading(false);
       })();
     } else {
-      setPlans(trainingPlans.filter(p => p.studentId === 1));
+      setPlans([]);
       setLoading(false);
     }
   }, [user?.id]);
@@ -304,14 +304,14 @@ export default function MeusTreinos() {
       <div
         key={plan.id}
         style={{
-          background: 'white', borderRadius: 14, overflow: 'hidden',
-          boxShadow: highlight ? '0 4px 20px rgba(59,130,246,0.15)' : '0 1px 3px rgba(0,0,0,0.08)',
-          border: highlight ? '2px solid #3B82F6' : '2px solid transparent',
+          background: 'var(--bg-surface)', borderRadius: 14, overflow: 'hidden',
+          boxShadow: highlight ? '0 4px 20px rgba(59,130,246,0.15)' : '0 1px 4px rgba(0,0,0,0.3)',
+          border: highlight ? '2px solid #3B82F6' : '1px solid var(--border)',
         }}
       >
         {highlight && (
-          <div style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', padding: '8px 18px' }}>
-            <span style={{ fontSize: 12, fontWeight: 800, color: 'white' }}>⚡ TREINO DE HOJE — {todayLabel.toUpperCase()}</span>
+          <div style={{ background: 'var(--accent)', padding: '8px 18px' }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: 'white', display: 'flex', alignItems: 'center', gap: 6 }}><Zap size={13} fill="white" /> TREINO DE HOJE — {todayLabel.toUpperCase()}</span>
           </div>
         )}
 
@@ -326,11 +326,11 @@ export default function MeusTreinos() {
             <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3, flexWrap: 'wrap' }}>
               <span style={{ background: `${color}20`, color, fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>{plan.type}</span>
               {planDays.map(d => (
-                <span key={d} style={{ background: '#F3F4F6', color: '#6B7280', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 20 }}>{DAYS_PT[d]}</span>
+                <span key={d} style={{ background: 'var(--gray-100)', color: 'var(--gray-400)', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 20 }}>{DAYS_PT[d]}</span>
               ))}
             </div>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{plan.name}</p>
-            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6B7280' }}>
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{plan.name}</p>
+            <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>
               {exercises.length} exercícios
               {doneCount > 0 ? ` · ${doneCount}/${exercises.length} feitos hoje` : ''}
             </p>
@@ -338,21 +338,21 @@ export default function MeusTreinos() {
           <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 8 }}>
             {allDone && <CheckCircle size={20} color="#10B981" />}
             {doneCount > 0 && !allDone && (
-              <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#3B82F6' }}>
+              <div style={{ width: 38, height: 38, borderRadius: '50%', background: 'rgba(59,130,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 800, color: '#3B82F6' }}>
                 {Math.round((doneCount / exercises.length) * 100)}%
               </div>
             )}
             <button onClick={e => { e.stopPropagation(); generatePDF(plan); }}
               title="Baixar PDF do treino"
-              style={{ width: 34, height: 34, borderRadius: 9, background: '#F3F4F6', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <FileText size={16} color="#6B7280" />
+              style={{ width: 34, height: 34, borderRadius: 9, background: 'var(--gray-100)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <FileText size={16} color="var(--gray-400)" />
             </button>
             {isOpen ? <ChevronUp size={18} color="#9CA3AF" /> : <ChevronDown size={18} color="#9CA3AF" />}
           </div>
         </button>
 
         {doneCount > 0 && (
-          <div style={{ height: 3, background: '#E5E7EB', margin: '0 18px' }}>
+          <div style={{ height: 3, background: 'var(--border)', margin: '0 18px' }}>
             <div style={{ height: '100%', width: `${(doneCount / exercises.length) * 100}%`, background: allDone ? 'linear-gradient(90deg, #10B981, #059669)' : 'linear-gradient(90deg, #3B82F6, #8B5CF6)', borderRadius: 2, transition: 'width 0.4s' }} />
           </div>
         )}
@@ -362,7 +362,7 @@ export default function MeusTreinos() {
           <div style={{ padding: '0 18px 14px' }}>
             <button
               onClick={() => navigate(`/aluno/treinos/${plan.id}/executar`)}
-              style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'white', fontSize: 15, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
             >
               <Play size={15} fill="white" /> {ctaLabel}
             </button>
@@ -370,14 +370,14 @@ export default function MeusTreinos() {
         )}
 
         {isOpen && (
-          <div style={{ padding: '0 18px 18px', borderTop: '1px solid #F3F4F6' }}>
+          <div style={{ padding: '0 18px 18px', borderTop: '1px solid var(--border)' }}>
 
             {/* CTA inside expanded card */}
             {!allDone && (
               <div style={{ paddingTop: 14, marginBottom: 4 }}>
                 <button
                   onClick={() => navigate(`/aluno/treinos/${plan.id}/executar`)}
-                  style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                  style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'white', fontSize: 14, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                 >
                   <Play size={14} fill="white" /> {ctaLabel || 'Iniciar Treino'}
                 </button>
@@ -392,23 +392,23 @@ export default function MeusTreinos() {
                 const hasVideo = !!getYouTubeId(videoUrl);
                 const videoLoading = !ex.video_url && !ex.videoUrl && autoVideoUrls[ex.id] === null;
                 return (
-                  <div key={ex.id} style={{ padding: '11px 0', borderBottom: i < exercises.length - 1 ? '1px solid #F3F4F6' : 'none' }}>
+                  <div key={ex.id} style={{ padding: '11px 0', borderBottom: i < exercises.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                       {/* Read-only status indicator */}
-                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: done ? '#D1FAE5' : '#F3F4F6', border: `2px solid ${done ? '#10B981' : '#E5E7EB'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: '50%', background: done ? 'rgba(16,185,129,0.15)' : 'var(--gray-100)', border: `2px solid ${done ? '#10B981' : 'var(--border)'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: 1 }}>
                         {done && <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#10B981" strokeWidth="3"><polyline points="20 6 9 17 4 12" /></svg>}
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ margin: 0, fontSize: 14, fontWeight: done ? 400 : 600, color: done ? '#9CA3AF' : '#111827', textDecoration: done ? 'line-through' : 'none' }}>
+                        <p style={{ margin: 0, fontSize: 14, fontWeight: done ? 400 : 600, color: done ? 'var(--gray-400)' : 'var(--gray-900)', textDecoration: done ? 'line-through' : 'none' }}>
                           {ex.name}
                         </p>
-                        <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6B7280' }}>
+                        <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>
                           {ex.sets}x · {ex.reps} reps{ex.load ? ` · ${ex.load}` : ''}{ex.rest ? ` · ${ex.rest} desc.` : ''}
                         </p>
-                        {ex.obs && <p style={{ margin: '3px 0 0', fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' }}>💡 {ex.obs}</p>}
+                        {ex.obs && <p style={{ margin: '3px 0 0', fontSize: 11, color: 'var(--gray-400)', fontStyle: 'italic' }}>💡 {ex.obs}</p>}
                       </div>
                       {videoLoading && (
-                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: '#9CA3AF' }}>
+                        <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--gray-400)' }}>
                           <Loader size={12} style={{ animation: 'spin 1s linear infinite' }} />
                         </div>
                       )}
@@ -424,12 +424,12 @@ export default function MeusTreinos() {
             </div>
 
             {allDone && (
-              <div style={{ marginTop: 16, padding: '14px', background: '#F0FDF4', borderRadius: 10, border: '1px solid #A7F3D0', textAlign: 'center' }}>
-                <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: '#065F46' }}>🎉 Treino concluído!</p>
+              <div style={{ marginTop: 16, padding: '14px', background: 'rgba(16,185,129,0.1)', borderRadius: 10, border: '1px solid rgba(16,185,129,0.25)', textAlign: 'center' }}>
+                <p style={{ margin: '0 0 10px', fontSize: 14, fontWeight: 700, color: '#10B981', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}><Trophy size={16} /> Treino concluído!</p>
                 {!ratedToday ? (
                   <button
                     onClick={() => setRatingModal(plan)}
-                    style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                    style={{ background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
                   >
                     ⭐ Avaliar sessão
                   </button>
@@ -452,25 +452,25 @@ export default function MeusTreinos() {
       </div>
 
       {plans.length === 0 ? (
-        <div style={{ background: 'white', borderRadius: 12, padding: 60, textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
-          <Dumbbell size={48} color="#D1D5DB" style={{ marginBottom: 16 }} />
-          <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: '#374151' }}>Nenhum treino ainda</p>
-          <p style={{ margin: '8px 0 0', fontSize: 14, color: '#9CA3AF' }}>Aguarde seu personal cadastrar seus treinos</p>
+        <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: 60, textAlign: 'center' }}>
+          <Dumbbell size={48} color="var(--gray-300)" style={{ marginBottom: 16 }} />
+          <p style={{ margin: 0, fontSize: 16, fontWeight: 600, color: 'var(--gray-700)' }}>Nenhum treino ainda</p>
+          <p style={{ margin: '8px 0 0', fontSize: 14, color: 'var(--gray-400)' }}>Aguarde seu personal cadastrar seus treinos</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {todayPlan && renderPlan(todayPlan, true)}
           {!todayPlan && (
-            <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-              <span style={{ fontSize: 18 }}>📅</span>
-              <p style={{ margin: 0, fontSize: 13, color: '#92400E' }}>
+            <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.25)', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <CalendarOff size={18} color="var(--yellow)" style={{ flexShrink: 0 }} />
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-600)' }}>
                 <strong>Hoje ({todayLabel})</strong> não há treino programado. Descanse ou faça uma atividade leve!
               </p>
             </div>
           )}
           {otherPlans.length > 0 && (
             <>
-              {todayPlan && <p style={{ margin: '8px 0 4px', fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Outros planos</p>}
+              {todayPlan && <p style={{ margin: '8px 0 4px', fontSize: 12, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Outros planos</p>}
               {otherPlans.map(p => renderPlan(p, false))}
             </>
           )}
@@ -498,3 +498,5 @@ export default function MeusTreinos() {
     </div>
   );
 }
+
+

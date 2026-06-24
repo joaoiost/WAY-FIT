@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Bell, BellRing, Plus, Trash2, X, Loader, CheckCheck, Clock, Pencil, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -61,11 +61,11 @@ function ScheduleModal({ schedule, students, onSave, onClose }) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-content" onClick={e => e.stopPropagation()}>
-        <div style={{ padding: '20px 24px', borderBottom: '1px solid #F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: '#111827' }}>
+        <div style={{ padding: '20px 24px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--gray-900)' }}>
             {editing ? 'Editar lembrete' : 'Novo lembrete automático'}
           </h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', padding: 4 }}>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex', padding: 4 }}>
             <X size={20} />
           </button>
         </div>
@@ -127,7 +127,7 @@ function ScheduleModal({ schedule, students, onSave, onClose }) {
                   <option key={i} value={i}>{String(i).padStart(2, '0')}h</option>
                 ))}
               </select>
-              <span style={{ color: '#374151', fontWeight: 700 }}>:</span>
+              <span style={{ color: 'var(--gray-700)', fontWeight: 700 }}>:</span>
               <select
                 value={form.send_minute}
                 onChange={e => setForm(f => ({ ...f, send_minute: Number(e.target.value) }))}
@@ -143,7 +143,7 @@ function ScheduleModal({ schedule, students, onSave, onClose }) {
           <div>
             <label>Enviar para</label>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#374151', fontWeight: 500 }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--gray-700)', fontWeight: 500 }}>
                 <input
                   type="radio"
                   checked={form.student_ids.length === 0}
@@ -153,7 +153,7 @@ function ScheduleModal({ schedule, students, onSave, onClose }) {
                 Todos os alunos
               </label>
               {students.map(s => (
-                <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#374151', fontWeight: 500 }}>
+                <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--gray-700)', fontWeight: 500 }}>
                   <input
                     type="checkbox"
                     checked={form.student_ids.includes(String(s.id))}
@@ -308,14 +308,14 @@ export default function Notificacoes() {
   return (
     <div className="page-padding" style={{ flex: 1 }}>
       <div style={{ marginBottom: 24 }}>
-        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Notificações</h2>
-        <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>
+        <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--gray-900)' }}>Notificações</h2>
+        <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--gray-500)' }}>
           Envie push diretamente para o celular dos seus alunos
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="mode-tabs" style={{ display: 'flex', background: '#F3F4F6', borderRadius: 10, padding: 4, gap: 4, marginBottom: 24, width: 'fit-content', maxWidth: '100%' }}>
+      <div className="mode-tabs" style={{ display: 'flex', background: 'var(--bg-page)', borderRadius: 10, padding: 4, gap: 4, marginBottom: 24, width: 'fit-content', maxWidth: '100%' }}>
         {[
           { key: 'now', label: 'Enviar agora', icon: BellRing },
           { key: 'scheduled', label: 'Lembretes automáticos', icon: Clock },
@@ -340,7 +340,7 @@ export default function Notificacoes() {
       {/* ── ENVIAR AGORA ── */}
       {tab === 'now' && (
         <div style={{ maxWidth: 520 }}>
-          <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: 16 }}>
             <div>
               <label>Título *</label>
               <input
@@ -365,7 +365,7 @@ export default function Notificacoes() {
             <div>
               <label>Enviar para</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#374151', fontWeight: 500 }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--gray-700)', fontWeight: 500 }}>
                   <input
                     type="radio"
                     checked={notifStudentIds.length === 0}
@@ -375,7 +375,7 @@ export default function Notificacoes() {
                   Todos os alunos ({students.length})
                 </label>
                 {students.map(s => (
-                  <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: '#374151', fontWeight: 500 }}>
+                  <label key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer', fontSize: 13, color: 'var(--gray-700)', fontWeight: 500 }}>
                     <input
                       type="checkbox"
                       checked={notifStudentIds.includes(String(s.id))}
@@ -422,7 +422,7 @@ export default function Notificacoes() {
       {tab === 'scheduled' && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, gap: 12 }}>
-            <p style={{ margin: 0, fontSize: 13, color: '#6B7280', flex: 1 }}>
+            <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-500)', flex: 1 }}>
               Push automático nos dias e horários configurados — chega no celular mesmo com app fechado.
             </p>
             <button
@@ -442,10 +442,10 @@ export default function Notificacoes() {
               <Loader size={24} color="#8B5CF6" style={{ animation: 'spin 1s linear infinite' }} />
             </div>
           ) : schedules.length === 0 ? (
-            <div style={{ background: 'white', borderRadius: 12, padding: '56px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+            <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '56px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               <Bell size={44} color="#E5E7EB" style={{ marginBottom: 14 }} />
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#374151' }}>Nenhum lembrete configurado</p>
-              <p style={{ margin: '6px 0 20px', fontSize: 13, color: '#9CA3AF' }}>Crie lembretes automáticos para manter seus alunos motivados</p>
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-700)' }}>Nenhum lembrete configurado</p>
+              <p style={{ margin: '6px 0 20px', fontSize: 13, color: 'var(--gray-400)' }}>Crie lembretes automáticos para manter seus alunos motivados</p>
               <button
                 onClick={() => { setEditingSchedule(null); setModalOpen(true); }}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 22px', background: '#8B5CF6', color: 'white', border: 'none', borderRadius: 8, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
@@ -459,7 +459,7 @@ export default function Notificacoes() {
                 <div
                   key={s.id}
                   style={{
-                    background: 'white', borderRadius: 12, padding: '16px 18px',
+                    background: 'var(--bg-surface)', borderRadius: 12, padding: '16px 18px',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
                     display: 'flex', alignItems: 'center', gap: 14,
                     opacity: s.is_active ? 1 : 0.55,
@@ -469,14 +469,14 @@ export default function Notificacoes() {
                 >
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 3, flexWrap: 'wrap' }}>
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>{s.title}</p>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>{s.title}</p>
                       {!s.is_active && (
-                        <span style={{ fontSize: 11, fontWeight: 700, color: '#9CA3AF', background: '#F3F4F6', padding: '2px 8px', borderRadius: 10 }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', background: 'var(--bg-page)', padding: '2px 8px', borderRadius: 10 }}>
                           Pausado
                         </span>
                       )}
                     </div>
-                    <p style={{ margin: '0 0 8px', fontSize: 12, color: '#6B7280', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.message}</p>
+                    <p style={{ margin: '0 0 8px', fontSize: 12, color: 'var(--gray-500)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{s.message}</p>
                     <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                       <span style={{ fontSize: 11, fontWeight: 600, background: '#F5F3FF', color: '#7C3AED', padding: '3px 9px', borderRadius: 10 }}>
                         {formatDays(s.days_of_week)}
@@ -543,3 +543,4 @@ export default function Notificacoes() {
     </div>
   );
 }
+

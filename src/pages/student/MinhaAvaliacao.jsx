@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Activity, Loader, TrendingDown, TrendingUp, Minus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -10,7 +10,7 @@ function calcIMC(weight, height) {
 }
 function imcLabel(v) {
   const n = parseFloat(v);
-  if (!n) return { label: '—', color: '#9CA3AF' };
+  if (!n) return { label: '—', color: 'var(--gray-400)' };
   if (n < 18.5) return { label: 'Abaixo do peso', color: '#3B82F6' };
   if (n < 25)   return { label: 'Peso normal',    color: '#10B981' };
   if (n < 30)   return { label: 'Sobrepeso',      color: '#F59E0B' };
@@ -23,25 +23,25 @@ function StatCard({ label, value, unit, sub, color = '#111827', bg = '#F9FAFB', 
   const improved = diff === null ? null : betterLower ? diff < 0 : diff > 0;
   return (
     <div style={{ background: bg, borderRadius: 12, padding: '12px 14px', border: '1px solid #F1F5F9' }}>
-      <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+      <p style={{ margin: '0 0 4px', fontSize: 10, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
       <p style={{ margin: 0, fontSize: 20, fontWeight: 900, color, lineHeight: 1 }}>
-        {value || '—'} {value && <span style={{ fontSize: 12, fontWeight: 600, color: '#9CA3AF' }}>{unit}</span>}
+        {value || '—'} {value && <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-400)' }}>{unit}</span>}
       </p>
-      {sub && <p style={{ margin: '3px 0 0', fontSize: 11, color: '#9CA3AF' }}>{sub}</p>}
+      {sub && <p style={{ margin: '3px 0 0', fontSize: 11, color: 'var(--gray-400)' }}>{sub}</p>}
       {diff !== null && diff !== 0 && (
         <p style={{ margin: '4px 0 0', fontSize: 11, fontWeight: 700, color: improved ? '#10B981' : '#EF4444', display: 'flex', alignItems: 'center', gap: 3 }}>
           {improved ? <TrendingDown size={11} /> : <TrendingUp size={11} />}
           {diff > 0 ? '+' : ''}{diff.toFixed(1)} {unit} vs anterior
         </p>
       )}
-      {diff === 0 && <p style={{ margin: '4px 0 0', fontSize: 11, color: '#9CA3AF', display: 'flex', alignItems: 'center', gap: 3 }}><Minus size={11} /> Igual ao anterior</p>}
+      {diff === 0 && <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--gray-400)', display: 'flex', alignItems: 'center', gap: 3 }}><Minus size={11} /> Igual ao anterior</p>}
     </div>
   );
 }
 
 function Section({ title, color, children }) {
   return (
-    <div style={{ background: 'white', borderRadius: 16, padding: '16px 18px', marginBottom: 14, border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '16px 18px', marginBottom: 14, border: '1px solid #F1F5F9', boxShadow: '0 1px 4px rgba(0,0,0,0.05)' }}>
       <p style={{ margin: '0 0 14px', fontSize: 13, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em', borderLeft: `3px solid ${color}`, paddingLeft: 10 }}>{title}</p>
       {children}
     </div>
@@ -77,8 +77,8 @@ export default function MinhaAvaliacao() {
       <div style={{ width: 72, height: 72, borderRadius: 20, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
         <Activity size={34} color="#3B82F6" />
       </div>
-      <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 900, color: '#111827' }}>Nenhuma avaliação ainda</h3>
-      <p style={{ margin: 0, fontSize: 14, color: '#6B7280', lineHeight: 1.6 }}>Seu personal ainda não realizou uma avaliação física.</p>
+      <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 900, color: 'var(--gray-900)' }}>Nenhuma avaliação ainda</h3>
+      <p style={{ margin: 0, fontSize: 14, color: 'var(--gray-500)', lineHeight: 1.6 }}>Seu personal ainda não realizou uma avaliação física.</p>
     </div>
   );
 
@@ -129,8 +129,8 @@ export default function MinhaAvaliacao() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 8 }}>
               {deltas.map(d => (
                 <div key={d.key} style={{ background: d.improved ? '#F0FDF4' : '#FEF2F2', borderRadius: 10, padding: '10px 12px', border: `1px solid ${d.improved ? '#86EFAC' : '#FECACA'}` }}>
-                  <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase' }}>{d.label}</p>
-                  <p style={{ margin: '0 0 2px', fontSize: 16, fontWeight: 900, color: '#111827' }}>{d.curr} <span style={{ fontSize: 11, color: '#9CA3AF' }}>{d.unit}</span></p>
+                  <p style={{ margin: '0 0 2px', fontSize: 10, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase' }}>{d.label}</p>
+                  <p style={{ margin: '0 0 2px', fontSize: 16, fontWeight: 900, color: 'var(--gray-900)' }}>{d.curr} <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>{d.unit}</span></p>
                   <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: d.improved ? '#16A34A' : '#DC2626' }}>
                     {d.diff > 0 ? '↑ +' : '↓ '}{Math.abs(d.diff).toFixed(1)} {d.unit}
                   </p>
@@ -149,7 +149,7 @@ export default function MinhaAvaliacao() {
           <StatCard label="Idade" value={curr.age} unit="anos" />
           <StatCard label="IMC" value={imc} color={imcInfo.color} sub={imcInfo.label} />
         </div>
-        <p style={{ margin: '10px 0 0', fontSize: 12, color: '#9CA3AF' }}>Data: {curr.date || history[selectedIdx]?.date || '—'}</p>
+        <p style={{ margin: '10px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>Data: {curr.date || history[selectedIdx]?.date || '—'}</p>
       </Section>
 
       {/* Composição corporal */}
@@ -199,3 +199,4 @@ export default function MinhaAvaliacao() {
     </div>
   );
 }
+

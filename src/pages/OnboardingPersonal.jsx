@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, Dumbbell, Calendar, Users, BarChart2, Zap } from 'lucide-react';
 
@@ -59,7 +59,7 @@ const STEPS = [
     emoji: '⚡',
     title: 'Bem-vindo ao WAY FIT!',
     subtitle: 'A plataforma que vai mudar a forma como você gerencia seus alunos.',
-    gradient: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+    gradient: 'var(--accent)',
     glow: 'rgba(59,130,246,0.4)',
   },
   {

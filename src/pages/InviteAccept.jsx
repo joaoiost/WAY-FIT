@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { Zap, Eye, EyeOff, CheckCircle, AlertCircle, Loader, ChevronRight } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -128,10 +128,10 @@ export default function InviteAccept() {
       <div style={{ width: '100%', maxWidth: stage === 'onboarding' ? 520 : 440, background: 'white', borderRadius: 20, padding: 40, boxShadow: '0 20px 60px rgba(0,0,0,0.4)' }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, justifyContent: 'center' }}>
-          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 40, height: 40, borderRadius: 12, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Zap size={22} color="white" fill="white" />
           </div>
-          <span style={{ fontSize: 24, fontWeight: 800, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>WAY FIT</span>
+          <span style={{ fontSize: 24, fontWeight: 800, background: 'var(--accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>WAY FIT</span>
         </div>
 
         {/* Convite inválido */}
@@ -300,7 +300,7 @@ export default function InviteAccept() {
         {/* Etapa 4: Tudo pronto */}
         {stage === 'done' && (
           <div style={{ textAlign: 'center' }}>
-            <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+            <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
               <span style={{ fontSize: 36 }}>🎉</span>
             </div>
             <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 800 }}>Tudo pronto!</h2>

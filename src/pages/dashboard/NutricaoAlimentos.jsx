@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Apple, Plus, Search, Trash2, Edit2, X, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -160,7 +160,7 @@ export default function NutricaoAlimentos() {
           <button onClick={openAdd} className="btn-primary" style={{ marginTop: 8 }}><Plus size={15} /> Adicionar alimento</button>
         </div>
       ) : (
-        <div style={{ background: 'white', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden' }}>
           {/* Desktop header */}
           <div className="alunos-desktop-table">
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 80px 70px 70px 70px 80px', gap: 0, padding: '10px 18px', borderBottom: '1px solid var(--border-light)', background: 'var(--gray-50)' }}>
@@ -246,3 +246,4 @@ export default function NutricaoAlimentos() {
     </div>
   );
 }
+

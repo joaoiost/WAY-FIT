@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -11,7 +11,7 @@ const CSS = `
 
   .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #F3F4F6; }
   .logo-area { display: flex; align-items: center; gap: 10px; }
-  .logo-box { width: 40px; height: 40px; border-radius: 10px; background: linear-gradient(135deg,#3B82F6,#8B5CF6); display: flex; align-items: center; justify-content: center; }
+  .logo-box { width: 40px; height: 40px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
   .logo-zap { font-size: 22px; color: white; font-weight: 900; }
   .logo-name { font-size: 22px; font-weight: 900; color: #111827; }
   .logo-sub { font-size: 11px; color: #9CA3AF; font-weight: 500; margin-top: 2px; }
@@ -196,7 +196,7 @@ export default function RelatorioAluno() {
             ← Voltar
           </button>
           <button onClick={() => window.print()}
-            style={{ padding: '8px 20px', background: 'linear-gradient(135deg,#3B82F6,#8B5CF6)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: 'white' }}>
+            style={{ padding: '8px 20px', background: 'var(--accent)', border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: 'white' }}>
             ↓ Salvar PDF
           </button>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Send, MessageCircle, Search, ArrowLeft, Loader } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -17,14 +17,14 @@ function MessageBubble({ msg, isMe }) {
         <div style={{
           padding: '10px 14px',
           borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
-          background: isMe ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : 'var(--bg-surface)',
+          background: isMe ? 'var(--accent)' : 'var(--bg-surface)',
           color: isMe ? 'white' : 'var(--gray-900)',
           fontSize: 14, lineHeight: 1.5,
           boxShadow: isMe ? 'none' : '0 1px 3px rgba(0,0,0,0.08)',
         }}>
           {msg.text}
         </div>
-        <p style={{ margin: '3px 0 0', fontSize: 10, color: '#9CA3AF', textAlign: isMe ? 'right' : 'left' }}>
+        <p style={{ margin: '3px 0 0', fontSize: 10, color: 'var(--gray-400)', textAlign: isMe ? 'right' : 'left' }}>
           {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
@@ -238,14 +238,14 @@ export default function Chat() {
       <div style={{ display: 'flex', gap: 16, flex: 1, minHeight: 0 }}>
         {/* Student list — hidden on mobile when conv is open */}
         <div className={`chat-sidebar${isConvOpen ? ' chat-sidebar-hidden' : ''}`} style={{ width: 280, background: 'var(--bg-surface)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden', flexShrink: 0 }}>
-          <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid #F3F4F6' }}>
+          <div style={{ padding: '14px 14px 10px', borderBottom: '1px solid var(--border-light)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-page)', borderRadius: 10, padding: '8px 12px', border: '1px solid var(--border)' }}>
               <Search size={14} color="#9CA3AF" />
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar aluno..."
-                style={{ border: 'none', background: 'none', outline: 'none', fontSize: 13, color: '#374151', WebkitTextFillColor: '#374151', width: '100%', padding: 0 }}
+                style={{ border: 'none', background: 'none', outline: 'none', fontSize: 13, color: 'var(--gray-700)', WebkitTextFillcolor: 'var(--gray-700)', width: '100%', padding: 0 }}
               />
             </div>
           </div>
@@ -254,7 +254,7 @@ export default function Chat() {
             {loading ? (
               <div style={{ padding: 24, textAlign: 'center' }}><Loader size={20} color="#9CA3AF" /></div>
             ) : filteredStudents.length === 0 ? (
-              <div style={{ padding: 24, textAlign: 'center', color: '#9CA3AF', fontSize: 13 }}>
+              <div style={{ padding: 24, textAlign: 'center', color: 'var(--gray-400)', fontSize: 13 }}>
                 {students.length === 0 ? 'Nenhum aluno cadastrado' : 'Nenhum resultado'}
               </div>
             ) : filteredStudents.map(student => {
@@ -283,7 +283,7 @@ export default function Chat() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                       <span style={{ fontSize: 13, fontWeight: unread ? 700 : 600, color: 'var(--gray-900)' }}>{student.name.split(' ')[0]}</span>
-                      {lastMsg && <span style={{ fontSize: 10, color: '#9CA3AF' }}>{new Date(lastMsg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>}
+                      {lastMsg && <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>{new Date(lastMsg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}</span>}
                     </div>
                     <p style={{ margin: 0, fontSize: 12, color: unread ? '#374151' : '#9CA3AF', fontWeight: unread ? 600 : 400, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                       {lastMsg ? (lastMsg.from_role === 'personal' ? `Você: ${lastMsg.text}` : lastMsg.text) : 'Nenhuma mensagem ainda'}
@@ -303,7 +303,7 @@ export default function Chat() {
         {/* Conversation panel */}
         <div className={`chat-conv${isConvOpen ? ' chat-conv-open' : ''}`} style={{ flex: 1, background: 'var(--bg-surface)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
           {!selectedId ? (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF', gap: 12 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)', gap: 12 }}>
               <MessageCircle size={48} color="#E5E7EB" />
               <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--gray-700)' }}>Selecione um aluno</p>
               <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-400)' }}>Clique em um aluno para ver a conversa</p>
@@ -312,7 +312,7 @@ export default function Chat() {
             <>
               {/* Conv header */}
               <div style={{ padding: '12px 16px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                <button className="chat-back-btn" onClick={() => setSelectedId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#6B7280', display: 'none' }}>
+                <button className="chat-back-btn" onClick={() => setSelectedId(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: 'var(--gray-500)', display: 'none' }}>
                   <ArrowLeft size={20} />
                 </button>
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: selectedStudent?.color || '#3B82F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 12, fontWeight: 700, color: 'white', flexShrink: 0 }}>
@@ -329,7 +329,7 @@ export default function Chat() {
                 {loadingMsgs ? (
                   <div style={{ textAlign: 'center', marginTop: 40 }}><Loader size={20} color="#9CA3AF" /></div>
                 ) : grouped.length === 0 ? (
-                  <div style={{ textAlign: 'center', marginTop: 40, color: '#9CA3AF' }}>
+                  <div style={{ textAlign: 'center', marginTop: 40, color: 'var(--gray-400)' }}>
                     <MessageCircle size={32} color="#E5E7EB" style={{ marginBottom: 8 }} />
                     <p style={{ margin: 0, fontSize: 13 }}>Nenhuma mensagem ainda. Diga olá!</p>
                   </div>
@@ -354,7 +354,7 @@ export default function Chat() {
                 <button
                   type="submit"
                   disabled={!text.trim() || sending}
-                  style={{ width: 42, height: 42, borderRadius: '50%', background: text.trim() ? 'linear-gradient(135deg,#3B82F6,#8B5CF6)' : '#F3F4F6', border: 'none', cursor: text.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}
+                  style={{ width: 42, height: 42, borderRadius: '50%', background: text.trim() ? 'var(--accent)' : '#F3F4F6', border: 'none', cursor: text.trim() ? 'pointer' : 'default', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, transition: 'background 0.15s' }}
                 >
                   <Send size={16} color={text.trim() ? 'white' : '#9CA3AF'} />
                 </button>
@@ -366,3 +366,4 @@ export default function Chat() {
     </div>
   );
 }
+

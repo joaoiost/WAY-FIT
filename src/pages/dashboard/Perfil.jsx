@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import { Camera, Save, Copy, Check, User, Link2, Phone, FileText, AlertCircle, CheckCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
@@ -146,7 +146,7 @@ export default function Perfil() {
               <label style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, fontSize: 13, fontWeight: 600, color: 'var(--gray-700)' }}>
                 <Link2 size={14} /> Meu link exclusivo *
               </label>
-              <div style={{ display: 'flex', alignItems: 'center', background: 'var(--gray-50)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
+              <div style={{ display: 'flex', alignItems: 'center', background: 'var(--bg-page)', border: '1.5px solid var(--border)', borderRadius: 'var(--radius-sm)', overflow: 'hidden' }}>
                 <span style={{ padding: '0 12px', fontSize: 12, color: 'var(--gray-400)', borderRight: '1px solid var(--border)', height: 40, display: 'flex', alignItems: 'center', background: 'var(--gray-100)', whiteSpace: 'nowrap' }}>
                   {window.location.origin}/p/
                 </span>
@@ -193,3 +193,4 @@ export default function Perfil() {
     </div>
   );
 }
+

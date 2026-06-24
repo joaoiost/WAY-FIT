@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Users, Calendar, DollarSign, Check, MessageCircle, ChevronRight, Clock, Zap, AlertTriangle, TrendingUp, Bell, CheckCircle, Dumbbell, ArrowUp, ArrowDown, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/UI/Avatar';
 import Badge from '../../components/UI/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
-import { appointments as mockAppts, students as mockStudents } from '../../data/mockData';
+// mockData removed
 
 const TODAY         = new Date().toISOString().slice(0, 10);
 const TOMORROW      = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
@@ -97,8 +97,8 @@ export default function Dashboard() {
         setTotalPending((pendingPays||[]).reduce((s,p)=>s+Number(p.amount),0));
       });
     } else {
-      setStudents(mockStudents);
-      setTodayAppts(mockAppts.filter(a=>a.date===TODAY).sort((a,b)=>a.time.localeCompare(b.time)));
+      setStudents([]);
+      setTodayAppts([]);
       setRevenue(4280); setLastMonthRevenue(3820); setWeekSessions(12);
     }
   }, [user?.id]);
@@ -488,3 +488,4 @@ export default function Dashboard() {
     </div>
   );
 }
+

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Calendar, Dumbbell, DollarSign, TrendingUp, MessageCircle, Check, X, Phone, Mail, Edit2, Clock, BarChart2, Activity, Star, FileText, Flame, ChevronDown, ChevronUp, Utensils, Droplets } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, Line, CartesianGrid } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import Modal from '../../components/UI/Modal';
@@ -76,6 +77,7 @@ export default function AlunoDetalhe() {
   const [workoutSessions, setWorkoutSessions] = useState([]);
   const [exerciseLogs, setExerciseLogs] = useState([]);
   const [waterLog, setWaterLog] = useState(null);
+  const [checkins, setCheckins] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const [scheduleModal, setScheduleModal] = useState(false);
@@ -107,18 +109,20 @@ export default function AlunoDetalhe() {
         { data: ws },
         { data: el },
         { data: wl },
+        { data: ci },
       ] = await Promise.all([
         supabase.from('students').select('*').eq('id', id).eq('personal_id', user.id).maybeSingle(),
         supabase.from('training_plans').select('*, exercises(*)').eq('student_id', id).order('created_at', { ascending: false }),
         supabase.from('appointments').select('*').eq('student_id', id).order('date', { ascending: false }).limit(20),
         supabase.from('attendances').select('*').eq('student_id', id).gte('date', monthStart).order('date'),
         supabase.from('payments').select('*').eq('student_id', id).order('due_date', { ascending: false }).limit(10),
-        supabase.from('measurements').select('*').eq('student_id', id).order('date').limit(10),
+        supabase.from('student_measurements').select('*').eq('student_id', id).order('recorded_at').limit(10),
         supabase.from('anamneses').select('*').eq('student_id', id).maybeSingle(),
         supabase.from('session_ratings').select('*').eq('student_id', id).order('date', { ascending: false }).limit(30),
         supabase.from('workout_sessions').select('id, date, plan_name, plan_type, exercises_done, exercises_total, finished_at').eq('student_id', id).order('date', { ascending: false }).limit(30),
         supabase.from('exercise_logs').select('exercise_name, load_actual, done, created_at, session_id').eq('student_id', id).not('load_actual', 'is', null).order('created_at', { ascending: true }).limit(100),
         supabase.from('water_logs').select('intake_ml, goal_ml').eq('student_id', id).eq('date', today).maybeSingle(),
+        supabase.from('daily_checkins').select('*').eq('student_id', id).order('date', { ascending: false }).limit(7),
       ]);
 
       setStudent(s);
@@ -132,6 +136,7 @@ export default function AlunoDetalhe() {
       setWorkoutSessions(ws || []);
       setExerciseLogs(el || []);
       setWaterLog(wl || null);
+      setCheckins(ci || []);
       setLoading(false);
     };
     load();
@@ -198,7 +203,7 @@ export default function AlunoDetalhe() {
   if (loading) return <div className="loading-screen">Carregando...</div>;
   if (!student) return (
     <div className="page-padding" style={{ textAlign: 'center', paddingTop: 60 }}>
-      <p style={{ color: '#9CA3AF' }}>Aluno não encontrado.</p>
+      <p style={{ color: 'var(--gray-400)' }}>Aluno não encontrado.</p>
       <button onClick={() => navigate('/dashboard/alunos')} className="btn-primary" style={{ marginTop: 16 }}>Voltar</button>
     </div>
   );
@@ -298,32 +303,32 @@ export default function AlunoDetalhe() {
       {tab === 'Treinos' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
           {plans.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '48px 0', color: '#9CA3AF' }}>
-              <Dumbbell size={36} color="#E5E7EB" style={{ marginBottom: 12 }} />
-              <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#374151' }}>Nenhum plano criado</p>
+            <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--gray-400)' }}>
+              <Dumbbell size={36} color="var(--border)" style={{ marginBottom: 12 }} />
+              <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--gray-700)' }}>Nenhum plano criado</p>
               <p style={{ margin: '4px 0 16px', fontSize: 13 }}>Vá para a seção Treinos para criar um plano</p>
               <button onClick={() => navigate('/dashboard/treinos')} className="btn-primary">Ir para Treinos</button>
             </div>
           ) : plans.map(plan => (
-            <div key={plan.id} style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: 'var(--shadow-sm)' }}>
+            <div key={plan.id} style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, border: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 }}>
                 <div>
-                  <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>{plan.name}</p>
-                  <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9CA3AF' }}>
+                  <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>{plan.name}</p>
+                  <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>
                     {(plan.days || []).map(d => ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d]).join(', ')} · {(plan.exercises || []).length} exercícios
                   </p>
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {(plan.exercises || []).slice(0, 6).map((ex, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: '#F9FAFB', borderRadius: 8 }}>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: '#374151', flex: 1 }}>{ex.name}</span>
-                    <span style={{ fontSize: 12, color: '#6B7280' }}>{ex.sets}x{ex.reps}</span>
-                    {ex.weight && <span style={{ fontSize: 12, color: '#9CA3AF' }}>{ex.weight}kg</span>}
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: 'var(--bg-page)', borderRadius: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-700)', flex: 1 }}>{ex.name}</span>
+                    <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>{ex.sets}x{ex.reps}</span>
+                    {ex.weight && <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>{ex.weight}kg</span>}
                   </div>
                 ))}
                 {(plan.exercises || []).length > 6 && (
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: '#9CA3AF', textAlign: 'center' }}>+{plan.exercises.length - 6} exercícios</p>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--gray-400)', textAlign: 'center' }}>+{plan.exercises.length - 6} exercícios</p>
                 )}
               </div>
             </div>
@@ -366,29 +371,89 @@ export default function AlunoDetalhe() {
                 { label: 'Total de sessões', value: totalSessionsAll, icon: Dumbbell, color: '#8B5CF6', bg: '#F5F3FF' },
                 { label: 'Completados', value: completedSessions, icon: Check, color: '#10B981', bg: '#D1FAE5' },
               ].map(s => (
-                <div key={s.label} style={{ background: 'white', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div key={s.label} style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '16px 18px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ width: 40, height: 40, borderRadius: 10, background: s.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <s.icon size={20} color={s.color} />
                   </div>
                   <div>
-                    <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: '#111827' }}>{s.value}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>{s.label}</p>
+                    <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: 'var(--gray-900)' }}>{s.value}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>{s.label}</p>
                   </div>
                 </div>
               ))}
             </div>
 
+            {/* Workout frequency chart */}
+            {workoutSessions.length > 0 && (() => {
+              // Build weekly frequency for last 12 weeks
+              const weeks = [];
+              const now = new Date(); now.setHours(12,0,0,0);
+              for (let w = 11; w >= 0; w--) {
+                const end = new Date(now); end.setDate(now.getDate() - w * 7);
+                const start = new Date(end); start.setDate(end.getDate() - 6);
+                const startStr = start.toISOString().slice(0,10);
+                const endStr = end.toISOString().slice(0,10);
+                const count = workoutSessions.filter(s => s.date >= startStr && s.date <= endStr).length;
+                weeks.push({
+                  label: start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' }),
+                  treinos: count,
+                });
+              }
+              const maxWeek = Math.max(...weeks.map(w => w.treinos), 1);
+              return (
+                <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
+                  <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                    <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'var(--gray-900)' }}>Frequência de Treinos</h3>
+                    <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>Sessões por semana — últimas 12 semanas</p>
+                  </div>
+                  <div style={{ padding: '16px 20px 12px' }}>
+                    <ResponsiveContainer width="100%" height={140}>
+                      <BarChart data={weeks} margin={{ top: 4, right: 4, left: -28, bottom: 0 }}>
+                        <XAxis dataKey="label" tick={{ fontSize: 9, fill: 'var(--gray-400)' }} axisLine={false} tickLine={false} interval={2} />
+                        <YAxis allowDecimals={false} domain={[0, maxWeek + 1]} tick={{ fontSize: 10, fill: 'var(--gray-400)' }} axisLine={false} tickLine={false} />
+                        <Tooltip
+                          contentStyle={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 8, fontSize: 12 }}
+                          labelStyle={{ color: 'var(--gray-600)', fontWeight: 600 }}
+                          formatter={(v) => [`${v} treino${v !== 1 ? 's' : ''}`, '']}
+                          cursor={{ fill: 'rgba(129,140,248,0.08)' }}
+                        />
+                        <Bar dataKey="treinos" fill="var(--accent)" radius={[4,4,0,0]} maxBarSize={28} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                    <div style={{ display: 'flex', gap: 20, marginTop: 8 }}>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: 'var(--gray-900)' }}>{workoutSessions.length}</p>
+                        <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>total sessões</p>
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: 'var(--accent)' }}>
+                          {(weeks.slice(-4).reduce((s, w) => s + w.treinos, 0) / 4).toFixed(1)}
+                        </p>
+                        <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>treinos/semana (média)</p>
+                      </div>
+                      <div>
+                        <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: 'var(--green)' }}>
+                          {workoutSessions.filter(s => s.exercises_total > 0 && s.exercises_done >= s.exercises_total).length}
+                        </p>
+                        <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>treinos completos</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             {/* Exercise progression */}
-            <div style={{ background: 'white', borderRadius: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid #F3F4F6' }}>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827' }}>Evolução por exercício</h3>
-                <p style={{ margin: '3px 0 0', fontSize: 12, color: '#9CA3AF' }}>Baseado nos pesos registrados pelo aluno</p>
+            <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)' }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'var(--gray-900)' }}>Evolução por exercício</h3>
+                <p style={{ margin: '3px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>Baseado nos pesos registrados pelo aluno</p>
               </div>
               {exerciseProgression.length === 0 ? (
                 <div style={{ padding: '40px 20px', textAlign: 'center' }}>
-                  <Dumbbell size={36} color="#E5E7EB" style={{ marginBottom: 10 }} />
-                  <p style={{ margin: 0, fontSize: 14, color: '#9CA3AF' }}>Nenhuma evolução registrada ainda</p>
-                  <p style={{ margin: '4px 0 0', fontSize: 12, color: '#D1D5DB' }}>O aluno precisa registrar pesos em pelo menos 2 sessões</p>
+                  <Dumbbell size={36} color="var(--border)" style={{ marginBottom: 10 }} />
+                  <p style={{ margin: 0, fontSize: 14, color: 'var(--gray-400)' }}>Nenhuma evolução registrada ainda</p>
+                  <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>O aluno precisa registrar pesos em pelo menos 2 sessões</p>
                 </div>
               ) : exerciseProgression.map((ex, i) => {
                 const loadFirst = parseFloat(ex.first?.load);
@@ -397,16 +462,16 @@ export default function AlunoDetalhe() {
                 const isUp = diff !== null && diff > 0;
                 const isDown = diff !== null && diff < 0;
                 return (
-                  <div key={ex.name} style={{ padding: '14px 20px', borderBottom: i < exerciseProgression.length - 1 ? '1px solid #F9FAFB' : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div key={ex.name} style={{ padding: '14px 20px', borderBottom: i < exerciseProgression.length - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', alignItems: 'center', gap: 14 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: '0 0 3px', fontSize: 14, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</p>
-                      <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>
-                        {ex.first?.load} → <strong style={{ color: '#111827' }}>{ex.last?.load}</strong>
+                      <p style={{ margin: '0 0 3px', fontSize: 14, fontWeight: 700, color: 'var(--gray-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name}</p>
+                      <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)' }}>
+                        {ex.first?.load} → <strong style={{ color: 'var(--gray-900)' }}>{ex.last?.load}</strong>
                         {' · '}{ex.count} registro{ex.count !== 1 ? 's' : ''}
                       </p>
                     </div>
                     {diff !== null && (
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 20, background: isUp ? '#D1FAE5' : isDown ? '#FEE2E2' : '#F3F4F6', flexShrink: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '5px 12px', borderRadius: 20, background: isUp ? 'rgba(16,185,129,0.12)' : isDown ? 'rgba(239,68,68,0.12)' : 'var(--bg-page)', flexShrink: 0 }}>
                         <TrendingUp size={13} color={isUp ? '#10B981' : isDown ? '#EF4444' : '#9CA3AF'} style={{ transform: isDown ? 'scaleY(-1)' : 'none' }} />
                         <span style={{ fontSize: 13, fontWeight: 800, color: isUp ? '#059669' : isDown ? '#DC2626' : '#6B7280' }}>
                           {isUp ? '+' : ''}{diff.toFixed(1)}kg
@@ -419,25 +484,25 @@ export default function AlunoDetalhe() {
             </div>
 
             {/* Recent sessions */}
-            <div style={{ background: 'white', borderRadius: 14, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid #F3F4F6' }}>
-                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: '#111827' }}>Sessões recentes</h3>
+            <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--border-light)' }}>
+                <h3 style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'var(--gray-900)' }}>Sessões recentes</h3>
               </div>
               {workoutSessions.length === 0 ? (
                 <div style={{ padding: '32px', textAlign: 'center' }}>
-                  <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF' }}>Nenhuma sessão registrada ainda</p>
+                  <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-400)' }}>Nenhuma sessão registrada ainda</p>
                 </div>
               ) : workoutSessions.slice(0, 10).map((session, i) => {
                 const pct = session.exercises_total > 0 ? Math.round((session.exercises_done / session.exercises_total) * 100) : 0;
                 const done = pct === 100;
                 return (
-                  <div key={session.id} style={{ padding: '12px 20px', borderBottom: i < Math.min(workoutSessions.length, 10) - 1 ? '1px solid #F9FAFB' : 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div key={session.id} style={{ padding: '12px 20px', borderBottom: i < Math.min(workoutSessions.length, 10) - 1 ? '1px solid var(--border-light)' : 'none', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 38, height: 38, borderRadius: 10, background: done ? '#D1FAE5' : '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                       {done ? <Check size={18} color="#10B981" /> : <Dumbbell size={16} color="#D97706" />}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.plan_name}</p>
-                      <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>
+                      <p style={{ margin: '0 0 2px', fontSize: 13, fontWeight: 700, color: 'var(--gray-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{session.plan_name}</p>
+                      <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>
                         {new Date(session.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}
                         {session.exercises_total > 0 && ` · ${session.exercises_done}/${session.exercises_total} exercícios`}
                       </p>
@@ -479,21 +544,21 @@ export default function AlunoDetalhe() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
             {/* ── Semana Atual card ── */}
-            <div style={{ background: 'white', borderRadius: 14, padding: '18px 20px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
+            <div style={{ background: 'var(--bg-surface)', borderRadius: 14, padding: '18px 20px', border: '1px solid var(--border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <Calendar size={16} color="#3B82F6" />
-                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Semana Atual</h3>
+                  <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>Semana Atual</h3>
                 </div>
                 {pct !== null ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <div style={{ height: 6, width: 80, borderRadius: 3, background: '#F3F4F6', overflow: 'hidden' }}>
+                    <div style={{ height: 6, width: 80, borderRadius: 3, background: 'var(--border)', overflow: 'hidden' }}>
                       <div style={{ height: '100%', width: `${pct}%`, background: pctColor, borderRadius: 3, transition: 'width 0.6s ease' }} />
                     </div>
                     <span style={{ fontSize: 13, fontWeight: 800, color: pctColor }}>{completedCount}/{plannedCount}</span>
                   </div>
                 ) : (
-                  <span style={{ fontSize: 12, color: '#9CA3AF' }}>Sem treinos programados</span>
+                  <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>Sem treinos programados</span>
                 )}
               </div>
 
@@ -520,7 +585,7 @@ export default function AlunoDetalhe() {
                         <span style={{ fontSize: 14, fontWeight: 900, color: gc, lineHeight: 1 }}>{icon}</span>
                       </div>
                       {d.matchedPlan && (
-                        <span style={{ fontSize: 9, color: '#9CA3AF', textAlign: 'center', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', fontWeight: 600 }}>
+                        <span style={{ fontSize: 9, color: 'var(--gray-400)', textAlign: 'center', lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%', fontWeight: 600 }}>
                           {d.matchedPlan.name?.split(' ').slice(0, 2).join(' ')}
                         </span>
                       )}
@@ -539,7 +604,7 @@ export default function AlunoDetalhe() {
                 ].map(l => (
                   <div key={l.label} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                     <div style={{ width: 8, height: 8, borderRadius: 2, background: l.bg, border: `1.5px solid ${l.color}` }} />
-                    <span style={{ fontSize: 11, color: '#6B7280' }}>{l.label}</span>
+                    <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{l.label}</span>
                   </div>
                 ))}
               </div>
@@ -548,40 +613,40 @@ export default function AlunoDetalhe() {
             {/* ── grade 2 colunas com o resto ── */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           {/* Current plan */}
-          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
               <Dumbbell size={16} color="#8B5CF6" />
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Treino Atual</h3>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>Treino Atual</h3>
             </div>
             {plans.length === 0 ? (
-              <p style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Nenhum plano criado</p>
+              <p style={{ color: 'var(--gray-400)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Nenhum plano criado</p>
             ) : plans.slice(0, 1).map(plan => (
               <div key={plan.id}>
-                <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 700, color: '#374151' }}>{plan.name}</p>
-                <p style={{ margin: '0 0 10px', fontSize: 12, color: '#9CA3AF' }}>
+                <p style={{ margin: '0 0 8px', fontSize: 14, fontWeight: 700, color: 'var(--gray-700)' }}>{plan.name}</p>
+                <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--gray-400)' }}>
                   {(plan.days || []).map(d => ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'][d]).join(', ')}
                 </p>
-                <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>{(plan.exercises || []).length} exercícios</p>
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>{(plan.exercises || []).length} exercícios</p>
               </div>
             ))}
           </div>
 
           {/* Recent appointments */}
-          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
               <Calendar size={16} color="#3B82F6" />
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Próximas Aulas</h3>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>Próximas Aulas</h3>
             </div>
             {appointments.filter(a => a.date >= today && a.status !== 'cancelled').slice(0, 4).length === 0 ? (
-              <p style={{ color: '#9CA3AF', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Sem aulas agendadas</p>
+              <p style={{ color: 'var(--gray-400)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>Sem aulas agendadas</p>
             ) : appointments.filter(a => a.date >= today && a.status !== 'cancelled').slice(0, 4).map(appt => (
-              <div key={appt.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid #F9FAFB' }}>
+              <div key={appt.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--border-light)' }}>
                 <div style={{ width: 3, height: 32, borderRadius: 2, background: appt.color || '#3B82F6', flexShrink: 0 }} />
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: '#374151' }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-700)' }}>
                     {new Date(appt.date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short',day:'numeric',month:'short'})} · {(appt.time||'').slice(0,5)}
                   </p>
-                  <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>{appt.type}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>{appt.type}</p>
                 </div>
                 {appt.status === 'done'
                   ? <Check size={14} color="#10B981" />
@@ -664,10 +729,10 @@ export default function AlunoDetalhe() {
 
           {/* Notes / goal */}
           {(student.goal || student.notes) && (
-            <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.07)' }}>
-              <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700, color: '#111827' }}>Objetivo</h3>
-              {student.goal && <p style={{ margin: '0 0 8px', fontSize: 14, color: '#374151', fontWeight: 600 }}>🎯 {student.goal}</p>}
-              {student.notes && <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>{student.notes}</p>}
+            <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, border: '1px solid var(--border)' }}>
+              <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>Objetivo</h3>
+              {student.goal && <p style={{ margin: '0 0 8px', fontSize: 14, color: 'var(--gray-700)', fontWeight: 600 }}>🎯 {student.goal}</p>}
+              {student.notes && <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-500)' }}>{student.notes}</p>}
             </div>
           )}
         </div>
@@ -682,10 +747,10 @@ export default function AlunoDetalhe() {
               const goalCups = Math.round((waterLog.goal_ml || 2000) / 250);
               return (
                 <div style={{
-                  background: goalReached ? 'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)' : 'white',
+                  background: goalReached ? 'linear-gradient(135deg, #0EA5E9 0%, #0284C7 100%)' : 'var(--bg-surface)',
                   borderRadius: 16, padding: '20px 24px',
-                  boxShadow: goalReached ? '0 8px 28px rgba(2,132,199,0.32)' : '0 1px 3px rgba(0,0,0,0.07)',
-                  border: goalReached ? 'none' : '1px solid #E0F2FE',
+                  boxShadow: goalReached ? '0 8px 28px rgba(2,132,199,0.32)' : 'none',
+                  border: goalReached ? 'none' : '1px solid var(--border)',
                   display: 'flex', alignItems: 'center', gap: 20,
                   overflow: 'hidden', position: 'relative',
                   transition: 'background 0.6s ease, box-shadow 0.6s ease',
@@ -709,18 +774,18 @@ export default function AlunoDetalhe() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
                       <Droplets size={15} color={goalReached ? 'rgba(255,255,255,0.9)' : '#0284C7'} />
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: goalReached ? 'white' : '#111827' }}>
+                      <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: goalReached ? 'white' : 'var(--gray-900)' }}>
                         {goalReached ? 'Meta de água atingida! 💧' : 'Hidratação Hoje'}
                       </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 10 }}>
                       <span style={{ fontSize: 34, fontWeight: 900, color: goalReached ? 'white' : '#0284C7', lineHeight: 1 }}>{liters}L</span>
-                      <span style={{ fontSize: 14, color: goalReached ? 'rgba(255,255,255,0.65)' : '#9CA3AF' }}>de {goalL}L</span>
+                      <span style={{ fontSize: 14, color: goalReached ? 'rgba(255,255,255,0.65)' : 'var(--gray-400)' }}>de {goalL}L</span>
                     </div>
-                    <div style={{ height: 6, borderRadius: 99, background: goalReached ? 'rgba(255,255,255,0.25)' : '#E0F2FE', overflow: 'hidden', marginBottom: 7 }}>
+                    <div style={{ height: 6, borderRadius: 99, background: goalReached ? 'rgba(255,255,255,0.25)' : 'rgba(2,132,199,0.1)', overflow: 'hidden', marginBottom: 7 }}>
                       <div style={{ height: '100%', width: `${waterPct}%`, borderRadius: 99, background: goalReached ? 'rgba(255,255,255,0.8)' : 'linear-gradient(90deg, #38BDF8, #0284C7)', transition: 'width 0.8s ease' }} />
                     </div>
-                    <p style={{ margin: 0, fontSize: 12, color: goalReached ? 'rgba(255,255,255,0.7)' : '#6B7280' }}>
+                    <p style={{ margin: 0, fontSize: 12, color: goalReached ? 'rgba(255,255,255,0.7)' : 'var(--gray-500)' }}>
                       {cups} copo{cups !== 1 ? 's' : ''} de {goalCups} · atualizado pelo aluno
                     </p>
                   </div>
@@ -736,13 +801,13 @@ export default function AlunoDetalhe() {
             })()}
 
             {/* ── Nutrição — full width ── */}
-            <div style={{ background: 'white', borderRadius: 16, padding: '18px 24px', boxShadow: '0 1px 3px rgba(0,0,0,0.07)', display: 'flex', alignItems: 'center', gap: 16, border: '1px solid #D1FAE5' }}>
+            <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '18px 24px', border: '1px solid rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ width: 50, height: 50, borderRadius: 14, background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Utensils size={22} color="#059669" />
               </div>
               <div style={{ flex: 1 }}>
-                <p style={{ margin: '0 0 3px', fontSize: 15, fontWeight: 800, color: '#111827' }}>Plano Alimentar</p>
-                <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>Crie e edite a nutrição personalizada deste aluno</p>
+                <p style={{ margin: '0 0 3px', fontSize: 15, fontWeight: 800, color: 'var(--gray-900)' }}>Plano Alimentar</p>
+                <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>Crie e edite a nutrição personalizada deste aluno</p>
               </div>
               <button onClick={() => navigate(`/dashboard/alunos/${id}/nutricao`)} style={{ flexShrink: 0, padding: '9px 18px', borderRadius: 10, border: 'none', background: '#059669', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
                 <Utensils size={14} /> Abrir plano
@@ -760,7 +825,7 @@ export default function AlunoDetalhe() {
       {tab === 'Agenda' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           {/* Frequência do mês */}
-          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: 'var(--shadow-sm)' }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, border: '1px solid var(--border)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
               <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>
                 Frequência — {new Date().toLocaleDateString('pt-BR',{month:'long',year:'numeric'})}
@@ -800,7 +865,7 @@ export default function AlunoDetalhe() {
                 <button onClick={() => setScheduleModal(true)} className="btn-primary">Agendar Aula</button>
               </div>
             ) : appointments.map(appt => (
-              <div key={appt.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'white', borderRadius: 12, boxShadow: 'var(--shadow-sm)', borderLeft: `4px solid ${appt.color || 'var(--accent)'}` }}>
+              <div key={appt.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'var(--bg-surface)', borderRadius: 12, border: '1px solid var(--border)', borderLeft: `4px solid ${appt.color || 'var(--accent)'}` }}>
                 <div style={{ minWidth: 60, textAlign: 'center' }}>
                   <p style={{ margin: 0, fontSize: 17, fontWeight: 800, color: appt.color || 'var(--accent)', lineHeight: 1 }}>{(appt.time||'').slice(0,5)}</p>
                   <p style={{ margin: '2px 0 0', fontSize: 10, color: 'var(--gray-400)', fontWeight: 600 }}>
@@ -829,7 +894,7 @@ export default function AlunoDetalhe() {
         return (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
             {/* Nutrição */}
-            <div style={{ background: 'white', borderRadius: 14, padding: '20px 24px', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'center', gap: 16 }}>
+            <div style={{ background: 'var(--bg-surface)', borderRadius: 14, padding: '20px 24px', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 16 }}>
               <div style={{ width: 48, height: 48, borderRadius: 14, background: 'var(--accent-bg)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Utensils size={22} color="var(--accent)" />
               </div>
@@ -842,8 +907,31 @@ export default function AlunoDetalhe() {
               </button>
             </div>
 
+            {/* Check-ins recentes */}
+            {checkins.length > 0 && (
+              <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 24, border: '1px solid var(--border)' }}>
+                <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>Check-ins Recentes</h3>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  {checkins.map((c, idx) => (
+                    <div key={c.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: idx < checkins.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
+                      <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', width: 64, flexShrink: 0 }}>
+                        {new Date(c.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}
+                      </p>
+                      <div style={{ display: 'flex', gap: 8, flex: 1 }} title={`Humor ${c.mood} · Energia ${c.energy} · Sono ${c.sleep_quality} · Dores ${c.soreness}`}>
+                        <span style={{ fontSize: 20 }}>{['😫','😕','😐','🙂','😄'][(c.mood || 3) - 1]}</span>
+                        <span style={{ fontSize: 20 }}>{['🪫','😪','⚡','💪','🚀'][(c.energy || 3) - 1]}</span>
+                        <span style={{ fontSize: 20 }}>{['😵','😕','😐','😌','🌟'][(c.sleep_quality || 3) - 1]}</span>
+                        <span style={{ fontSize: 20 }}>{['💚','🟢','🟡','🟠','🔴'][(c.soreness || 1) - 1]}</span>
+                      </div>
+                      {c.notes && <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.notes}</p>}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Ficha de saúde */}
-            <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: 'var(--shadow-sm)' }}>
+            <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 24, border: '1px solid var(--border)' }}>
               <h3 style={{ margin: '0 0 16px', fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>Ficha de Saúde</h3>
               {!d ? (
                 <p style={{ color: 'var(--gray-400)', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>Aluno ainda não preencheu a ficha de saúde</p>
@@ -881,7 +969,7 @@ export default function AlunoDetalhe() {
             {payments.length === 0 ? (
               <p style={{ color: 'var(--gray-400)', fontSize: 13, textAlign: 'center', padding: '24px 0' }}>Nenhum registro de pagamento</p>
             ) : payments.map(p => (
-              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'white', borderRadius: 12, boxShadow: 'var(--shadow-sm)' }}>
+              <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', background: 'var(--bg-surface)', borderRadius: 12, border: '1px solid var(--border)' }}>
                 <div style={{ flex: 1 }}>
                   <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>R$ {Number(p.amount).toLocaleString('pt-BR')}</p>
                   <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>Venc. {new Date(p.due_date+'T12:00:00').toLocaleDateString('pt-BR')}</p>
@@ -904,7 +992,7 @@ export default function AlunoDetalhe() {
               {ratings.map(r => {
                 const FEELINGS = { otimo: '💪 Ótimo', bem: '😊 Bem', regular: '😐 Regular', cansado: '😓 Cansado', mal: '😩 Mal' };
                 return (
-                  <div key={r.id} style={{ background: 'white', borderRadius: 12, padding: '14px 18px', boxShadow: 'var(--shadow-sm)', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
+                  <div key={r.id} style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '14px 18px', border: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                     <div style={{ minWidth: 56, textAlign: 'center' }}>
                       <p style={{ margin: '0 0 2px', fontSize: 11, color: 'var(--gray-400)', fontWeight: 600 }}>
                         {new Date(r.date+'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
@@ -978,7 +1066,7 @@ export default function AlunoDetalhe() {
               <textarea value={editForm.notes || ''} onChange={e => setEditForm(f => ({ ...f, notes: e.target.value }))} rows={3} placeholder="Anotações internas..." style={{ resize: 'vertical' }} />
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
             <button type="button" className="btn-secondary" onClick={() => setEditModal(false)}>Cancelar</button>
             <button type="submit" className="btn-primary" disabled={editSaving}>{editSaving ? 'Salvando...' : 'Salvar'}</button>
           </div>
@@ -989,7 +1077,7 @@ export default function AlunoDetalhe() {
       <Modal isOpen={scheduleModal} onClose={() => setScheduleModal(false)} title="Agendar Aula">
         <form onSubmit={handleSchedule}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-            <p style={{ margin: 0, fontSize: 14, color: '#374151' }}>Aluno: <strong>{student.name}</strong></p>
+            <p style={{ margin: 0, fontSize: 14, color: 'var(--gray-700)' }}>Aluno: <strong>{student.name}</strong></p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div><label>Data *</label><input type="date" value={schedForm.date} onChange={e => setSchedForm(f=>({...f,date:e.target.value}))} required /></div>
               <div><label>Horário *</label><input type="time" value={schedForm.time} onChange={e => setSchedForm(f=>({...f,time:e.target.value}))} required /></div>
@@ -1001,7 +1089,7 @@ export default function AlunoDetalhe() {
               </select>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
             <button type="button" className="btn-secondary" onClick={() => setScheduleModal(false)}>Cancelar</button>
             <button type="submit" className="btn-primary"><Calendar size={15} /> Agendar</button>
           </div>
@@ -1013,9 +1101,11 @@ export default function AlunoDetalhe() {
 
 function InfoRow({ label, value }) {
   return (
-    <div style={{ paddingBottom: 14, borderBottom: '1px solid #F9FAFB' }}>
-      <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
-      <p style={{ margin: 0, fontSize: 14, color: '#374151' }}>{value}</p>
+    <div style={{ paddingBottom: 14, borderBottom: '1px solid var(--border-light)' }}>
+      <p style={{ margin: '0 0 4px', fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{label}</p>
+      <p style={{ margin: 0, fontSize: 14, color: 'var(--gray-700)' }}>{value}</p>
     </div>
   );
 }
+
+

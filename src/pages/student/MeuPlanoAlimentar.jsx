@@ -19,7 +19,7 @@ function calcMealTotals(foods) {
 }
 
 function mealTimeIcon(time) {
-  if (!time) return 'Refeicao';
+  if (!time) return 'Refeição';
   const [h] = time.split(':').map(Number);
   if (h >= 5  && h < 10) return 'Manha';
   if (h >= 10 && h < 12) return 'Lanche';
@@ -63,12 +63,12 @@ function MealCard({ meal }) {
     'Tarde':  { bg: 'linear-gradient(135deg,#FDF4FF,#F3E8FF)', icon: '#9333EA' },
     'Jantar': { bg: 'linear-gradient(135deg,#FFF1F2,#FFE4E6)', icon: '#E11D48' },
     'Noite':  { bg: 'linear-gradient(135deg,#F0F9FF,#E0F2FE)', icon: '#0284C7' },
-    'Refeicao': { bg: 'linear-gradient(135deg,#F8FAFC,#F1F5F9)', icon: '#64748B' },
+    'Refeição': { bg: 'linear-gradient(135deg,#F8FAFC,#F1F5F9)', icon: '#64748B' },
   };
-  const pc = PERIOD_COLORS[period] || PERIOD_COLORS['Refeicao'];
+  const pc = PERIOD_COLORS[period] || PERIOD_COLORS['Refeição'];
 
   return (
-    <div style={{ background: 'var(--bg-surface, white)', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border, #E5E7EB)', boxShadow: '0 1px 6px rgba(0,0,0,0.06)', marginBottom: 12 }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border)', boxShadow: '0 1px 6px rgba(0,0,0,0.06)', marginBottom: 12 }}>
       {/* Header */}
       <div
         onClick={() => setOpen(o => !o)}
@@ -110,7 +110,7 @@ function MealCard({ meal }) {
       {open && (
         <div style={{ padding: '4px 0 8px' }}>
           {foods.length === 0 ? (
-            <p style={{ margin: 0, padding: '10px 16px', fontSize: 13, color: 'var(--gray-400, #9CA3AF)', fontStyle: 'italic' }}>Nenhum alimento cadastrado nesta refeicao.</p>
+            <p style={{ margin: 0, padding: '10px 16px', fontSize: 13, color: 'var(--gray-400)', fontStyle: 'italic' }}>Nenhum alimento cadastrado nesta refeição.</p>
           ) : foods.map((food, idx) => (
             <div
               key={food.id || idx}
@@ -214,7 +214,7 @@ export default function MeuPlanoAlimentar() {
         <Utensils size={34} color="#059669" />
       </div>
       <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 900, color: 'var(--gray-900, #111827)' }}>Nenhum plano alimentar</h3>
-      <p style={{ margin: 0, fontSize: 14, color: 'var(--gray-500, #6B7280)', lineHeight: 1.6 }}>Seu personal ainda nao cadastrou um plano alimentar para voce.</p>
+      <p style={{ margin: 0, fontSize: 14, color: 'var(--gray-500)', lineHeight: 1.6 }}>Seu personal ainda não cadastrou um plano alimentar para você.</p>
     </div>
   );
 
@@ -268,11 +268,11 @@ export default function MeuPlanoAlimentar() {
 
       {/* Allergy banner (from anamnese) */}
       {anamnese?.allergies && (
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, marginBottom: 16 }}>
-          <AlertCircle size={16} color="#D97706" style={{ flexShrink: 0, marginTop: 1 }} />
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 14, marginBottom: 16 }}>
+          <AlertCircle size={16} color="#F59E0B" style={{ flexShrink: 0, marginTop: 1 }} />
           <div>
-            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Atencao — Alergias</p>
-            <p style={{ margin: '2px 0 0', fontSize: 13, color: '#92400E', lineHeight: 1.5 }}>{anamnese.allergies}</p>
+            <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Atenção — Alergias</p>
+            <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--gray-600)', lineHeight: 1.5 }}>{anamnese.allergies}</p>
           </div>
         </div>
       )}
@@ -311,18 +311,18 @@ export default function MeuPlanoAlimentar() {
 
       {/* Water goal pill (from anamnese) */}
       {anamnese?.water_goal_ml && (
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 14px', background: 'var(--bg-surface, white)', border: '1px solid var(--border, #E5E7EB)', borderRadius: 20, marginBottom: 20 }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 7, padding: '7px 14px', background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 20, marginBottom: 20 }}>
           <Droplets size={14} color="#3B82F6" />
-          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600, #4B5563)' }}>
-            Meta de agua: <strong style={{ color: '#3B82F6' }}>{(anamnese.water_goal_ml / 1000).toFixed(1)}L</strong> / dia
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-600)' }}>
+            Meta de água: <strong style={{ color: '#3B82F6' }}>{(anamnese.water_goal_ml / 1000).toFixed(1)}L</strong> / dia
           </span>
         </div>
       )}
 
       {/* Meals */}
       {meals.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--gray-400, #9CA3AF)', fontSize: 14 }}>
-          Nenhuma refeicao cadastrada neste plano.
+        <div style={{ textAlign: 'center', padding: '32px 20px', color: 'var(--gray-400)', fontSize: 14 }}>
+          Nenhuma refeição cadastrada neste plano.
         </div>
       ) : (
         meals.map(meal => (
@@ -335,7 +335,7 @@ export default function MeuPlanoAlimentar() {
         <div style={{ background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 14, padding: '14px 16px', marginTop: 8, marginBottom: 20, display: 'flex', gap: 10 }}>
           <AlertCircle size={16} color="#D97706" style={{ flexShrink: 0, marginTop: 2 }} />
           <div>
-            <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Observacoes do personal</p>
+            <p style={{ margin: '0 0 4px', fontSize: 12, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Observações do personal</p>
             <p style={{ margin: 0, fontSize: 13, color: '#92400E', lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{anamnese.notes}</p>
           </div>
         </div>

@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+﻿import { useState, useRef, useEffect, useCallback } from 'react';
 import { Camera, Plus, X, ZoomIn, Calendar, GitCompare } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -17,13 +17,13 @@ const TAG_COLORS = {
 
 function PhotoCard({ photo, onView, onDelete }) {
   return (
-    <div style={{ background: 'white', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
       <div
         onClick={() => photo.url && onView(photo)}
         style={{ height: 180, background: photo.url ? `url(${photo.url}) center/cover` : 'linear-gradient(135deg, #F3F4F6, #E5E7EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: photo.url ? 'pointer' : 'default', position: 'relative' }}
       >
         {!photo.url && (
-          <div style={{ textAlign: 'center', color: '#9CA3AF' }}>
+          <div style={{ textAlign: 'center', color: 'var(--gray-400)' }}>
             <Camera size={36} style={{ marginBottom: 8 }} />
             <p style={{ margin: 0, fontSize: 12 }}>Sem foto</p>
           </div>
@@ -46,13 +46,13 @@ function PhotoCard({ photo, onView, onDelete }) {
       </div>
       <div style={{ padding: '12px 14px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 6 }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{photo.label}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--gray-900)' }}>{photo.label}</span>
           <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: TAG_COLORS[photo.tag]?.bg, color: TAG_COLORS[photo.tag]?.color }}>
             {TAG_COLORS[photo.tag]?.label}
           </span>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
-          <span style={{ fontSize: 11, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <span style={{ fontSize: 11, color: 'var(--gray-500)', display: 'flex', alignItems: 'center', gap: 4 }}>
             <Calendar size={10} /> {new Date(photo.date + 'T12:00:00').toLocaleDateString('pt-BR')}
           </span>
           {photo.weight && <span style={{ fontSize: 11, color: '#3B82F6', fontWeight: 700 }}>{photo.weight}</span>}
@@ -88,19 +88,19 @@ function BeforeAfterSlider({ before, after }) {
       {before.url ? (
         <img src={before.url} alt="Antes" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
       ) : (
-        <div style={{ position: 'absolute', inset: 0, background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF' }}>Sem foto</div>
+        <div style={{ position: 'absolute', inset: 0, background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)' }}>Sem foto</div>
       )}
       {/* After layer (clipped) */}
       <div style={{ position: 'absolute', inset: 0, clipPath: `inset(0 ${100 - position}% 0 0)` }}>
         {after.url ? (
           <img src={after.url} alt="Depois" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <div style={{ position: 'absolute', inset: 0, background: '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF' }}>Sem foto</div>
+          <div style={{ position: 'absolute', inset: 0, background: 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)' }}>Sem foto</div>
         )}
       </div>
       {/* Divider */}
-      <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${position}%`, width: 3, background: 'white', transform: 'translateX(-50%)', pointerEvents: 'none', boxShadow: '0 0 8px rgba(0,0,0,0.4)' }}>
-        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 36, height: 36, borderRadius: '50%', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.25)', fontSize: 14, fontWeight: 900, color: '#374151' }}>⇔</div>
+      <div style={{ position: 'absolute', top: 0, bottom: 0, left: `${position}%`, width: 3, background: 'rgba(255,255,255,0.95)', transform: 'translateX(-50%)', pointerEvents: 'none', boxShadow: '0 0 8px rgba(0,0,0,0.4)' }}>
+        <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 36, height: 36, borderRadius: '50%', background: 'rgba(255,255,255,0.95)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 10px rgba(0,0,0,0.4)', fontSize: 14, fontWeight: 900, color: 'var(--gray-700)' }}>⇔</div>
       </div>
       {/* Labels */}
       <div style={{ position: 'absolute', top: 12, left: 12, background: 'rgba(0,0,0,0.55)', color: 'white', fontSize: 11, fontWeight: 700, padding: '4px 10px', borderRadius: 20, pointerEvents: 'none' }}>ANTES</div>
@@ -113,32 +113,32 @@ function BeforeAfterSlider({ before, after }) {
 
 function ComparePhoto({ photo }) {
   if (!photo) return (
-    <div style={{ flex: 1, borderRadius: 12, background: '#F3F4F6', border: '2px dashed #E5E7EB', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 280, color: '#9CA3AF', gap: 8 }}>
+    <div style={{ flex: 1, borderRadius: 12, background: 'var(--bg-page)', border: '2px dashed #E5E7EB', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: 280, color: 'var(--gray-400)', gap: 8 }}>
       <Camera size={32} />
       <p style={{ margin: 0, fontSize: 13 }}>Nenhuma foto selecionada</p>
     </div>
   );
   return (
-    <div style={{ flex: 1, borderRadius: 12, overflow: 'hidden', background: 'white', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', position: 'relative' }}>
+    <div style={{ flex: 1, borderRadius: 12, overflow: 'hidden', background: 'var(--bg-surface)', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', position: 'relative' }}>
       {photo.url ? (
         <img src={photo.url} alt={photo.label} style={{ width: '100%', objectFit: 'cover', maxHeight: 400, display: 'block' }} />
       ) : (
-        <div style={{ height: 280, background: 'linear-gradient(135deg, #F3F4F6, #E5E7EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9CA3AF' }}>
+        <div style={{ height: 280, background: 'linear-gradient(135deg, #F3F4F6, #E5E7EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)' }}>
           <div style={{ textAlign: 'center' }}>
             <Camera size={40} style={{ marginBottom: 8 }} />
             <p style={{ margin: 0, fontSize: 13 }}>Sem foto</p>
           </div>
         </div>
       )}
-      <div style={{ padding: '10px 14px', borderTop: '1px solid #F3F4F6' }}>
+      <div style={{ padding: '10px 14px', borderTop: '1px solid var(--border)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#111827' }}>{photo.label}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--gray-900)' }}>{photo.label}</span>
           <span style={{ fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20, background: TAG_COLORS[photo.tag]?.bg, color: TAG_COLORS[photo.tag]?.color }}>
             {TAG_COLORS[photo.tag]?.label}
           </span>
         </div>
         <div style={{ display: 'flex', gap: 10, marginTop: 4 }}>
-          <span style={{ fontSize: 11, color: '#6B7280' }}>{new Date(photo.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
+          <span style={{ fontSize: 11, color: 'var(--gray-500)' }}>{new Date(photo.date + 'T12:00:00').toLocaleDateString('pt-BR')}</span>
           {photo.weight && <span style={{ fontSize: 11, color: '#3B82F6', fontWeight: 700 }}>{photo.weight}</span>}
         </div>
       </div>
@@ -235,7 +235,7 @@ export default function FotosProgresso() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', background: '#F3F4F6', borderRadius: 10, padding: 4, marginBottom: 20, width: 'fit-content', gap: 2 }}>
+      <div style={{ display: 'flex', background: 'var(--bg-page)', borderRadius: 10, padding: 4, marginBottom: 20, width: 'fit-content', gap: 2 }}>
         {[
           { key: 'galeria', label: '📸 Galeria' },
           { key: 'comparar', label: '🔀 Comparar' },
@@ -273,10 +273,10 @@ export default function FotosProgresso() {
           </div>
 
           {photos.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+            <div style={{ textAlign: 'center', padding: '60px 20px', background: 'var(--bg-surface)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
               <Camera size={48} color="#D1D5DB" style={{ marginBottom: 12 }} />
-              <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 600, color: '#374151' }}>Nenhuma foto ainda</p>
-              <p style={{ margin: '0 0 16px', fontSize: 13, color: '#9CA3AF' }}>Adicione sua primeira foto de progresso</p>
+              <p style={{ margin: '0 0 8px', fontSize: 15, fontWeight: 600, color: 'var(--gray-700)' }}>Nenhuma foto ainda</p>
+              <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--gray-400)' }}>Adicione sua primeira foto de progresso</p>
               <button className="btn-primary" onClick={() => setModal(true)}><Plus size={15} /> Adicionar Foto</button>
             </div>
           )}
@@ -285,11 +285,11 @@ export default function FotosProgresso() {
 
       {tab === 'comparar' && (
         <div>
-          <div style={{ background: 'white', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
-            <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: '#111827' }}>Selecione duas fotos para comparar</p>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+            <p style={{ margin: '0 0 14px', fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>Selecione duas fotos para comparar</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: 4 }}>Foto A (antes)</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-500)', display: 'block', marginBottom: 4 }}>Foto A (antes)</label>
                 <select value={compareA} onChange={e => setCompareA(e.target.value)} style={{ width: '100%' }}>
                   <option value="">Selecione...</option>
                   {photos.map(p => (
@@ -300,7 +300,7 @@ export default function FotosProgresso() {
                 </select>
               </div>
               <div>
-                <label style={{ fontSize: 12, fontWeight: 600, color: '#6B7280', display: 'block', marginBottom: 4 }}>Foto B (depois)</label>
+                <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--gray-500)', display: 'block', marginBottom: 4 }}>Foto B (depois)</label>
                 <select value={compareB} onChange={e => setCompareB(e.target.value)} style={{ width: '100%' }}>
                   <option value="">Selecione...</option>
                   {photos.map(p => (
@@ -316,29 +316,29 @@ export default function FotosProgresso() {
           {/* Slider */}
           {photoA && photoB && (
             <div style={{ marginBottom: 20 }}>
-              <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: '#6B7280', textTransform: 'uppercase' }}>Arraste para comparar</p>
+              <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase' }}>Arraste para comparar</p>
               <BeforeAfterSlider before={photoA} after={photoB} />
             </div>
           )}
           {(!photoA || !photoB) && (
-            <div style={{ background: '#F9FAFB', borderRadius: 12, padding: '32px 20px', textAlign: 'center', marginBottom: 20, border: '2px dashed #E5E7EB' }}>
-              <p style={{ margin: 0, fontSize: 14, color: '#9CA3AF' }}>Selecione duas fotos para ver o slider de comparação</p>
+            <div style={{ background: 'var(--bg-page)', borderRadius: 12, padding: '32px 20px', textAlign: 'center', marginBottom: 20, border: '2px dashed #E5E7EB' }}>
+              <p style={{ margin: 0, fontSize: 14, color: 'var(--gray-400)' }}>Selecione duas fotos para ver o slider de comparação</p>
             </div>
           )}
 
           {/* Comparison view */}
           <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }} className="compare-grid">
             <div style={{ flex: 1 }}>
-              <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Antes</p>
+              <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 800, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Antes</p>
               <ComparePhoto photo={photoA} />
             </div>
             <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
-              <div style={{ width: 32, height: 32, borderRadius: '50%', background: '#F3F4F6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--bg-page)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <GitCompare size={16} color="#9CA3AF" />
               </div>
             </div>
             <div style={{ flex: 1 }}>
-              <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 800, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Depois</p>
+              <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 800, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.08em' }}>Depois</p>
               <ComparePhoto photo={photoB} />
             </div>
           </div>
@@ -346,7 +346,7 @@ export default function FotosProgresso() {
           {photoA && photoB && photoA.weight && photoB.weight && (
             <div style={{ marginTop: 16, background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', borderRadius: 12, padding: 16, display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap' }}>
               {[
-                { label: 'Peso inicial', value: photoA.weight, color: '#6B7280' },
+                { label: 'Peso inicial', value: photoA.weight, color: 'var(--gray-500)' },
                 { label: 'Peso atual', value: photoB.weight, color: '#3B82F6' },
                 {
                   label: 'Diferença',
@@ -366,7 +366,7 @@ export default function FotosProgresso() {
               ].map(s => (
                 <div key={s.label} style={{ textAlign: 'center' }}>
                   <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color: s.color }}>{s.value}</p>
-                  <p style={{ margin: 0, fontSize: 11, color: '#6B7280' }}>{s.label}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-500)' }}>{s.label}</p>
                 </div>
               ))}
             </div>
@@ -378,9 +378,9 @@ export default function FotosProgresso() {
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #F3F4F6' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-light)' }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Adicionar Foto de Progresso</h3>
-              <button onClick={() => setModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex' }}><X size={20} /></button>
+              <button onClick={() => setModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-500)', display: 'flex' }}><X size={20} /></button>
             </div>
             <form onSubmit={save} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div
@@ -388,7 +388,7 @@ export default function FotosProgresso() {
                 style={{ height: 160, borderRadius: 12, border: '2px dashed #E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', background: form.previewUrl ? `url(${form.previewUrl}) center/cover` : '#F9FAFB', overflow: 'hidden' }}
               >
                 {!form.previewUrl && (
-                  <div style={{ textAlign: 'center', color: '#9CA3AF' }}>
+                  <div style={{ textAlign: 'center', color: 'var(--gray-400)' }}>
                     <Camera size={32} style={{ marginBottom: 8 }} />
                     <p style={{ margin: 0, fontSize: 13, fontWeight: 600 }}>Clique para selecionar foto</p>
                     <p style={{ margin: '4px 0 0', fontSize: 11 }}>JPG, PNG até 10MB</p>
@@ -418,7 +418,7 @@ export default function FotosProgresso() {
                   </select>
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 8, borderTop: '1px solid #F3F4F6' }}>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 8, borderTop: '1px solid var(--border)' }}>
                 <button type="button" className="btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={uploading}>{uploading ? 'Enviando...' : 'Salvar'}</button>
               </div>
@@ -452,3 +452,5 @@ export default function FotosProgresso() {
     </div>
   );
 }
+
+

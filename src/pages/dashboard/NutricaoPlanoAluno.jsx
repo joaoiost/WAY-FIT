@@ -2,13 +2,13 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Search, X, Save, ChevronDown,
-  Droplets, AlertCircle, Check, FileText, Target, Zap,
+  Droplets, AlertCircle, Check, Target, Zap, Calculator,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import tacoFoods from '../../data/taco_foods.json';
 
-// ─── Constants ───────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const DEFAULT_MEALS = [
   { name: 'Café da manhã',   time_of_day: '07:00', order_index: 0 },
@@ -16,24 +16,23 @@ const DEFAULT_MEALS = [
   { name: 'Almoço',          time_of_day: '12:30', order_index: 2 },
   { name: 'Lanche da tarde', time_of_day: '15:30', order_index: 3 },
   { name: 'Jantar',          time_of_day: '19:00', order_index: 4 },
-  { name: 'Ceia',            time_of_day: '21:30', order_index: 5 },
 ];
 
 const MACRO_COLORS = { cal: '#EF4444', prot: '#6366F1', carb: '#F59E0B', fat: '#10B981' };
 
 const ACTIVITY_LEVELS = [
-  { key: 'sedentario',  label: 'Sedentário',                  sub: 'menos de 1x/semana', factor: 1.2   },
-  { key: 'leve',        label: 'Levemente ativo',             sub: '1–3x/semana',        factor: 1.375 },
-  { key: 'moderado',    label: 'Moderadamente ativo',         sub: '3–5x/semana',        factor: 1.55  },
-  { key: 'muito_ativo', label: 'Muito ativo',                 sub: '6–7x/semana',        factor: 1.725 },
-  { key: 'atleta',      label: 'Atleta / Extremamente ativo', sub: 'treino 2x/dia',      factor: 1.9   },
+  { key: 'sedentario',  label: 'Sedentário',         sub: 'menos de 1x/semana', factor: 1.2   },
+  { key: 'leve',        label: 'Levemente ativo',     sub: '1–3x/semana',        factor: 1.375 },
+  { key: 'moderado',    label: 'Moderadamente ativo', sub: '3–5x/semana',        factor: 1.55  },
+  { key: 'muito_ativo', label: 'Muito ativo',         sub: '6–7x/semana',        factor: 1.725 },
+  { key: 'atleta',      label: 'Atleta',              sub: 'treino 2x/dia',      factor: 1.9   },
 ];
 
 const GOALS_TMB = [
-  { key: 'emagrecimento', label: 'Emagrecimento',  kcalDelta: -400, protFactor: 2.0, fatFactor: 0.8 },
-  { key: 'manutencao',    label: 'Manutenção',      kcalDelta:    0, protFactor: 1.8, fatFactor: 0.9 },
-  { key: 'ganho',         label: 'Ganho de massa',  kcalDelta: +300, protFactor: 2.2, fatFactor: 1.0 },
-  { key: 'definicao',     label: 'Definição',       kcalDelta: -200, protFactor: 2.5, fatFactor: 0.8 },
+  { key: 'emagrecimento', label: 'Emagrecer',   kcalDelta: -400, protFactor: 2.0, fatFactor: 0.8 },
+  { key: 'manutencao',    label: 'Manutenção',   kcalDelta:    0, protFactor: 1.8, fatFactor: 0.9 },
+  { key: 'ganho',         label: 'Ganhar massa', kcalDelta: +300, protFactor: 2.2, fatFactor: 1.0 },
+  { key: 'definicao',     label: 'Definição',    kcalDelta: -200, protFactor: 2.5, fatFactor: 0.8 },
 ];
 
 const ANAMNESE_INIT = {
@@ -43,6 +42,28 @@ const ANAMNESE_INIT = {
   conditions: '', medications: '', workout_time: '',
   meal_count: 5, water_goal_ml: 2000, notes: '',
 };
+
+// Temas visuais por tipo de refeição
+const MEAL_THEMES = {
+  cafe:    { color: '#D97706', bg: 'rgba(217,119,6,0.12)',   emoji: '☕' },
+  almoco:  { color: '#2563EB', bg: 'rgba(37,99,235,0.1)',    emoji: '🍽️' },
+  lanche:  { color: '#059669', bg: 'rgba(5,150,105,0.1)',    emoji: '🥗' },
+  jantar:  { color: '#9333EA', bg: 'rgba(147,51,234,0.1)',   emoji: '🌙' },
+  ceia:    { color: '#0284C7', bg: 'rgba(2,132,199,0.1)',    emoji: '⭐' },
+  pre:     { color: '#E11D48', bg: 'rgba(225,29,72,0.1)',    emoji: '⚡' },
+  default: { color: '#64748B', bg: 'rgba(100,116,139,0.1)', emoji: '🥘' },
+};
+
+function getMealTheme(name) {
+  const n = (name || '').toLowerCase();
+  if (n.includes('cafe') || n.includes('café') || n.includes('manhã') || n.includes('manha')) return MEAL_THEMES.cafe;
+  if (n.includes('almoço') || n.includes('almoco')) return MEAL_THEMES.almoco;
+  if (n.includes('jantar')) return MEAL_THEMES.jantar;
+  if (n.includes('ceia') || n.includes('noite')) return MEAL_THEMES.ceia;
+  if (n.includes('pré') || n.includes('pre') || n.includes('treino')) return MEAL_THEMES.pre;
+  if (n.includes('lanche') || n.includes('tarde')) return MEAL_THEMES.lanche;
+  return MEAL_THEMES.default;
+}
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -78,33 +99,193 @@ function calcSuggestedMacros(tdee, weight, goalKey) {
   return { calories: targetKcal, protein, fat, carbs };
 }
 
-// ─── MacroBar (with optional goal) ───────────────────────────────────────────
+// ─── CalorieRing ──────────────────────────────────────────────────────────────
 
-function MacroBar({ label, value, goal, total, color }) {
-  const pct = goal > 0
-    ? Math.min(100, (value / goal) * 100)
-    : total > 0
-      ? Math.min(100, (value / total) * 100)
-      : 0;
-
-  const goalLabel = goal
-    ? `${Math.round(value)}${label === 'kcal' ? '' : 'g'} / ${Math.round(goal)}${label === 'kcal' ? '' : 'g'}`
-    : `${Math.round(value)}${label === 'kcal' ? '' : 'g'}`;
+function CalorieRing({ consumed, goal }) {
+  const size = 108;
+  const r = 44;
+  const cx = 54, cy = 54;
+  const pct = goal > 0 ? Math.min(1, consumed / goal) : 0;
+  const circumference = 2 * Math.PI * r;
+  const dash = pct * circumference;
+  const over = goal > 0 && consumed > goal;
+  const ringColor = consumed === 0 ? 'var(--border)' : over ? 'var(--red)' : 'var(--accent)';
 
   return (
-    <div style={{ flex: 1 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
-        <span style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase' }}>{label}</span>
-        <span style={{ fontSize: 11, fontWeight: 800, color }}>{goalLabel}</span>
-      </div>
-      <div style={{ height: 5, borderRadius: 99, background: color + '20' }}>
-        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 99, background: color, transition: 'width 0.4s ease' }} />
+    <div style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
+      <svg width={size} height={size} style={{ display: 'block' }}>
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--border)" strokeWidth="11" />
+        <circle
+          cx={cx} cy={cy} r={r} fill="none"
+          stroke={ringColor} strokeWidth="11"
+          strokeDasharray={`${dash} ${circumference}`}
+          strokeLinecap="round"
+          transform={`rotate(-90 ${cx} ${cy})`}
+          style={{ transition: 'stroke-dasharray 0.5s ease' }}
+        />
+      </svg>
+      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 1 }}>
+        <span style={{ fontSize: 19, fontWeight: 900, color: over ? 'var(--red)' : 'var(--gray-900)', lineHeight: 1 }}>
+          {Math.round(consumed)}
+        </span>
+        {goal > 0 && (
+          <span style={{ fontSize: 9, color: 'var(--gray-400)', fontWeight: 600 }}>de {Math.round(goal)}</span>
+        )}
+        <span style={{ fontSize: 9, color: 'var(--gray-400)', fontWeight: 500 }}>kcal</span>
       </div>
     </div>
   );
 }
 
-// ─── FoodSearch modal ─────────────────────────────────────────────────────────
+// ─── MacroBar ─────────────────────────────────────────────────────────────────
+
+function MacroBar({ label, value, goal, color, onGoalChange }) {
+  const [editing, setEditing] = useState(false);
+  const pct = goal > 0 ? Math.min(100, (value / goal) * 100) : 0;
+
+  return (
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+        <span style={{ fontSize: 11, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.04em' }}>{label}</span>
+        {editing ? (
+          <input
+            type="number"
+            defaultValue={goal || ''}
+            autoFocus
+            onBlur={e => { onGoalChange(e.target.value); setEditing(false); }}
+            onKeyDown={e => { if (e.key === 'Enter') { onGoalChange(e.target.value); setEditing(false); } }}
+            style={{ width: 64, textAlign: 'right', fontSize: 11, fontWeight: 700, color, border: `1.5px solid ${color}`, borderRadius: 5, padding: '1px 4px', background: 'transparent', outline: 'none', boxShadow: 'none' }}
+          />
+        ) : (
+          <button
+            onClick={() => setEditing(true)}
+            title="Clique para editar meta"
+            style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontSize: 11, fontWeight: 800, color, display: 'flex', alignItems: 'center', gap: 2 }}
+          >
+            <span style={{ color: 'var(--gray-600)' }}>{Math.round(value)}g</span>
+            {goal > 0 && <span style={{ color: 'var(--gray-400)', fontWeight: 500 }}>/{goal}g</span>}
+          </button>
+        )}
+      </div>
+      <div style={{ height: 6, borderRadius: 99, background: color + '20' }}>
+        <div style={{ width: `${pct}%`, height: '100%', borderRadius: 99, background: color, transition: 'width 0.4s ease', minWidth: value > 0 ? 4 : 0 }} />
+      </div>
+    </div>
+  );
+}
+
+// ─── QuickCalcPanel ───────────────────────────────────────────────────────────
+
+function QuickCalcPanel({ anamnese, onApply, onClose }) {
+  const [form, setForm] = useState({
+    weight:   anamnese.weight         || '',
+    height:   anamnese.height         || '',
+    age:      anamnese.age            || '',
+    sex:      anamnese.sex            || 'feminino',
+    activity: anamnese.activity_level || 'moderado',
+    goal:     'manutencao',
+  });
+
+  const tmb       = calcTMB(form.weight, form.height, form.age, form.sex);
+  const factor    = ACTIVITY_LEVELS.find(a => a.key === form.activity)?.factor || 1.55;
+  const tdee      = tmb ? Math.round(tmb * factor) : null;
+  const suggested = tdee ? calcSuggestedMacros(tdee, form.weight, form.goal) : null;
+
+  const set = (k, v) => setForm(p => ({ ...p, [k]: v }));
+
+  return (
+    <div style={{ background: 'var(--bg-page)', borderRadius: 12, border: '1.5px solid var(--accent)', padding: 16, marginTop: 2, marginBottom: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Calculator size={14} color="var(--accent)" />
+          <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--gray-900)' }}>Calcular metas automaticamente</span>
+        </div>
+        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
+          <X size={15} />
+        </button>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 10 }}>
+        {[
+          { key: 'weight', label: 'Peso (kg)', placeholder: '70' },
+          { key: 'height', label: 'Altura (cm)', placeholder: '168' },
+          { key: 'age',    label: 'Idade',       placeholder: '28' },
+        ].map(f => (
+          <div key={f.key}>
+            <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: 3 }}>{f.label}</label>
+            <input
+              type="number"
+              value={form[f.key]}
+              onChange={e => set(f.key, e.target.value)}
+              placeholder={f.placeholder}
+              style={{ width: '100%', fontSize: 14, fontWeight: 700, textAlign: 'center' }}
+            />
+          </div>
+        ))}
+      </div>
+
+      <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
+        {['feminino', 'masculino'].map(s => (
+          <button key={s} onClick={() => set('sex', s)}
+            style={{ flex: 1, padding: '6px 0', borderRadius: 8, border: `1.5px solid ${form.sex === s ? 'var(--accent)' : 'var(--border)'}`, background: form.sex === s ? 'var(--accent-bg)' : 'var(--bg-surface)', color: form.sex === s ? 'var(--accent-text)' : 'var(--gray-500)', fontSize: 12, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize' }}
+          >{s}</button>
+        ))}
+      </div>
+
+      <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: 6 }}>Nível de atividade</label>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
+        {ACTIVITY_LEVELS.map(a => (
+          <button key={a.key} onClick={() => set('activity', a.key)}
+            style={{ padding: '5px 10px', borderRadius: 20, border: `1.5px solid ${form.activity === a.key ? 'var(--accent)' : 'var(--border)'}`, background: form.activity === a.key ? 'var(--accent-bg)' : 'var(--bg-surface)', color: form.activity === a.key ? 'var(--accent-text)' : 'var(--gray-500)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+          >{a.label}</button>
+        ))}
+      </div>
+
+      <label style={{ fontSize: 10, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: 6 }}>Objetivo</label>
+      <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 12 }}>
+        {GOALS_TMB.map(g => (
+          <button key={g.key} onClick={() => set('goal', g.key)}
+            style={{ padding: '5px 10px', borderRadius: 20, border: `1.5px solid ${form.goal === g.key ? 'var(--accent)' : 'var(--border)'}`, background: form.goal === g.key ? 'var(--accent-bg)' : 'var(--bg-surface)', color: form.goal === g.key ? 'var(--accent-text)' : 'var(--gray-500)', fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+          >{g.label}</button>
+        ))}
+      </div>
+
+      {suggested ? (
+        <>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6, marginBottom: 10 }}>
+            {[
+              { label: 'Kcal', value: suggested.calories, color: MACRO_COLORS.cal,  unit: ''  },
+              { label: 'Prot', value: suggested.protein,  color: MACRO_COLORS.prot, unit: 'g' },
+              { label: 'Carb', value: suggested.carbs,    color: MACRO_COLORS.carb, unit: 'g' },
+              { label: 'Gord', value: suggested.fat,      color: MACRO_COLORS.fat,  unit: 'g' },
+            ].map(m => (
+              <div key={m.label} style={{ textAlign: 'center', padding: '8px 4px', background: m.color + '12', borderRadius: 8 }}>
+                <p style={{ margin: 0, fontSize: 15, fontWeight: 900, color: m.color }}>{m.value}{m.unit}</p>
+                <p style={{ margin: 0, fontSize: 9, color: m.color, fontWeight: 700, textTransform: 'uppercase' }}>{m.label}</p>
+              </div>
+            ))}
+          </div>
+          <p style={{ margin: '0 0 8px', fontSize: 11, color: 'var(--gray-400)', textAlign: 'center' }}>
+            TMB: {Math.round(tmb)} kcal · TDEE: {tdee} kcal
+          </p>
+          <button
+            onClick={() => { onApply(suggested); onClose(); }}
+            className="btn-primary"
+            style={{ width: '100%', justifyContent: 'center', gap: 6 }}
+          >
+            <Check size={14} /> Aplicar estas metas ao plano
+          </button>
+        </>
+      ) : (
+        <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)', textAlign: 'center', padding: '8px 0' }}>
+          Preencha peso, altura e idade para calcular
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── FoodSearch ───────────────────────────────────────────────────────────────
 
 function FoodSearch({ foods, onAdd, onClose }) {
   const [q, setQ]               = useState('');
@@ -114,7 +295,6 @@ function FoodSearch({ foods, onAdd, onClose }) {
 
   useEffect(() => { setTimeout(() => inputRef.current?.focus(), 50); }, []);
 
-  // Mescla banco do personal com TACO, deduplicando por nome
   const allFoodsMerged = useMemo(() => {
     const customNames = new Set(foods.map(f => f.name.toLowerCase()));
     const tacoNorm = tacoFoods
@@ -127,22 +307,20 @@ function FoodSearch({ foods, onAdd, onClose }) {
         protein_per_100g:  f.protein_g ?? 0,
         carbs_per_100g:    f.carbs_g   ?? 0,
         fat_per_100g:      f.fat_g     ?? 0,
-        fiber_per_100g:    0,
       }));
     return [...foods, ...tacoNorm];
   }, [foods]);
 
   const results = q.length < 2
     ? []
-    : allFoodsMerged.filter(f => f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 10);
-  const preview = selected
-    ? {
-        cal:  ((selected.calories_per_100g || 0) * qty / 100).toFixed(1),
-        prot: ((selected.protein_per_100g  || 0) * qty / 100).toFixed(1),
-        carb: ((selected.carbs_per_100g    || 0) * qty / 100).toFixed(1),
-        fat:  ((selected.fat_per_100g      || 0) * qty / 100).toFixed(1),
-      }
-    : null;
+    : allFoodsMerged.filter(f => f.name.toLowerCase().includes(q.toLowerCase())).slice(0, 8);
+
+  const preview = selected ? {
+    cal:  ((selected.calories_per_100g || 0) * qty / 100).toFixed(1),
+    prot: ((selected.protein_per_100g  || 0) * qty / 100).toFixed(1),
+    carb: ((selected.carbs_per_100g    || 0) * qty / 100).toFixed(1),
+    fat:  ((selected.fat_per_100g      || 0) * qty / 100).toFixed(1),
+  } : null;
 
   const handleAdd = () => {
     if (!selected) return;
@@ -166,37 +344,45 @@ function FoodSearch({ foods, onAdd, onClose }) {
       onClick={onClose}
     >
       <div
-        style={{ background: 'var(--bg-surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 520, padding: 20, maxHeight: '85vh', overflowY: 'auto' }}
+        style={{ background: 'var(--bg-surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 520, padding: '20px 20px 32px', maxHeight: '88vh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+        {/* Handle */}
+        <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border)', margin: '-8px auto 16px' }} />
+
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
           <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>Adicionar alimento</h3>
           <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
             <X size={18} />
           </button>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--gray-50)', border: '1.5px solid var(--border)', borderRadius: 10, padding: '8px 12px', marginBottom: 12 }}>
-          <Search size={15} color="var(--gray-400)" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-page)', border: '1.5px solid var(--border)', borderRadius: 12, padding: '10px 14px', marginBottom: 10 }}>
+          <Search size={16} color="var(--gray-400)" />
           <input
             ref={inputRef}
             value={q}
             onChange={e => { setQ(e.target.value); setSelected(null); }}
-            placeholder="Buscar alimento (TACO + banco próprio)..."
-            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 14, flex: 1, padding: 0, boxShadow: 'none', width: 'auto', color: 'var(--gray-900)', WebkitTextFillColor: 'var(--gray-900)' }}
+            placeholder={`Buscar entre ${(tacoFoods.length + foods.length).toLocaleString()} alimentos...`}
+            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 14, flex: 1, padding: 0, boxShadow: 'none', color: 'var(--gray-900)', WebkitTextFillColor: 'var(--gray-900)' }}
           />
+          {q.length > 0 && (
+            <button onClick={() => { setQ(''); setSelected(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
+              <X size={14} />
+            </button>
+          )}
         </div>
 
         {q.length < 2 && (
-          <p style={{ margin: '4px 0 8px', fontSize: 12, color: 'var(--gray-400)', textAlign: 'center' }}>
-            Digite ao menos 2 letras para buscar entre {tacoFoods.length + foods.length} alimentos
+          <p style={{ margin: '4px 0 10px', fontSize: 12, color: 'var(--gray-400)', textAlign: 'center' }}>
+            Digite ao menos 2 letras para buscar
           </p>
         )}
 
         {q.length >= 2 && results.length === 0 && (
           <button
             onClick={() => { onAdd({ food_item_id: null, name: q, quantity_g: qty, calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, order_index: 0 }); onClose(); }}
-            style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--gray-50)', color: 'var(--gray-600)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', marginBottom: 12 }}
+            style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--bg-page)', color: 'var(--gray-500)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', marginBottom: 12 }}
           >
             + Adicionar "{q}" manualmente (sem macros)
           </button>
@@ -206,38 +392,56 @@ function FoodSearch({ foods, onAdd, onClose }) {
           <div
             key={f.id}
             onClick={() => setSelected(f)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, marginBottom: 4, background: selected?.id === f.id ? 'var(--accent-bg)' : 'var(--bg-page)', border: `1px solid ${selected?.id === f.id ? 'var(--accent)' : 'var(--border)'}`, cursor: 'pointer', transition: 'all 0.1s' }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, marginBottom: 4, background: selected?.id === f.id ? 'var(--accent-bg)' : 'var(--bg-page)', border: `1.5px solid ${selected?.id === f.id ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', transition: 'all 0.1s' }}
           >
-            <div>
+            <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-900)' }}>{f.name}</p>
-              <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>{f.calories_per_100g} kcal · {f.protein_per_100g}g prot · {f.carbs_per_100g}g carb / 100g</p>
+              <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>
+                {f.calories_per_100g} kcal · {f.protein_per_100g}g P · {f.carbs_per_100g}g C / 100g
+              </p>
             </div>
-            {selected?.id === f.id && <Check size={16} color="var(--accent)" />}
+            {selected?.id === f.id && <Check size={16} color="var(--accent)" style={{ flexShrink: 0 }} />}
           </div>
         ))}
 
         {selected && (
-          <div style={{ marginTop: 14, padding: 14, background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
-            <label style={{ marginBottom: 8 }}>Quantidade</label>
+          <div style={{ marginTop: 12, padding: 14, background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: 8 }}>
+              Quantidade
+            </label>
+
+            {/* Serving presets */}
+            <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
+              {[50, 100, 150, 200, 250, 300].map(g => (
+                <button
+                  key={g}
+                  onClick={() => setQty(g)}
+                  style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${qty === g ? 'var(--accent)' : 'var(--border)'}`, background: qty === g ? 'var(--accent-bg)' : 'var(--bg-surface)', color: qty === g ? 'var(--accent-text)' : 'var(--gray-500)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  {g}g
+                </button>
+              ))}
+            </div>
+
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
               <input
                 type="number"
                 value={qty}
                 min="1"
-                step="1"
                 onChange={e => setQty(Number(e.target.value) || 100)}
-                style={{ width: 100, textAlign: 'center', fontWeight: 700, fontSize: 15 }}
+                style={{ width: 80, textAlign: 'center', fontWeight: 700, fontSize: 16 }}
               />
               <span style={{ fontSize: 13, color: 'var(--gray-500)', fontWeight: 600 }}>gramas</span>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
               {[
                 { label: 'Kcal', value: preview.cal,  color: MACRO_COLORS.cal  },
                 { label: 'Prot', value: preview.prot, color: MACRO_COLORS.prot },
                 { label: 'Carb', value: preview.carb, color: MACRO_COLORS.carb },
                 { label: 'Gord', value: preview.fat,  color: MACRO_COLORS.fat  },
               ].map(m => (
-                <div key={m.label} style={{ textAlign: 'center', padding: '8px 4px', background: m.color + '12', borderRadius: 9 }}>
+                <div key={m.label} style={{ textAlign: 'center', padding: '8px 4px', background: m.color + '12', borderRadius: 8 }}>
                   <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: m.color }}>{m.value}</p>
                   <p style={{ margin: 0, fontSize: 9, color: m.color, fontWeight: 700, textTransform: 'uppercase' }}>{m.label}</p>
                 </div>
@@ -259,20 +463,48 @@ function FoodSearch({ foods, onAdd, onClose }) {
   );
 }
 
-// ─── MealCard ─────────────────────────────────────────────────────────────────
+// ─── MealCard (MyFitnessPal style) ────────────────────────────────────────────
 
 function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal, onDelete }) {
   const [open, setOpen]             = useState(true);
   const [showSearch, setShowSearch] = useState(false);
-  const [showNotes, setShowNotes]   = useState(false);
+  const [editingName, setEditingName] = useState(false);
   const macros = calcMacros(foods);
+  const theme  = getMealTheme(meal.name);
 
   return (
-    <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', overflow: 'hidden', boxShadow: 'var(--shadow-xs)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: open ? '1px solid var(--border)' : 'none', background: open ? 'var(--bg-surface)' : 'var(--bg-page)' }}>
-        <div onClick={() => setOpen(o => !o)} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>{meal.name}</p>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 16, border: '1px solid var(--border)', overflow: 'hidden' }}>
+      {/* Header */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: open ? '1px solid var(--border-light)' : 'none' }}>
+
+        {/* Emoji icon */}
+        <div
+          onClick={() => setOpen(o => !o)}
+          style={{ width: 42, height: 42, borderRadius: 13, background: theme.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 20, cursor: 'pointer' }}
+        >
+          {theme.emoji}
+        </div>
+
+        {/* Name + time */}
+        <div style={{ flex: 1, minWidth: 0, cursor: 'pointer' }} onClick={() => setOpen(o => !o)}>
+          {editingName ? (
+            <input
+              autoFocus
+              defaultValue={meal.name}
+              onBlur={e => { onUpdateMeal({ ...meal, name: e.target.value }); setEditingName(false); }}
+              onKeyDown={e => { if (e.key === 'Enter') { onUpdateMeal({ ...meal, name: e.target.value }); setEditingName(false); } }}
+              onClick={e => e.stopPropagation()}
+              style={{ fontSize: 14, fontWeight: 700, color: 'var(--gray-900)', border: '1.5px solid var(--accent)', borderRadius: 6, padding: '2px 6px', background: 'var(--bg-surface)', outline: 'none', boxShadow: 'none', width: '100%', marginBottom: 2 }}
+            />
+          ) : (
+            <p
+              style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)', cursor: 'pointer' }}
+              onDoubleClick={e => { e.stopPropagation(); setEditingName(true); }}
+            >
+              {meal.name}
+            </p>
+          )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
             <input
               type="time"
               value={meal.time_of_day || ''}
@@ -280,87 +512,97 @@ function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal
               onChange={e => onUpdateMeal({ ...meal, time_of_day: e.target.value })}
               style={{ fontSize: 11, color: 'var(--gray-400)', border: 'none', outline: 'none', background: 'transparent', padding: 0, width: 'auto', boxShadow: 'none', fontWeight: 600 }}
             />
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 2 }}>
+            <span style={{ fontSize: 11, color: 'var(--border)' }}>·</span>
             <span style={{ fontSize: 11, color: 'var(--gray-400)' }}>
-              {foods.length} item{foods.length !== 1 ? 's' : ''} · <span style={{ color: MACRO_COLORS.cal, fontWeight: 700 }}>{Math.round(macros.cal)} kcal</span>
+              {foods.length} item{foods.length !== 1 ? 's' : ''}
             </span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: MACRO_COLORS.prot }}>{Math.round(macros.prot)}g P</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: MACRO_COLORS.carb }}>{Math.round(macros.carb)}g C</span>
-            <span style={{ fontSize: 11, fontWeight: 700, color: MACRO_COLORS.fat }}>{Math.round(macros.fat)}g G</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+
+        {/* kcal total */}
+        {macros.cal > 0 && (
+          <span style={{ fontSize: 14, fontWeight: 900, color: MACRO_COLORS.cal, flexShrink: 0 }}>
+            {Math.round(macros.cal)}<span style={{ fontSize: 10, fontWeight: 500, color: 'var(--gray-400)', marginLeft: 2 }}>kcal</span>
+          </span>
+        )}
+
+        {/* Add food (prominent blue button) */}
+        <button
+          onClick={e => { e.stopPropagation(); setShowSearch(true); }}
+          style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--accent)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+          title="Adicionar alimento"
+        >
+          <Plus size={17} color="white" />
+        </button>
+
+        {onDelete && (
           <button
-            onClick={e => { e.stopPropagation(); setShowNotes(n => !n); }}
-            style={{ width: 32, height: 32, borderRadius: 8, background: meal.notes ? '#FFFBEB' : 'var(--gray-50)', border: `1px solid ${meal.notes ? '#FDE68A' : 'var(--border)'}`, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-            title="Observações desta refeição"
+            onClick={e => { e.stopPropagation(); onDelete(); }}
+            style={{ width: 34, height: 34, borderRadius: 10, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+            title="Remover refeição"
           >
-            <FileText size={13} color={meal.notes ? '#D97706' : 'var(--gray-400)'} />
+            <Trash2 size={14} color="var(--red)" />
           </button>
-          {onDelete && (
-            <button
-              onClick={e => { e.stopPropagation(); onDelete(); }}
-              style={{ width: 32, height: 32, borderRadius: 8, background: '#FEF2F2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-              title="Remover refeição"
-            >
-              <Trash2 size={13} color="var(--red)" />
-            </button>
-          )}
-          <button
-            onClick={() => setOpen(o => !o)}
-            style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--gray-50)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-          >
-            <ChevronDown size={16} color="var(--gray-400)" style={{ transform: open ? 'rotate(180deg)' : 'rotate(0deg)', transition: 'transform 0.25s ease' }} />
-          </button>
-        </div>
+        )}
+
+        <button
+          onClick={() => setOpen(o => !o)}
+          style={{ width: 34, height: 34, borderRadius: 10, background: 'var(--bg-page)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+        >
+          <ChevronDown size={16} color="var(--gray-400)" style={{ transform: open ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s' }} />
+        </button>
       </div>
 
-      {showNotes && (
-        <div style={{ padding: '8px 16px', background: '#FFFBEB', borderBottom: '1px solid #FDE68A' }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: 4 }}>
-            Observações da refeição
-          </label>
-          <textarea
-            value={meal.notes || ''}
-            onChange={e => onUpdateMeal({ ...meal, notes: e.target.value })}
-            placeholder="Ex: Preparar com azeite de oliva, evitar sal..."
-            rows={2}
-            style={{ width: '100%', fontSize: 13, color: '#92400E', background: 'transparent', border: 'none', outline: 'none', resize: 'vertical', padding: 0, boxShadow: 'none', fontFamily: 'inherit', lineHeight: 1.5 }}
-          />
-        </div>
-      )}
-
+      {/* Foods */}
       {open && (
-        <div style={{ padding: '8px 16px 12px' }}>
-          {foods.length === 0 && (
-            <p style={{ fontSize: 12, color: 'var(--gray-400)', fontStyle: 'italic', padding: '8px 0' }}>Nenhum alimento adicionado</p>
-          )}
-          {foods.map((food, i) => (
-            <div
-              key={food._tempId || food.id || i}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: i < foods.length - 1 ? '1px solid var(--border-light)' : 'none' }}
-            >
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-900)' }}>{food.name}</p>
-                <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-500)' }}>
-                  {food.quantity_g}g · <span style={{ color: MACRO_COLORS.cal }}>{Math.round(food.calories)} kcal</span> · {Math.round(food.protein_g)}g P · {Math.round(food.carbs_g)}g C · {Math.round(food.fat_g)}g G
-                </p>
-              </div>
-              <button
-                onClick={() => onRemoveFood(food._tempId || food.id)}
-                style={{ width: 28, height: 28, borderRadius: 7, background: '#FEE2E2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+        <div>
+          {foods.length === 0 ? (
+            <p style={{ margin: 0, padding: '14px 16px', fontSize: 13, color: 'var(--gray-400)', fontStyle: 'italic' }}>
+              Nenhum alimento — toque em + para adicionar
+            </p>
+          ) : (
+            foods.map((food, i) => (
+              <div
+                key={food._tempId || food.id || i}
+                style={{ display: 'flex', alignItems: 'center', padding: '10px 16px', borderBottom: i < foods.length - 1 ? '1px solid var(--border-light)' : 'none' }}
               >
-                <Trash2 size={12} color="var(--red)" />
-              </button>
+                <div style={{ width: 7, height: 7, borderRadius: '50%', background: theme.color, flexShrink: 0, marginRight: 11 }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-900)' }}>{food.name}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-500)' }}>
+                    {food.quantity_g}g
+                    {food.protein_g > 0 && <> · <span style={{ color: MACRO_COLORS.prot }}>{Math.round(food.protein_g)}g P</span></>}
+                    {food.carbs_g   > 0 && <> · <span style={{ color: MACRO_COLORS.carb }}>{Math.round(food.carbs_g)}g C</span></>}
+                    {food.fat_g     > 0 && <> · <span style={{ color: MACRO_COLORS.fat }}>{Math.round(food.fat_g)}g G</span></>}
+                  </p>
+                </div>
+                <span style={{ fontSize: 13, fontWeight: 800, color: MACRO_COLORS.cal, marginRight: 10, flexShrink: 0 }}>
+                  {Math.round(food.calories)} kcal
+                </span>
+                <button
+                  onClick={() => onRemoveFood(food._tempId || food.id)}
+                  style={{ width: 26, height: 26, borderRadius: 7, background: '#FEE2E2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
+                >
+                  <X size={12} color="var(--red)" />
+                </button>
+              </div>
+            ))
+          )}
+
+          {/* Meal macro summary footer */}
+          {foods.length > 0 && (
+            <div style={{ display: 'flex', gap: 14, padding: '8px 16px', background: 'var(--bg-page)', borderTop: '1px solid var(--border-light)' }}>
+              {[
+                { label: 'Prot', value: macros.prot, color: MACRO_COLORS.prot },
+                { label: 'Carb', value: macros.carb, color: MACRO_COLORS.carb },
+                { label: 'Gord', value: macros.fat,  color: MACRO_COLORS.fat  },
+              ].map(m => (
+                <span key={m.label} style={{ fontSize: 11, fontWeight: 700, color: m.color }}>
+                  {Math.round(m.value)}g <span style={{ color: 'var(--gray-400)', fontWeight: 500 }}>{m.label}</span>
+                </span>
+              ))}
             </div>
-          ))}
-          <button
-            onClick={() => setShowSearch(true)}
-            style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 6, padding: '7px 12px', borderRadius: 9, border: '1.5px dashed var(--border)', background: 'var(--gray-50)', color: 'var(--gray-500)', fontSize: 12, fontWeight: 600, cursor: 'pointer', width: '100%', justifyContent: 'center' }}
-          >
-            <Plus size={14} /> Adicionar alimento
-          </button>
+          )}
         </div>
       )}
 
@@ -375,7 +617,7 @@ function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal
   );
 }
 
-// ─── Section title ────────────────────────────────────────────────────────────
+// ─── SectionTitle ─────────────────────────────────────────────────────────────
 
 function SectionTitle({ children }) {
   return (
@@ -406,7 +648,7 @@ export default function NutricaoPlanoAluno() {
   const [saving,     setSaving]     = useState(false);
   const [saved,      setSaved]      = useState(false);
   const [planName,   setPlanName]   = useState('Plano Alimentar');
-  const [tmbGoalKey, setTmbGoalKey] = useState('emagrecimento');
+  const [showCalc,   setShowCalc]   = useState(false);
 
   useEffect(() => {
     if (!user || !id) return;
@@ -608,12 +850,8 @@ export default function NutricaoPlanoAluno() {
 
   // ── Derived ──────────────────────────────────────────────────────────────
 
-  const allFoodsList   = Object.values(mealFoods).flat();
-  const totals         = calcMacros(allFoodsList);
-  const tmb            = calcTMB(anamnese.weight, anamnese.height, anamnese.age, anamnese.sex);
-  const activityFactor = ACTIVITY_LEVELS.find(a => a.key === anamnese.activity_level)?.factor || 1.55;
-  const tdee           = tmb ? Math.round(tmb * activityFactor) : null;
-  const suggestedMacros = tdee ? calcSuggestedMacros(tdee, anamnese.weight, tmbGoalKey) : null;
+  const allFoodsList = Object.values(mealFoods).flat();
+  const totals       = calcMacros(allFoodsList);
 
   if (loading) return <div className="loading-screen"><div className="spinner" /></div>;
 
@@ -645,8 +883,8 @@ export default function NutricaoPlanoAluno() {
       </div>
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--gray-100)', borderRadius: 10, padding: 4 }}>
-        {[{ key: 'plano', label: 'Plano' }, { key: 'anamnese', label: 'Anamnese' }, { key: 'aderencia', label: 'Aderência' }].map(t => (
+      <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--bg-page)', borderRadius: 10, padding: 4, border: '1px solid var(--border-light)' }}>
+        {[{ key: 'plano', label: 'Plano' }, { key: 'anamnese', label: 'Dados do Aluno' }, { key: 'aderencia', label: 'Aderência' }].map(t => (
           <button
             key={t.key}
             onClick={() => { setTab(t.key); if (t.key === 'aderencia' && !adherence.length) loadAdherence(); }}
@@ -657,77 +895,99 @@ export default function NutricaoPlanoAluno() {
         ))}
       </div>
 
-      {/* ── PLANO TAB ─────────────────────────────────────────────────────── */}
+      {/* ── PLANO TAB ──────────────────────────────────────────────────────── */}
       {tab === 'plano' && (
         <>
-          {/* Allergy warning banner */}
+          {/* Allergy warning */}
           {anamnese.allergies && (
-            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', background: '#FFFBEB', border: '1px solid #FDE68A', borderRadius: 12, marginBottom: 14 }}>
-              <AlertCircle size={16} color="#D97706" style={{ flexShrink: 0, marginTop: 1 }} />
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, padding: '12px 16px', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 12, marginBottom: 14 }}>
+              <AlertCircle size={16} color="#F59E0B" style={{ flexShrink: 0, marginTop: 1 }} />
               <div>
-                <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#92400E', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Alergias / Restrições</p>
-                <p style={{ margin: '2px 0 0', fontSize: 13, color: '#92400E' }}>{anamnese.allergies}</p>
+                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: '#F59E0B', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Alergias / Restrições</p>
+                <p style={{ margin: '2px 0 0', fontSize: 13, color: 'var(--gray-600)' }}>{anamnese.allergies}</p>
               </div>
             </div>
           )}
 
-          {/* Totals bar */}
-          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, padding: '16px 20px', border: '1px solid var(--border)', marginBottom: 14, boxShadow: 'var(--shadow-xs)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
-              <div>
-                <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total diário</p>
-                <p style={{ margin: 0, fontSize: 26, fontWeight: 900, color: MACRO_COLORS.cal, lineHeight: 1 }}>
-                  {Math.round(totals.cal)}
-                  <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-400)', marginLeft: 4 }}>kcal</span>
-                  {macroGoals.calories && (
-                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--gray-400)', marginLeft: 6 }}>/ {macroGoals.calories}</span>
-                  )}
-                </p>
-              </div>
+          {/* ── Summary card (MyFitnessPal style) ─────────────────────── */}
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '18px 20px', border: '1px solid var(--border)', marginBottom: 14 }}>
+
+            {/* Plan name + auto-calc button */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
               <input
                 value={planName}
                 onChange={e => setPlanName(e.target.value)}
-                style={{ fontSize: 13, fontWeight: 600, color: 'var(--gray-600)', border: '1px solid var(--border)', borderRadius: 8, padding: '5px 10px', background: 'var(--gray-50)', width: 'auto', maxWidth: 180 }}
+                style={{ flex: 1, fontSize: 15, fontWeight: 800, color: 'var(--gray-900)', border: 'none', background: 'transparent', outline: 'none', boxShadow: 'none' }}
+                placeholder="Nome do plano"
               />
+              <button
+                onClick={() => setShowCalc(s => !s)}
+                style={{ display: 'flex', alignItems: 'center', gap: 5, padding: '6px 11px', borderRadius: 8, border: `1.5px solid ${showCalc ? 'var(--accent)' : 'var(--border)'}`, background: showCalc ? 'var(--accent-bg)' : 'var(--bg-page)', color: showCalc ? 'var(--accent-text)' : 'var(--gray-500)', fontSize: 11, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}
+              >
+                <Calculator size={13} /> Auto-calcular
+              </button>
             </div>
-            <div style={{ display: 'flex', gap: 12 }}>
-              <MacroBar label="prot" value={totals.prot} goal={macroGoals.protein ? Number(macroGoals.protein) : 0} total={totals.prot + totals.carb + totals.fat} color={MACRO_COLORS.prot} />
-              <MacroBar label="carb" value={totals.carb} goal={macroGoals.carbs   ? Number(macroGoals.carbs)   : 0} total={totals.prot + totals.carb + totals.fat} color={MACRO_COLORS.carb} />
-              <MacroBar label="gord" value={totals.fat}  goal={macroGoals.fat     ? Number(macroGoals.fat)     : 0} total={totals.prot + totals.carb + totals.fat} color={MACRO_COLORS.fat}  />
+
+            {/* Inline calculator */}
+            {showCalc && (
+              <QuickCalcPanel
+                anamnese={anamnese}
+                onApply={m => {
+                  setMacroGoals({ calories: String(m.calories), protein: String(m.protein), carbs: String(m.carbs), fat: String(m.fat) });
+                  setAnamnese(a => ({ ...a, weight: a.weight || String(m.weight || ''), activity_level: a.activity_level }));
+                }}
+                onClose={() => setShowCalc(false)}
+              />
+            )}
+
+            {/* Calorie ring + macro bars */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
+              <CalorieRing consumed={totals.cal} goal={macroGoals.calories ? Number(macroGoals.calories) : 0} />
+
+              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <MacroBar
+                  label="Proteína"
+                  value={totals.prot}
+                  goal={macroGoals.protein ? Number(macroGoals.protein) : 0}
+                  color={MACRO_COLORS.prot}
+                  onGoalChange={v => setMacroGoals(p => ({ ...p, protein: v }))}
+                />
+                <MacroBar
+                  label="Carboidratos"
+                  value={totals.carb}
+                  goal={macroGoals.carbs ? Number(macroGoals.carbs) : 0}
+                  color={MACRO_COLORS.carb}
+                  onGoalChange={v => setMacroGoals(p => ({ ...p, carbs: v }))}
+                />
+                <MacroBar
+                  label="Gordura"
+                  value={totals.fat}
+                  goal={macroGoals.fat ? Number(macroGoals.fat) : 0}
+                  color={MACRO_COLORS.fat}
+                  onGoalChange={v => setMacroGoals(p => ({ ...p, fat: v }))}
+                />
+              </div>
+            </div>
+
+            {/* Calorie goal row */}
+            <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8, paddingTop: 12, borderTop: '1px solid var(--border-light)' }}>
+              <Target size={13} color="var(--gray-400)" />
+              <span style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 600 }}>Meta de calorias:</span>
+              <input
+                type="number"
+                value={macroGoals.calories}
+                onChange={e => setMacroGoals(p => ({ ...p, calories: e.target.value }))}
+                placeholder="ex: 2000"
+                style={{ width: 80, fontSize: 13, fontWeight: 700, textAlign: 'center', color: MACRO_COLORS.cal, border: `1.5px solid ${MACRO_COLORS.cal}40`, borderRadius: 7, background: MACRO_COLORS.cal + '08', padding: '4px 6px', boxShadow: 'none' }}
+              />
+              <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>kcal/dia</span>
+              <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--gray-900)', marginLeft: 'auto' }}>
+                Total: <span style={{ color: MACRO_COLORS.cal }}>{Math.round(totals.cal)}</span> kcal
+              </span>
             </div>
           </div>
 
-          {/* Meta do Plano card */}
-          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, padding: '16px 20px', border: '1px solid var(--border)', marginBottom: 16, boxShadow: 'var(--shadow-xs)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-              <Target size={16} color="var(--accent)" />
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: 'var(--gray-900)' }}>Meta do Plano</p>
-              <span style={{ fontSize: 11, color: 'var(--gray-400)', marginLeft: 'auto' }}>Defina as metas diárias</span>
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
-              {[
-                { key: 'calories', label: 'Calorias',  unit: 'kcal', color: MACRO_COLORS.cal  },
-                { key: 'protein',  label: 'Proteína',  unit: 'g',    color: MACRO_COLORS.prot },
-                { key: 'carbs',    label: 'Carboidr.', unit: 'g',    color: MACRO_COLORS.carb },
-                { key: 'fat',      label: 'Gordura',   unit: 'g',    color: MACRO_COLORS.fat  },
-              ].map(m => (
-                <div key={m.key} style={{ textAlign: 'center' }}>
-                  <label style={{ fontSize: 10, fontWeight: 700, color: m.color, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: 4 }}>{m.label}</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={macroGoals[m.key]}
-                    onChange={e => setMacroGoals(prev => ({ ...prev, [m.key]: e.target.value }))}
-                    placeholder="—"
-                    style={{ width: '100%', textAlign: 'center', fontWeight: 800, fontSize: 15, color: m.color, border: `1.5px solid ${m.color}40`, borderRadius: 8, background: m.color + '08', padding: '6px 4px', boxShadow: 'none' }}
-                  />
-                  <span style={{ fontSize: 10, color: 'var(--gray-400)', fontWeight: 600 }}>{m.unit}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Meals */}
+          {/* ── Meals ─────────────────────────────────────────────────── */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {meals.map(meal => (
               <MealCard
@@ -743,7 +1003,7 @@ export default function NutricaoPlanoAluno() {
             ))}
             <button
               onClick={addMeal}
-              style={{ padding: '12px', borderRadius: 12, border: '2px dashed var(--border)', background: 'transparent', color: 'var(--gray-400)', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+              style={{ padding: '14px', borderRadius: 12, border: '2px dashed var(--border)', background: 'transparent', color: 'var(--gray-400)', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, transition: 'border-color 0.15s' }}
             >
               <Plus size={16} /> Adicionar refeição
             </button>
@@ -758,7 +1018,6 @@ export default function NutricaoPlanoAluno() {
             <div className="loading-screen"><div className="spinner" /></div>
           ) : (
             <>
-              {/* Summary */}
               {adherence.length > 0 && (() => {
                 const loggedDays = adherence.filter(d => d.logged).length;
                 const total = adherence.length;
@@ -767,8 +1026,8 @@ export default function NutricaoPlanoAluno() {
                 return (
                   <div style={{ display: 'flex', gap: 10, marginBottom: 20 }}>
                     {[
-                      { label: 'Aderência', value: `${pct}%`, sub: `${loggedDays}/${total} dias` },
-                      { label: 'Média kcal', value: avgKcal, sub: macroGoals.calories ? `meta: ${macroGoals.calories}` : 'sem meta' },
+                      { label: 'Aderência',   value: `${pct}%`,         sub: `${loggedDays}/${total} dias` },
+                      { label: 'Média kcal',  value: avgKcal,           sub: macroGoals.calories ? `meta: ${macroGoals.calories}` : 'sem meta' },
                       { label: 'Dias sem log', value: total - loggedDays, sub: 'últimos 14 dias' },
                     ].map(s => (
                       <div key={s.label} className="kpi-card" style={{ flex: 1, cursor: 'default', padding: '12px 10px', textAlign: 'center' }}>
@@ -781,7 +1040,6 @@ export default function NutricaoPlanoAluno() {
                 );
               })()}
 
-              {/* Calorie bar chart — últimos 14 dias */}
               {macroGoals.calories && (
                 <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 14, padding: 16, marginBottom: 16 }}>
                   <p style={{ margin: '0 0 14px', fontSize: 12, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
@@ -812,7 +1070,6 @@ export default function NutricaoPlanoAluno() {
                 </div>
               )}
 
-              {/* Day-by-day list */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[...adherence].reverse().map(d => {
                   const isToday = d.date === new Date().toISOString().slice(0, 10);
@@ -823,9 +1080,7 @@ export default function NutricaoPlanoAluno() {
                     <div key={d.date} style={{ background: 'var(--bg-surface)', border: `1px solid ${isToday ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 12, padding: '12px 14px' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: d.logged ? 8 : 0 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <span style={{ fontSize: 12, fontWeight: 700, color: isToday ? 'var(--accent)' : 'var(--gray-600)', textTransform: 'capitalize' }}>
-                            {d.label}
-                          </span>
+                          <span style={{ fontSize: 12, fontWeight: 700, color: isToday ? 'var(--accent)' : 'var(--gray-600)', textTransform: 'capitalize' }}>{d.label}</span>
                           {isToday && <span style={{ fontSize: 10, background: 'var(--accent)', color: 'white', borderRadius: 20, padding: '1px 6px', fontWeight: 700 }}>hoje</span>}
                         </div>
                         {d.logged ? (
@@ -866,7 +1121,7 @@ export default function NutricaoPlanoAluno() {
         </div>
       )}
 
-      {/* ── ANAMNESE TAB ──────────────────────────────────────────────────── */}
+      {/* ── DADOS DO ALUNO TAB (ex-Anamnese) ──────────────────────────────── */}
       {tab === 'anamnese' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
 
@@ -893,7 +1148,7 @@ export default function NutricaoPlanoAluno() {
                     <button
                       key={s}
                       onClick={() => setAnamnese(a => ({ ...a, sex: s }))}
-                      style={{ flex: 1, padding: '7px 10px', borderRadius: 9, border: `1.5px solid ${anamnese.sex === s ? 'var(--accent)' : 'var(--border)'}`, background: anamnese.sex === s ? 'var(--accent-bg)' : 'white', color: anamnese.sex === s ? 'var(--accent-text)' : 'var(--gray-600)', fontSize: 13, fontWeight: anamnese.sex === s ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s', textTransform: 'capitalize' }}
+                      style={{ flex: 1, padding: '7px 10px', borderRadius: 9, border: `1.5px solid ${anamnese.sex === s ? 'var(--accent)' : 'var(--border)'}`, background: anamnese.sex === s ? 'var(--accent-bg)' : 'var(--bg-surface)', color: anamnese.sex === s ? 'var(--accent-text)' : 'var(--gray-600)', fontSize: 13, fontWeight: anamnese.sex === s ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s', textTransform: 'capitalize' }}
                     >
                       {s.charAt(0).toUpperCase() + s.slice(1)}
                     </button>
@@ -911,13 +1166,13 @@ export default function NutricaoPlanoAluno() {
                 <button
                   key={a.key}
                   onClick={() => setAnamnese(prev => ({ ...prev, activity_level: a.key }))}
-                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', borderRadius: 11, border: `1.5px solid ${anamnese.activity_level === a.key ? 'var(--accent)' : 'var(--border)'}`, background: anamnese.activity_level === a.key ? 'var(--accent-bg)' : 'white', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left' }}
+                  style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '11px 14px', borderRadius: 11, border: `1.5px solid ${anamnese.activity_level === a.key ? 'var(--accent)' : 'var(--border)'}`, background: anamnese.activity_level === a.key ? 'var(--accent-bg)' : 'var(--bg-surface)', cursor: 'pointer', transition: 'all 0.15s', textAlign: 'left' }}
                 >
                   <div>
                     <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: anamnese.activity_level === a.key ? 'var(--accent-text)' : 'var(--gray-900)' }}>{a.label}</p>
                     <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>{a.sub}</p>
                   </div>
-                  <span style={{ fontSize: 12, fontWeight: 800, color: anamnese.activity_level === a.key ? 'var(--accent-text)' : 'var(--gray-400)', background: anamnese.activity_level === a.key ? 'rgba(0,0,0,0.06)' : 'var(--gray-100)', padding: '3px 8px', borderRadius: 6 }}>
+                  <span style={{ fontSize: 12, fontWeight: 800, color: anamnese.activity_level === a.key ? 'var(--accent-text)' : 'var(--gray-400)', background: anamnese.activity_level === a.key ? 'rgba(0,0,0,0.06)' : 'var(--bg-page)', padding: '3px 8px', borderRadius: 6 }}>
                     x{a.factor}
                   </span>
                 </button>
@@ -925,107 +1180,29 @@ export default function NutricaoPlanoAluno() {
             </div>
           </div>
 
-          {/* Calculadora TMB */}
-          <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', padding: 20 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 14 }}>
-              <Zap size={15} color="#F59E0B" />
-              <SectionTitle>Calculadora TMB (Mifflin-St Jeor)</SectionTitle>
-            </div>
-
-            {tmb ? (
-              <>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
-                  <div style={{ padding: '12px 16px', borderRadius: 11, background: 'var(--gray-50)', border: '1px solid var(--border)', textAlign: 'center' }}>
-                    <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>TMB (basal)</p>
-                    <p style={{ margin: '4px 0 0', fontSize: 24, fontWeight: 900, color: 'var(--gray-900)', lineHeight: 1 }}>{Math.round(tmb)}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>kcal/dia</p>
-                  </div>
-                  <div style={{ padding: '12px 16px', borderRadius: 11, background: 'var(--accent-bg)', border: '1.5px solid var(--accent)', textAlign: 'center' }}>
-                    <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'var(--accent-text)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>TDEE (c/ atividade)</p>
-                    <p style={{ margin: '4px 0 0', fontSize: 24, fontWeight: 900, color: 'var(--accent-text)', lineHeight: 1 }}>{tdee}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: 'var(--accent-text)', opacity: 0.7 }}>kcal/dia</p>
-                  </div>
-                </div>
-
-                <p style={{ margin: '0 0 8px', fontSize: 12, fontWeight: 700, color: 'var(--gray-600)' }}>Objetivo para o cálculo:</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7, marginBottom: 14 }}>
-                  {GOALS_TMB.map(g => (
-                    <button
-                      key={g.key}
-                      onClick={() => setTmbGoalKey(g.key)}
-                      style={{ padding: '7px 13px', borderRadius: 20, border: `1.5px solid ${tmbGoalKey === g.key ? 'var(--accent)' : 'var(--border)'}`, background: tmbGoalKey === g.key ? 'var(--accent-bg)' : 'white', color: tmbGoalKey === g.key ? 'var(--accent-text)' : 'var(--gray-600)', fontSize: 12, fontWeight: tmbGoalKey === g.key ? 700 : 500, cursor: 'pointer', transition: 'all 0.15s' }}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
-
-                {suggestedMacros && (
-                  <div style={{ padding: 14, background: 'var(--gray-50)', borderRadius: 11, border: '1px solid var(--border)', marginBottom: 12 }}>
-                    <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Macros sugeridos</p>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-                      {[
-                        { label: 'Kcal', value: suggestedMacros.calories, color: MACRO_COLORS.cal  },
-                        { label: 'Prot', value: suggestedMacros.protein,  color: MACRO_COLORS.prot },
-                        { label: 'Carb', value: suggestedMacros.carbs,    color: MACRO_COLORS.carb },
-                        { label: 'Gord', value: suggestedMacros.fat,      color: MACRO_COLORS.fat  },
-                      ].map(m => (
-                        <div key={m.label} style={{ textAlign: 'center', padding: '8px 4px', background: m.color + '12', borderRadius: 9 }}>
-                          <p style={{ margin: 0, fontSize: 15, fontWeight: 900, color: m.color }}>{m.value}</p>
-                          <p style={{ margin: 0, fontSize: 9, color: m.color, fontWeight: 700, textTransform: 'uppercase' }}>{m.label}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  onClick={() => {
-                    if (!suggestedMacros) return;
-                    setMacroGoals({
-                      calories: String(suggestedMacros.calories),
-                      protein:  String(suggestedMacros.protein),
-                      carbs:    String(suggestedMacros.carbs),
-                      fat:      String(suggestedMacros.fat),
-                    });
-                    setTab('plano');
-                  }}
-                  className="btn-primary"
-                  style={{ width: '100%', justifyContent: 'center', gap: 7 }}
-                >
-                  <Target size={15} /> Aplicar ao plano
-                </button>
-              </>
-            ) : (
-              <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-400)', fontStyle: 'italic', textAlign: 'center', padding: '16px 0' }}>
-                Preencha peso, altura, idade e sexo na secao "Dados Fisicos" para calcular.
-              </p>
-            )}
-          </div>
-
           {/* Alimentação */}
           <div style={{ background: 'var(--bg-surface)', borderRadius: 14, border: '1px solid var(--border)', padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
             <SectionTitle>Alimentação</SectionTitle>
             <div>
               <label>Objetivo nutricional</label>
-              <input value={anamnese.goal} onChange={e => setAnamnese(a => ({ ...a, goal: e.target.value }))} placeholder="Ex: Emagrecimento, ganho de massa, manutencao..." />
+              <input value={anamnese.goal} onChange={e => setAnamnese(a => ({ ...a, goal: e.target.value }))} placeholder="Ex: Emagrecimento, ganho de massa..." />
             </div>
             <div>
               <label>Alergias alimentares</label>
-              <textarea value={anamnese.allergies} onChange={e => setAnamnese(a => ({ ...a, allergies: e.target.value }))} placeholder="Ex: Intolerancia a lactose, alergia a amendoim..." rows={2} style={{ resize: 'vertical' }} />
+              <textarea value={anamnese.allergies} onChange={e => setAnamnese(a => ({ ...a, allergies: e.target.value }))} placeholder="Ex: Intolerância a lactose, alergia a amendoim..." rows={2} style={{ resize: 'vertical' }} />
             </div>
             <div>
               <label>Restrições alimentares</label>
-              <textarea value={anamnese.restrictions} onChange={e => setAnamnese(a => ({ ...a, restrictions: e.target.value }))} placeholder="Ex: Vegetariano, sem gluten, sem carne vermelha..." rows={2} style={{ resize: 'vertical' }} />
+              <textarea value={anamnese.restrictions} onChange={e => setAnamnese(a => ({ ...a, restrictions: e.target.value }))} placeholder="Ex: Vegetariano, sem glúten..." rows={2} style={{ resize: 'vertical' }} />
             </div>
             <div>
-              <label>Preferências / Alimentos que gosta</label>
-              <textarea value={anamnese.preferences} onChange={e => setAnamnese(a => ({ ...a, preferences: e.target.value }))} placeholder="Ex: Prefere frango, gosta de ovos, come peixe..." rows={2} style={{ resize: 'vertical' }} />
+              <label>Preferências / Alimentos favoritos</label>
+              <textarea value={anamnese.preferences} onChange={e => setAnamnese(a => ({ ...a, preferences: e.target.value }))} placeholder="Ex: Prefere frango, gosta de ovos..." rows={2} style={{ resize: 'vertical' }} />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
               <div>
                 <label>Horário de treino</label>
-                <input value={anamnese.workout_time} onChange={e => setAnamnese(a => ({ ...a, workout_time: e.target.value }))} placeholder="Ex: Manha, 6h30" />
+                <input value={anamnese.workout_time} onChange={e => setAnamnese(a => ({ ...a, workout_time: e.target.value }))} placeholder="Ex: Manhã, 6h30" />
               </div>
               <div>
                 <label>Nº de refeições/dia</label>
@@ -1045,7 +1222,7 @@ export default function NutricaoPlanoAluno() {
             <SectionTitle>Saúde</SectionTitle>
             <div>
               <label>Doenças / condições</label>
-              <textarea value={anamnese.conditions} onChange={e => setAnamnese(a => ({ ...a, conditions: e.target.value }))} placeholder="Ex: Diabetes tipo 2, hipertensao, hipotireoidismo..." rows={2} style={{ resize: 'vertical' }} />
+              <textarea value={anamnese.conditions} onChange={e => setAnamnese(a => ({ ...a, conditions: e.target.value }))} placeholder="Ex: Diabetes tipo 2, hipertensão..." rows={2} style={{ resize: 'vertical' }} />
             </div>
             <div>
               <label>Medicamentos relevantes</label>
@@ -1064,6 +1241,8 @@ export default function NutricaoPlanoAluno() {
               style={{ resize: 'vertical', width: '100%' }}
             />
           </div>
+
+          <div style={{ paddingBottom: 20 }} />
         </div>
       )}
     </div>

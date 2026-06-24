@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Plus, Dumbbell, X, Save, Trash2, Sparkles, Users, ChevronDown, ChevronUp, Search, Copy, Check, GripVertical, Send } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -78,7 +78,7 @@ function ExerciseRowEditor({ ex, index, onChange, onDelete, onMoveUp, onMoveDown
   const color = '#3B82F6';
 
   return (
-    <div style={{ background: 'white', border: '1.5px solid #E5E7EB', borderRadius: 12, overflow: 'visible', marginBottom: 8, transition: 'border-color 0.15s' }}>
+    <div style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border)', borderRadius: 12, overflow: 'visible', marginBottom: 8, transition: 'border-color 0.15s' }}>
       {/* Row header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 12px' }}>
         <div style={{ width: 24, height: 24, borderRadius: 7, background: '#EFF6FF', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -92,7 +92,7 @@ function ExerciseRowEditor({ ex, index, onChange, onDelete, onMoveUp, onMoveDown
             onFocus={() => ex.name.length > 1 && suggestions.length > 0 && setShowSugg(true)}
             onBlur={() => setTimeout(() => setShowSugg(false), 150)}
             placeholder="Nome do exercício..."
-            style={{ width: '100%', border: 'none', outline: 'none', fontSize: 14, fontWeight: 600, color: '#111827', background: 'transparent' }}
+            style={{ width: '100%', border: 'none', outline: 'none', fontSize: 14, fontWeight: 600, color: 'var(--gray-900)', background: 'transparent' }}
           />
           {showSugg && suggestions.length > 0 && (
             <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: 'var(--bg-surface)', border: '1.5px solid var(--border)', borderRadius: 10, boxShadow: '0 8px 24px rgba(0,0,0,0.12)', zIndex: 50, maxHeight: 200, overflowY: 'auto' }}>
@@ -119,7 +119,7 @@ function ExerciseRowEditor({ ex, index, onChange, onDelete, onMoveUp, onMoveDown
       {/* Quick stats (always visible) */}
       {!expanded && ex.name && (
         <div style={{ display: 'flex', gap: 10, padding: '0 12px 10px 44px' }}>
-          <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 600 }}>{ex.sets}×{ex.reps}</span>
+          <span style={{ fontSize: 12, color: 'var(--gray-500)', fontWeight: 600 }}>{ex.sets}×{ex.reps}</span>
           {ex.load && <span style={{ fontSize: 12, color: '#9CA3AF' }}>· {ex.load}</span>}
           {ex.rest && <span style={{ fontSize: 12, color: '#9CA3AF' }}>· {ex.rest} desc.</span>}
         </div>
@@ -127,23 +127,23 @@ function ExerciseRowEditor({ ex, index, onChange, onDelete, onMoveUp, onMoveDown
 
       {/* Expanded config */}
       {expanded && (
-        <div style={{ padding: '4px 12px 14px', borderTop: '1px solid #F3F4F6' }}>
+        <div style={{ padding: '4px 12px 14px', borderTop: '1px solid var(--border)' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 8 }}>
             <div>
               <label style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 3 }}>SÉRIES</label>
               <input type="number" value={ex.sets} min={1} max={10}
                 onChange={e => onChange({ ...ex, sets: e.target.value })}
-                style={{ width: '100%', padding: '7px 10px', border: '1.5px solid #E5E7EB', borderRadius: 8, fontSize: 14, fontWeight: 700, textAlign: 'center' }} />
+                style={{ width: '100%', padding: '7px 10px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 14, fontWeight: 700, textAlign: 'center' }} />
             </div>
             <div>
               <label style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 3 }}>REPS</label>
               <input value={ex.reps} onChange={e => onChange({ ...ex, reps: e.target.value })}
-                style={{ width: '100%', padding: '7px 10px', border: '1.5px solid #E5E7EB', borderRadius: 8, fontSize: 14, fontWeight: 700, textAlign: 'center' }} />
+                style={{ width: '100%', padding: '7px 10px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 14, fontWeight: 700, textAlign: 'center' }} />
             </div>
             <div>
               <label style={{ fontSize: 10, fontWeight: 700, color: '#9CA3AF', display: 'block', marginBottom: 3 }}>CARGA</label>
               <input value={ex.load} onChange={e => onChange({ ...ex, load: e.target.value })} placeholder="—"
-                style={{ width: '100%', padding: '7px 10px', border: '1.5px solid #E5E7EB', borderRadius: 8, fontSize: 14, fontWeight: 700, textAlign: 'center' }} />
+                style={{ width: '100%', padding: '7px 10px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 14, fontWeight: 700, textAlign: 'center' }} />
             </div>
           </div>
           {/* Reps quick picks */}
@@ -166,7 +166,7 @@ function ExerciseRowEditor({ ex, index, onChange, onDelete, onMoveUp, onMoveDown
             ))}
           </div>
           <input value={ex.obs} onChange={e => onChange({ ...ex, obs: e.target.value })} placeholder="Observação (opcional)..."
-            style={{ width: '100%', padding: '7px 10px', border: '1.5px solid #E5E7EB', borderRadius: 8, fontSize: 12, color: '#6B7280', boxSizing: 'border-box' }} />
+            style={{ width: '100%', padding: '7px 10px', border: '1.5px solid var(--border)', borderRadius: 8, fontSize: 12, color: 'var(--gray-500)', boxSizing: 'border-box' }} />
         </div>
       )}
     </div>
@@ -192,20 +192,20 @@ function AIModal({ onApply, onClose }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-surface)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420, boxShadow: '0 20px 60px rgba(0,0,0,0.2)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Sparkles size={20} color="white" />
           </div>
           <div>
             <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Sugestão com IA</h3>
-            <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>Gera exercícios baseados no objetivo</p>
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>Gera exercícios baseados no objetivo</p>
           </div>
           <button onClick={onClose} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
         </div>
 
         <div style={{ marginBottom: 18 }}>
-          <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 8 }}>Grupos musculares</label>
+          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Grupos musculares</label>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {GROUPS.map(g => {
               const selected = selectedGroups.includes(g);
@@ -221,7 +221,7 @@ function AIModal({ onApply, onClose }) {
         </div>
 
         <div style={{ marginBottom: 24 }}>
-          <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 8 }}>Nível do aluno</label>
+          <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Nível do aluno</label>
           <div style={{ display: 'flex', gap: 8 }}>
             {Object.keys(AI_LEVELS).map(l => (
               <button key={l} onClick={() => setLevel(l)}
@@ -272,28 +272,28 @@ function AssignModal({ template, students, onAssign, onClose }) {
 
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 300, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: 20, padding: 28, width: '100%', maxWidth: 440, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-surface)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 440, boxShadow: '0 20px 60px rgba(0,0,0,0.2)', maxHeight: '90vh', overflowY: 'auto' }}>
         {done ? (
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <Check size={26} color="#10B981" strokeWidth={3} />
             </div>
             <p style={{ margin: 0, fontSize: 16, fontWeight: 800 }}>Treino atribuído!</p>
-            <p style={{ margin: '4px 0 0', fontSize: 13, color: '#6B7280' }}>Alunos já podem ver no app deles</p>
+            <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--gray-500)' }}>Alunos já podem ver no app deles</p>
           </div>
         ) : (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <div>
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Atribuir treino</h3>
-                <p style={{ margin: '2px 0 0', fontSize: 12, color: '#6B7280' }}>{template.name} · {exs.length} exercícios</p>
+                <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-500)' }}>{template.name} · {exs.length} exercícios</p>
               </div>
               <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
             </div>
 
             {/* Day selector */}
             <div style={{ marginBottom: 18 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 8 }}>Dias da semana</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Dias da semana</label>
               <div style={{ display: 'flex', gap: 6 }}>
                 {DAYS.map(d => {
                   const sel = selectedDays.includes(d.value);
@@ -309,7 +309,7 @@ function AssignModal({ template, students, onAssign, onClose }) {
 
             {/* Student selector */}
             <div style={{ marginBottom: 20 }}>
-              <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 8 }}>Selecionar alunos</label>
+              <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Selecionar alunos</label>
               {students.length === 0 ? (
                 <p style={{ fontSize: 13, color: '#9CA3AF', textAlign: 'center', padding: 20 }}>Nenhum aluno ativo</p>
               ) : (
@@ -322,7 +322,7 @@ function AssignModal({ template, students, onAssign, onClose }) {
                         <div style={{ width: 32, height: 32, borderRadius: '50%', background: s.color || '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                           <span style={{ fontSize: 11, fontWeight: 800, color: 'white' }}>{s.initials || s.name?.[0]}</span>
                         </div>
-                        <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: '#111827' }}>{s.name}</span>
+                        <span style={{ flex: 1, fontSize: 14, fontWeight: 600, color: 'var(--gray-900)' }}>{s.name}</span>
                         <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${sel ? '#3B82F6' : '#D1D5DB'}`, background: sel ? '#3B82F6' : 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {sel && <Check size={11} color="white" strokeWidth={3} />}
                         </div>
@@ -334,7 +334,7 @@ function AssignModal({ template, students, onAssign, onClose }) {
             </div>
 
             <button onClick={handleAssign} disabled={!selected.length || !selectedDays.length || saving}
-              style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', fontSize: 14, fontWeight: 700, cursor: selected.length && selectedDays.length ? 'pointer' : 'not-allowed', background: selected.length && selectedDays.length ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : '#E5E7EB', color: selected.length && selectedDays.length ? 'white' : '#9CA3AF' }}>
+              style={{ width: '100%', padding: '13px', borderRadius: 12, border: 'none', fontSize: 14, fontWeight: 700, cursor: selected.length && selectedDays.length ? 'pointer' : 'not-allowed', background: selected.length && selectedDays.length ? 'var(--accent)' : '#E5E7EB', color: selected.length && selectedDays.length ? 'white' : '#9CA3AF' }}>
               {saving ? 'Atribuindo...' : `Atribuir para ${selected.length} aluno${selected.length !== 1 ? 's' : ''}`}
             </button>
           </>
@@ -355,7 +355,7 @@ function TemplateCard({ template, onEdit, onAssign, onDelete }) {
   const extra = exs.length - PREVIEW_COUNT;
 
   return (
-    <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', transition: 'box-shadow 0.2s', cursor: 'default' }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 16, overflow: 'hidden', boxShadow: '0 2px 8px rgba(0,0,0,0.08)', border: '1px solid var(--border-light)', display: 'flex', flexDirection: 'column', transition: 'box-shadow 0.2s', cursor: 'default' }}>
       {/* Cartilha header — faixa colorida */}
       <div style={{ background: `linear-gradient(135deg, ${color}, ${color}cc)`, padding: '16px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
@@ -387,7 +387,7 @@ function TemplateCard({ template, onEdit, onAssign, onDelete }) {
             {preview.map((ex, i) => (
               <div key={ex.id || i} style={{ display: 'flex', alignItems: 'baseline', gap: 8, padding: '5px 0', borderBottom: i < preview.length - 1 || extra > 0 ? '1px solid #F3F4F6' : 'none' }}>
                 <span style={{ width: 18, fontSize: 11, fontWeight: 800, color: '#D1D5DB', flexShrink: 0, textAlign: 'right' }}>{i + 1}</span>
-                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name || '—'}</span>
+                <span style={{ flex: 1, fontSize: 13, fontWeight: 600, color: 'var(--gray-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{ex.name || '—'}</span>
                 <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, flexShrink: 0 }}>{ex.sets}×{ex.reps}</span>
               </div>
             ))}
@@ -401,11 +401,11 @@ function TemplateCard({ template, onEdit, onAssign, onDelete }) {
       </div>
 
       {/* Rodapé — total + ações */}
-      <div style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid #F3F4F6', marginTop: 12 }}>
-        <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 600 }}>{exs.length} exercício{exs.length !== 1 ? 's' : ''}</span>
+      <div style={{ padding: '12px 18px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderTop: '1px solid var(--border)', marginTop: 12 }}>
+        <span style={{ fontSize: 12, color: 'var(--gray-500)', fontWeight: 600 }}>{exs.length} exercício{exs.length !== 1 ? 's' : ''}</span>
         <div style={{ display: 'flex', gap: 6 }}>
           <button onClick={() => onEdit(template)}
-            style={{ padding: '7px 14px', borderRadius: 8, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 12, fontWeight: 700, color: '#374151', cursor: 'pointer' }}>
+            style={{ padding: '7px 14px', borderRadius: 8, border: '1.5px solid var(--border)', background: 'var(--bg-surface)', fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', cursor: 'pointer' }}>
             Editar
           </button>
           <button onClick={() => onAssign(template)}
@@ -474,14 +474,14 @@ function TemplateEditor({ template, onSave, onClose }) {
 
           {/* Nome */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6 }}>Nome da cartilha *</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Nome da cartilha *</label>
             <input value={name} onChange={e => setName(e.target.value)} placeholder="ex: Treino A — Peito e Tríceps"
-              style={{ width: '100%', padding: '11px 14px', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 15, fontWeight: 600, boxSizing: 'border-box', outline: 'none' }} />
+              style={{ width: '100%', padding: '11px 14px', border: '1.5px solid var(--border)', borderRadius: 10, fontSize: 15, fontWeight: 600, boxSizing: 'border-box', outline: 'none' }} />
           </div>
 
           {/* Tipo */}
           <div style={{ marginBottom: 16 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6 }}>Tipo de treino</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Tipo de treino</label>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {PLAN_TYPES.map(t => {
                 const c = typeColor(t);
@@ -498,7 +498,7 @@ function TemplateEditor({ template, onSave, onClose }) {
 
           {/* Dias */}
           <div style={{ marginBottom: 20 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#374151', display: 'block', marginBottom: 6 }}>Dias da semana (opcional)</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: 6 }}>Dias da semana (opcional)</label>
             <div style={{ display: 'flex', gap: 6 }}>
               {DAYS.map(d => {
                 const sel = days.includes(d.value);
@@ -514,7 +514,7 @@ function TemplateEditor({ template, onSave, onClose }) {
 
           {/* Exercícios */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-            <label style={{ fontSize: 12, fontWeight: 700, color: '#374151' }}>Exercícios ({exercises.filter(e => e.name).length})</label>
+            <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)' }}>Exercícios ({exercises.filter(e => e.name).length})</label>
           </div>
 
           {exercises.map((ex, i) => (
@@ -540,7 +540,7 @@ function TemplateEditor({ template, onSave, onClose }) {
         {/* Footer */}
         <div style={{ padding: '16px 24px', borderTop: '1px solid #F1F5F9' }}>
           <button onClick={handleSave} disabled={!name.trim() || saving}
-            style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: name.trim() ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : '#E5E7EB', color: name.trim() ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: name.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            style={{ width: '100%', padding: '14px', borderRadius: 12, border: 'none', background: name.trim() ? 'var(--accent)' : '#E5E7EB', color: name.trim() ? 'white' : '#9CA3AF', fontSize: 15, fontWeight: 800, cursor: name.trim() ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             {saving ? 'Salvando...' : <><Save size={16} /> {isNew ? 'Criar cartilha' : 'Salvar alterações'}</>}
           </button>
         </div>
@@ -660,13 +660,13 @@ export default function Cartilhas() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: '#111827' }}>Cartilhas de Treino</h2>
-          <p style={{ margin: '4px 0 0', fontSize: 14, color: '#6B7280' }}>
+          <h2 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: 'var(--gray-900)' }}>Cartilhas de Treino</h2>
+          <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--gray-500)' }}>
             {templates.length} template{templates.length !== 1 ? 's' : ''} · crie uma vez, envie para vários alunos
           </p>
         </div>
         <button onClick={() => setEditor({})}
-          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(59,130,246,0.35)' }}>
+          style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '11px 18px', borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer', boxShadow: '0 4px 14px rgba(59,130,246,0.35)' }}>
           <Plus size={18} /> Nova cartilha
         </button>
       </div>
@@ -676,22 +676,22 @@ export default function Cartilhas() {
         <div style={{ position: 'relative', marginBottom: 20 }}>
           <Search size={16} color="#9CA3AF" style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)' }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar cartilha..."
-            style={{ width: '100%', padding: '10px 14px 10px 40px', border: '1.5px solid #E5E7EB', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+            style={{ width: '100%', padding: '10px 14px 10px 40px', border: '1.5px solid var(--border)', borderRadius: 10, fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
         </div>
       )}
 
       {/* Empty state */}
       {templates.length === 0 && (
-        <div style={{ background: 'white', borderRadius: 16, padding: '60px 24px', textAlign: 'center', border: '2px dashed #E5E7EB' }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '60px 24px', textAlign: 'center', border: '2px dashed var(--border)' }}>
           <div style={{ width: 64, height: 64, borderRadius: 18, background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <Dumbbell size={28} color="#8B5CF6" />
           </div>
-          <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: '#111827' }}>Nenhuma cartilha ainda</h3>
-          <p style={{ margin: '0 0 24px', fontSize: 14, color: '#6B7280', maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>
+          <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: 'var(--gray-900)' }}>Nenhuma cartilha ainda</h3>
+          <p style={{ margin: '0 0 24px', fontSize: 14, color: 'var(--gray-500)', maxWidth: 320, marginLeft: 'auto', marginRight: 'auto' }}>
             Crie sua primeira cartilha de treino. Você pode usar a IA para sugerir os exercícios e depois enviar para os alunos.
           </p>
           <button onClick={() => setEditor({})}
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 12, border: 'none', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '12px 24px', borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'white', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>
             <Plus size={16} /> Criar primeira cartilha
           </button>
         </div>
@@ -737,3 +737,5 @@ export default function Cartilhas() {
     </div>
   );
 }
+
+

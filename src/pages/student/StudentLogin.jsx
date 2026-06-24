@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, AlertCircle, Dumbbell, User, Zap, TrendingUp, Timer } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -503,7 +503,7 @@ export default function StudentLogin() {
 
             <LoginForm {...formProps} />
 
-            <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid #F3F4F6', animation: 'fadeIn 0.6s ease 0.8s both' }}>
+            <div style={{ marginTop: 28, paddingTop: 24, borderTop: '1px solid var(--border)', animation: 'fadeIn 0.6s ease 0.8s both' }}>
               <p style={{ textAlign: 'center', fontSize: 13, color: '#9CA3AF', margin: 0 }}>
                 Sem conta?{' '}
                 <Link to="/registro" style={{ color: accent, fontWeight: 700, textDecoration: 'none', transition: 'color 0.35s' }}>Cadastre-se grátis</Link>
@@ -515,3 +515,4 @@ export default function StudentLogin() {
     </>
   );
 }
+

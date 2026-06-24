@@ -1,9 +1,9 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Users, CheckCircle, XCircle, Clock, Loader, ChevronLeft, ChevronRight, TrendingUp } from 'lucide-react';
 import Avatar from '../../components/UI/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
-import { students as mockStudents, appointments as mockAppointments } from '../../data/mockData';
+// mockData removed
 
 const STATUS_CONFIG = {
   present: { label: 'Presente', color: '#10B981', bg: '#D1FAE5', icon: CheckCircle },
@@ -62,7 +62,7 @@ export default function Frequencia() {
         setLoading(false);
       });
     } else {
-      setStudents(mockStudents);
+      setStudents([]);
       setLoading(false);
     }
   }, [user?.id]);
@@ -295,3 +295,4 @@ export default function Frequencia() {
     </div>
   );
 }
+

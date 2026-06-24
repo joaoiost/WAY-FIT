@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Dumbbell, CheckCircle, Clock, Calendar, ChevronDown, ChevronUp, Loader, BarChart2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -9,6 +9,86 @@ const TYPE_COLORS = {
   Cardio: '#F59E0B', Resistência: '#3B82F6', Mobilidade: '#06B6D4',
   Musculação: '#8B5CF6',
 };
+
+function WorkoutHeatmap({ sessions }) {
+  const WEEKS = 20;
+  const CELL = 13;
+  const GAP = 3;
+
+  const dateMap = {};
+  sessions.forEach(s => { if (s.date) dateMap[s.date] = (dateMap[s.date] || 0) + 1; });
+
+  const today = new Date();
+  today.setHours(12, 0, 0, 0);
+  const todayStr = today.toISOString().slice(0, 10);
+
+  const thisSunday = new Date(today);
+  thisSunday.setDate(today.getDate() - today.getDay());
+  const gridStart = new Date(thisSunday);
+  gridStart.setDate(thisSunday.getDate() - (WEEKS - 1) * 7);
+
+  const cells = [];
+  const monthLabels = [];
+  let lastMonth = -1;
+
+  for (let w = 0; w < WEEKS; w++) {
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(gridStart);
+      date.setDate(gridStart.getDate() + w * 7 + d);
+      const dateStr = date.toISOString().slice(0, 10);
+      const isFuture = dateStr > todayStr;
+      const count = dateMap[dateStr] || 0;
+      cells.push({ dateStr, count, isFuture, isToday: dateStr === todayStr });
+      if (d === 0) {
+        const month = date.getMonth();
+        if (month !== lastMonth) {
+          monthLabels.push({ w, label: date.toLocaleDateString('pt-BR', { month: 'short' }) });
+          lastMonth = month;
+        }
+      }
+    }
+  }
+
+  const totalWidth = WEEKS * (CELL + GAP) - GAP;
+
+  return (
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '16px 18px', border: '1px solid var(--border)', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <BarChart2 size={15} color="var(--accent)" />
+        <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--gray-900)' }}>Atividade — 20 semanas</h3>
+      </div>
+      <div style={{ overflowX: 'auto', paddingBottom: 2 }}>
+        <div style={{ position: 'relative', height: 14, width: totalWidth, marginBottom: 4 }}>
+          {monthLabels.map(({ w, label }) => (
+            <span key={`${w}${label}`} style={{ position: 'absolute', left: w * (CELL + GAP), fontSize: 9, color: 'var(--gray-400)', fontWeight: 700, textTransform: 'capitalize', whiteSpace: 'nowrap' }}>
+              {label}
+            </span>
+          ))}
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: `repeat(${WEEKS}, ${CELL}px)`, gridTemplateRows: `repeat(7, ${CELL}px)`, gap: GAP, width: totalWidth, gridAutoFlow: 'column' }}>
+          {cells.map(({ dateStr, count, isFuture, isToday }) => (
+            <div
+              key={dateStr}
+              title={isFuture ? '' : count > 0 ? `${dateStr} · ${count} treino${count > 1 ? 's' : ''}` : dateStr}
+              style={{
+                width: CELL, height: CELL, borderRadius: 3, boxSizing: 'border-box',
+                background: isFuture ? 'transparent' : count === 0 ? 'rgba(255,255,255,0.05)' : count === 1 ? 'rgba(99,102,241,0.5)' : 'var(--accent)',
+                border: isToday ? '1.5px solid var(--accent)' : 'none',
+              }}
+            />
+          ))}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 8, justifyContent: 'flex-end' }}>
+          <span style={{ fontSize: 10, color: 'var(--gray-400)', fontWeight: 600 }}>Menos</span>
+          {[0, 1, 2].map(lvl => (
+            <div key={lvl} style={{ width: 10, height: 10, borderRadius: 2, background: lvl === 0 ? 'rgba(255,255,255,0.05)' : lvl === 1 ? 'rgba(99,102,241,0.5)' : 'var(--accent)' }} />
+          ))}
+          <span style={{ fontSize: 10, color: 'var(--gray-400)', fontWeight: 600 }}>Mais</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function groupByWeek(items) {
   const groups = {};
@@ -53,7 +133,7 @@ function SessionCard({ session, isMock }) {
   };
 
   return (
-    <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.07)', overflow: 'hidden' }}>
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 12, border: '1px solid var(--border)', overflow: 'hidden' }}>
       <button
         onClick={handleToggle}
         style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}
@@ -62,16 +142,16 @@ function SessionCard({ session, isMock }) {
           <Dumbbell size={18} color={color} />
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {session.plan_name}
           </p>
           <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontSize: 12, color: '#6B7280', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ fontSize: 12, color: 'var(--gray-500)', display: 'flex', alignItems: 'center', gap: 4 }}>
               <Calendar size={11} />
               {new Date(session.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}
             </span>
             {session.exercises_total > 0 && (
-              <span style={{ fontSize: 12, color: '#6B7280' }}>
+              <span style={{ fontSize: 12, color: 'var(--gray-500)' }}>
                 {session.exercises_done}/{session.exercises_total} exercícios
               </span>
             )}
@@ -87,15 +167,15 @@ function SessionCard({ session, isMock }) {
       </button>
 
       {open && (
-        <div style={{ padding: '0 16px 14px', borderTop: '1px solid #F3F4F6' }}>
+        <div style={{ padding: '0 16px 14px', borderTop: '1px solid var(--border)' }}>
           {loadingLogs ? (
             <div style={{ display: 'flex', justifyContent: 'center', padding: '16px 0' }}>
               <Loader size={18} color="#3B82F6" style={{ animation: 'spin 1s linear infinite' }} />
             </div>
           ) : isMock ? (
-            <p style={{ margin: '12px 0 0', fontSize: 12, color: '#9CA3AF', textAlign: 'center' }}>Detalhes disponíveis nos treinos registrados pelo app</p>
+            <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--gray-400)', textAlign: 'center' }}>Detalhes disponíveis nos treinos registrados pelo app</p>
           ) : logs && logs.length === 0 ? (
-            <p style={{ margin: '12px 0 0', fontSize: 12, color: '#9CA3AF', textAlign: 'center' }}>Nenhum detalhe registrado nessa sessão</p>
+            <p style={{ margin: '12px 0 0', fontSize: 12, color: 'var(--gray-400)', textAlign: 'center' }}>Nenhum detalhe registrado nessa sessão</p>
           ) : (
             <div style={{ paddingTop: 10 }}>
               {(logs || []).map((log, i) => (
@@ -105,7 +185,7 @@ function SessionCard({ session, isMock }) {
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: log.done ? '#111827' : '#9CA3AF' }}>{log.exercise_name}</p>
-                    <p style={{ margin: '1px 0 0', fontSize: 11, color: '#9CA3AF' }}>
+                    <p style={{ margin: '1px 0 0', fontSize: 11, color: 'var(--gray-400)' }}>
                       {log.sets_planned}x · {log.reps_planned} reps
                       {log.load_planned ? ` · prescrito: ${log.load_planned}` : ''}
                     </p>
@@ -207,19 +287,21 @@ export default function Historico() {
         <p style={{ margin: '4px 0 0', fontSize: 14, color: 'var(--gray-400)' }}>{totalAll} treino{totalAll !== 1 ? 's' : ''} registrado{totalAll !== 1 ? 's' : ''}</p>
       </div>
 
+      {sessions.length > 0 && <WorkoutHeatmap sessions={sessions} />}
+
       <div className="grid-3" style={{ marginBottom: 20 }}>
         {[
           { label: 'Treinos este mês', value: totalThisMonth, Icon: Calendar,   color: '#3B82F6', bg: '#EFF6FF' },
           { label: 'Total de treinos', value: totalAll,        Icon: Dumbbell,   color: '#8B5CF6', bg: '#F5F3FF' },
           { label: 'Completos',        value: completedAll, Icon: CheckCircle, color: '#10B981', bg: '#ECFDF5' },
         ].map(({ label, value, Icon, color, bg }) => (
-          <div key={label} style={{ background: 'white', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <div key={label} style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ width: 44, height: 44, borderRadius: 12, background: bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <Icon size={20} color={color} />
             </div>
             <div>
               <p style={{ margin: 0, fontSize: 20, fontWeight: 800, color }}>{value}</p>
-              <p style={{ margin: 0, fontSize: 12, color: '#6B7280' }}>{label}</p>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>{label}</p>
             </div>
           </div>
         ))}
@@ -237,15 +319,15 @@ export default function Historico() {
       )}
 
       {groups.length === 0 ? (
-        <div style={{ background: 'white', borderRadius: 12, padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
           <Dumbbell size={40} color="#E5E7EB" style={{ marginBottom: 12 }} />
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: '#6B7280' }}>Nenhum treino registrado ainda</p>
-          <p style={{ margin: '4px 0 0', fontSize: 13, color: '#9CA3AF' }}>Complete seus primeiros exercícios em Meus Treinos</p>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 600, color: 'var(--gray-500)' }}>Nenhum treino registrado ainda</p>
+          <p style={{ margin: '4px 0 0', fontSize: 13, color: 'var(--gray-400)' }}>Complete seus primeiros exercícios em Meus Treinos</p>
         </div>
       ) : groups.map(([weekKey, items]) => (
         <div key={weekKey} style={{ marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <span style={{ fontSize: 12, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+            <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
               {weekLabel(weekKey)}
             </span>
             <span style={{ background: '#EFF6FF', color: '#3B82F6', fontSize: 11, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>
@@ -263,3 +345,5 @@ export default function Historico() {
     </div>
   );
 }
+
+

@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Edit2, Trash2, Download, Copy, Check, ExternalLink, Calendar, UserCheck, Smartphone, X, AlertCircle, Users } from 'lucide-react';
+﻿import { useState, useEffect, useRef } from 'react';
+import { Search, Plus, Edit2, Trash2, Download, Copy, Check, ExternalLink, Calendar, UserCheck, Smartphone, X, AlertCircle, Users, AlertTriangle, Clock } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/UI/Avatar';
 import Badge from '../../components/UI/Badge';
 import Modal from '../../components/UI/Modal';
-import { students as mockStudents } from '../../data/mockData';
+// mockData removed
 // Export utilities loaded dynamically to avoid including jsPDF/xlsx in the main bundle
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -59,7 +59,7 @@ function StudentForm({ form, onChange, onSubmit, onClose, isEdit }) {
           <input name="goal" value={form.goal} onChange={onChange} placeholder="Ex: Hipertrofia, Emagrecimento..." />
         </div>
       </div>
-      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
+      <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
         <button type="button" className="btn-secondary" onClick={onClose}>Cancelar</button>
         <button type="submit" className="btn-primary">{isEdit ? 'Salvar' : 'Adicionar'}</button>
       </div>
@@ -98,13 +98,13 @@ function InviteSheet({ student, sendInvite, onClose }) {
   return (
     <div style={{ padding: '4px 0' }}>
       {/* Student card */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: '#F9FAFB', borderRadius: 12, marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px', background: 'var(--bg-page)', borderRadius: 12, marginBottom: 20 }}>
         <div style={{ width: 44, height: 44, borderRadius: '50%', background: student?.color || '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 15, fontWeight: 800, color: 'white', flexShrink: 0 }}>
           {student?.initials || getInitials(student?.name || '')}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>{student?.name}</p>
-          <p style={{ margin: 0, fontSize: 12, color: '#9CA3AF' }}>{student?.email || student?.phone || 'Sem contato'}</p>
+          <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>{student?.name}</p>
+          <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)' }}>{student?.email || student?.phone || 'Sem contato'}</p>
         </div>
         {student?.email && (
           <span style={{ fontSize: 11, fontWeight: 700, color: '#3B82F6', background: '#EFF6FF', padding: '3px 9px', borderRadius: 20 }}>
@@ -122,12 +122,12 @@ function InviteSheet({ student, sendInvite, onClose }) {
         </div>
       ) : (
         <>
-          <p style={{ margin: '0 0 8px', fontSize: 13, color: '#374151', fontWeight: 600 }}>Link de convite personalizado</p>
+          <p style={{ margin: '0 0 8px', fontSize: 13, color: 'var(--gray-700)', fontWeight: 600 }}>Link de convite personalizado</p>
           <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
             <input
               value={generating ? 'Gerando link...' : tokenUrl}
               readOnly
-              style={{ flex: 1, fontSize: 12, background: '#F9FAFB', color: tokenUrl ? '#374151' : '#9CA3AF' }}
+              style={{ flex: 1, fontSize: 12, background: 'var(--bg-page)', color: tokenUrl ? '#374151' : '#9CA3AF' }}
             />
             <button onClick={copy} disabled={!tokenUrl}
               style={{ padding: '0 14px', background: copied ? '#10B981' : (tokenUrl ? '#3B82F6' : '#E5E7EB'), color: tokenUrl ? 'white' : '#9CA3AF', border: 'none', borderRadius: 10, cursor: tokenUrl ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, fontWeight: 600, flexShrink: 0, height: 42 }}>
@@ -157,7 +157,7 @@ function InviteSheet({ student, sendInvite, onClose }) {
         </a>
       )}
 
-      <p style={{ margin: '8px 0 0', fontSize: 12, color: '#9CA3AF', textAlign: 'center', lineHeight: 1.5 }}>
+      <p style={{ margin: '8px 0 0', fontSize: 12, color: 'var(--gray-400)', textAlign: 'center', lineHeight: 1.5 }}>
         O aluno clica no link, cria a senha e já entra direto — sem confirmar email.
       </p>
       <button className="btn-secondary" style={{ width: '100%', justifyContent: 'center', marginTop: 12 }} onClick={onClose}>Fechar</button>
@@ -208,6 +208,27 @@ function WeekDots({ sessionDates }) {
   );
 }
 
+function InactivityBadge({ studentId, lastWorkoutMap }) {
+  const lastDate = lastWorkoutMap[String(studentId)];
+  if (!lastDate) return (
+    <span title="Sem treino registrado" style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 7px', borderRadius: 20, background: 'rgba(248,113,113,0.12)', color: 'var(--red)', fontSize: 10, fontWeight: 700 }}>
+      <AlertTriangle size={9} /> Nunca treinou
+    </span>
+  );
+  const days = Math.floor((Date.now() - new Date(lastDate + 'T12:00:00').getTime()) / 86400000);
+  if (days >= 7) return (
+    <span title={`Último treino há ${days} dias`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 7px', borderRadius: 20, background: 'rgba(248,113,113,0.12)', color: 'var(--red)', fontSize: 10, fontWeight: 700 }}>
+      <AlertTriangle size={9} /> {days}d sem treinar
+    </span>
+  );
+  if (days >= 5) return (
+    <span title={`Último treino há ${days} dias`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, padding: '2px 7px', borderRadius: 20, background: 'rgba(251,191,36,0.12)', color: 'var(--yellow)', fontSize: 10, fontWeight: 700 }}>
+      <Clock size={9} /> {days}d sem treinar
+    </span>
+  );
+  return null;
+}
+
 function AppBadge({ student, setInviteSheet }) {
   if (student.user_id) {
     return (
@@ -239,19 +260,21 @@ export default function Alunos() {
   const [quickForm, setQuickForm] = useState({ date: '', time: '08:00', type: 'Musculação' });
   const [quickSaving, setQuickSaving] = useState(false);
   const [weekSessions, setWeekSessions] = useState({}); // student_id -> Set<date>
+  const [lastWorkoutMap, setLastWorkoutMap] = useState({}); // student_id -> date string
 
   useEffect(() => {
     if (!user) return;
     if (hasSupabase) {
-      supabase.from('students').select('*').eq('personal_id', user.id)
+      supabase.from('students').select('*').eq('personal_id', user.id).order('name').limit(200)
         .then(({ data }) => setStudents(data || []));
 
-      // Carrega sessões da semana atual para todos os alunos de uma só query
       const today = new Date();
+      const todayStr = today.toISOString().slice(0, 10);
       const dayOfWeek = (today.getDay() + 6) % 7;
       const weekStart = new Date(today);
       weekStart.setDate(today.getDate() - dayOfWeek);
       const weekStartStr = weekStart.toISOString().slice(0, 10);
+      // Busca sessões da semana atual (para os dots)
       supabase.from('workout_sessions')
         .select('student_id, date')
         .eq('personal_id', user.id)
@@ -265,8 +288,24 @@ export default function Alunos() {
           });
           setWeekSessions(map);
         });
+      // Busca última sessão de cada aluno (para alertas de inatividade)
+      const thirtyDaysAgo = new Date(today);
+      thirtyDaysAgo.setDate(today.getDate() - 30);
+      supabase.from('workout_sessions')
+        .select('student_id, date')
+        .eq('personal_id', user.id)
+        .gte('date', thirtyDaysAgo.toISOString().slice(0, 10))
+        .order('date', { ascending: false })
+        .then(({ data }) => {
+          const map = {};
+          (data || []).forEach(s => {
+            const sid = String(s.student_id);
+            if (!map[sid]) map[sid] = s.date; // first = most recent (ordered DESC)
+          });
+          setLastWorkoutMap(map);
+        });
     } else {
-      setStudents(mockStudents);
+      setStudents([]);
     }
   }, [user?.id]);
 
@@ -409,7 +448,10 @@ export default function Alunos() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                       <Avatar initials={s.initials} color={s.color} />
                       <div>
-                        <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--gray-900)' }}>{s.name}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexWrap: 'wrap' }}>
+                          <p style={{ margin: 0, fontSize: 14, fontWeight: 600, color: 'var(--gray-900)' }}>{s.name}</p>
+                          {s.status === 'ativo' && <InactivityBadge studentId={s.id} lastWorkoutMap={lastWorkoutMap} />}
+                        </div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
                           <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)' }}>{s.goal || '—'}</p>
                           <WeekDots sessionDates={weekSessions[String(s.id)] || new Set()} />
@@ -466,6 +508,7 @@ export default function Alunos() {
               <div style={{ display:'flex', alignItems:'center', gap:7, flexWrap:'wrap' }}>
                 <span className="list-row-title" style={{ fontSize:15 }}>{(s.name||'').split(' ')[0]} {(s.name||'').split(' ').slice(-1)[0]}</span>
                 <Badge status={s.status} />
+                {s.status === 'ativo' && <InactivityBadge studentId={s.id} lastWorkoutMap={lastWorkoutMap} />}
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:8, marginTop:3 }}>
                 <p className="list-row-sub" style={{ flex:1 }}>
@@ -497,7 +540,7 @@ export default function Alunos() {
 
       {/* Delete Modal */}
       <Modal isOpen={!!deleteModal} onClose={() => setDeleteModal(null)} title="Remover aluno" maxWidth="380px">
-        <p style={{ color: '#6B7280', marginBottom: 24, fontSize: 14 }}>
+        <p style={{ color: 'var(--gray-500)', marginBottom: 24, fontSize: 14 }}>
           Tem certeza que deseja remover <strong>{deleteModal?.name}</strong>? Esta ação não pode ser desfeita.
         </p>
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
@@ -521,7 +564,7 @@ export default function Alunos() {
               </select>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
             <button type="button" className="btn-secondary" onClick={() => setQuickSchedule(null)}>Cancelar</button>
             <button type="submit" className="btn-primary" disabled={quickSaving}>
               <Calendar size={14} /> {quickSaving ? 'Agendando...' : 'Agendar'}
@@ -532,3 +575,6 @@ export default function Alunos() {
     </div>
   );
 }
+
+
+

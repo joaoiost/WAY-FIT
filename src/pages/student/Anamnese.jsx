@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Save, CheckCircle, Loader } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -209,13 +209,13 @@ export default function Anamnese() {
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
         {SECTIONS.map(s => (
-          <button key={s.id} onClick={() => setActiveSection(s.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', background: activeSection === s.id ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : '#F3F4F6', color: activeSection === s.id ? 'white' : '#6B7280', transition: 'all 0.15s', flexShrink: 0 }}>
+          <button key={s.id} onClick={() => setActiveSection(s.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', background: activeSection === s.id ? 'var(--accent)' : '#F3F4F6', color: activeSection === s.id ? 'white' : '#6B7280', transition: 'all 0.15s', flexShrink: 0 }}>
             {s.icon} {s.label}
           </button>
         ))}
       </div>
 
-      <div style={{ background: 'white', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+      <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 24, boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
         {sections[activeSection]}
       </div>
 
@@ -228,3 +228,4 @@ export default function Anamnese() {
     </div>
   );
 }
+

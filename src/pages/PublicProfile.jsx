@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+﻿import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Zap, Star, Users, CheckCircle, Loader, Eye, EyeOff, ChevronRight, ArrowRight } from 'lucide-react';
 import { supabase, hasSupabase } from '../lib/supabase';
@@ -116,10 +116,10 @@ export default function PublicProfile() {
       {/* Top bar */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 24px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ width: 30, height: 30, borderRadius: 8, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: 30, height: 30, borderRadius: 8, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Zap size={15} color="white" fill="white" />
           </div>
-          <span style={{ fontSize: 16, fontWeight: 800, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>WAY FIT</span>
+          <span style={{ fontSize: 16, fontWeight: 800, background: 'var(--accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>WAY FIT</span>
         </div>
         <Link to="/aluno/login" style={{ fontSize: 13, color: '#94A3B8', textDecoration: 'none' }}>Já tenho conta →</Link>
       </div>
@@ -129,7 +129,7 @@ export default function PublicProfile() {
         {/* LEFT — Personal card (always visible) */}
         <div>
           <div style={{ background: 'rgba(255,255,255,0.05)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 24, padding: '28px 24px', textAlign: 'center', marginBottom: 16 }}>
-            <div style={{ width: 90, height: 90, borderRadius: '50%', margin: '0 auto 14px', overflow: 'hidden', boxShadow: '0 0 0 4px rgba(59,130,246,0.35)', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ width: 90, height: 90, borderRadius: '50%', margin: '0 auto 14px', overflow: 'hidden', boxShadow: '0 0 0 4px rgba(59,130,246,0.35)', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {profile.avatar_url
                 ? <img src={profile.avatar_url} alt={profile.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 : <span style={{ fontSize: 28, fontWeight: 800, color: 'white' }}>{initials}</span>
@@ -162,7 +162,7 @@ export default function PublicProfile() {
               </p>
               <button
                 onClick={() => setStage('register')}
-                style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 12, padding: '14px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                style={{ background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 12, padding: '14px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
               >
                 Quero começar agora <ArrowRight size={18} />
               </button>
@@ -176,7 +176,7 @@ export default function PublicProfile() {
 
             {stage === 'done' ? (
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
-                <div style={{ width: 72, height: 72, borderRadius: '50%', background: needsEmailConf ? '#FEF3C7' : 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                <div style={{ width: 72, height: 72, borderRadius: '50%', background: needsEmailConf ? '#FEF3C7' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
                   <span style={{ fontSize: 34 }}>{needsEmailConf ? '📧' : '🎉'}</span>
                 </div>
                 <h2 style={{ margin: '0 0 10px', fontSize: 22, fontWeight: 800 }}>
@@ -191,7 +191,7 @@ export default function PublicProfile() {
                 {!needsEmailConf && (
                   <button
                     onClick={() => navigate('/aluno/login')}
-                    style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 10, padding: '13px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                    style={{ background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 10, padding: '13px 28px', fontSize: 15, fontWeight: 700, cursor: 'pointer', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                   >
                     Acessar minha área <ChevronRight size={18} />
                   </button>
@@ -263,7 +263,7 @@ export default function PublicProfile() {
                   <button
                     type="submit"
                     disabled={submitting}
-                    style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 10, padding: '13px', fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: submitting ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                    style={{ background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 10, padding: '13px', fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: submitting ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
                   >
                     {submitting ? 'Criando conta...' : `Começar com ${firstName}`}
                     {!submitting && <ArrowRight size={16} />}

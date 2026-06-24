@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+﻿import { useState, useRef, useEffect } from 'react';
 import { Send, Loader } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -14,7 +14,7 @@ function PersonalAvatar({ avatar, initials, size = 30 }) {
     );
   }
   return (
-    <div style={{ width: size, height: size, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.37, fontWeight: 700, color: 'white', flexShrink: 0 }}>
+    <div style={{ width: size, height: size, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: size * 0.37, fontWeight: 700, color: 'white', flexShrink: 0 }}>
       {initials}
     </div>
   );
@@ -29,10 +29,10 @@ function MessageBubble({ msg, isMe, personalInitials, personalAvatar }) {
         </div>
       )}
       <div style={{ maxWidth: '72%' }}>
-        <div style={{ padding: '10px 14px', borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: isMe ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : 'white', color: isMe ? 'white' : '#111827', fontSize: 14, lineHeight: 1.5, boxShadow: isMe ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
+        <div style={{ padding: '10px 14px', borderRadius: isMe ? '16px 16px 4px 16px' : '16px 16px 16px 4px', background: isMe ? 'var(--accent)' : 'white', color: isMe ? 'white' : '#111827', fontSize: 14, lineHeight: 1.5, boxShadow: isMe ? 'none' : '0 1px 3px rgba(0,0,0,0.08)' }}>
           {msg.text}
         </div>
-        <p style={{ margin: '3px 0 0', fontSize: 10, color: '#9CA3AF', textAlign: isMe ? 'right' : 'left' }}>
+        <p style={{ margin: '3px 0 0', fontSize: 10, color: 'var(--gray-400)', textAlign: isMe ? 'right' : 'left' }}>
           {new Date(msg.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
         </p>
       </div>
@@ -47,9 +47,9 @@ function DateDivider({ dateStr }) {
     : new Date(dateStr + 'T12:00:00').toLocaleDateString('pt-BR', { day: 'numeric', month: 'long' });
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, margin: '12px 0' }}>
-      <div style={{ flex: 1, height: 1, background: '#F3F4F6' }} />
-      <span style={{ fontSize: 11, color: '#9CA3AF', fontWeight: 600, whiteSpace: 'nowrap' }}>{label}</span>
-      <div style={{ flex: 1, height: 1, background: '#F3F4F6' }} />
+      <div style={{ flex: 1, height: 1, background: 'var(--bg-page)' }} />
+      <span style={{ fontSize: 11, color: 'var(--gray-400)', fontWeight: 600, whiteSpace: 'nowrap' }}>{label}</span>
+      <div style={{ flex: 1, height: 1, background: 'var(--bg-page)' }} />
     </div>
   );
 }
@@ -235,3 +235,4 @@ export default function ChatAluno() {
     </div>
   );
 }
+

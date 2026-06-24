@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+﻿import { Link } from 'react-router-dom';
 import { Zap, Check, ChevronDown, Star, Users, Calendar, Dumbbell, DollarSign, MessageSquare, TrendingUp, Shield, Smartphone, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { plans, faqs } from '../data/mockData';
@@ -25,14 +25,14 @@ function Navbar() {
           width: 36,
           height: 36,
           borderRadius: 10,
-          background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+          background: 'var(--accent)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
         }}>
           <Zap size={20} color="white" fill="white" />
         </div>
-        <span style={{ fontSize: 22, fontWeight: 800, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+        <span style={{ fontSize: 22, fontWeight: 800, background: 'var(--accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
           WAY FIT
         </span>
       </div>
@@ -70,7 +70,7 @@ function Navbar() {
         <Link to="/registro" style={{
           padding: '8px 20px',
           borderRadius: 8,
-          background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+          background: 'var(--accent)',
           color: 'white',
           textDecoration: 'none',
           fontSize: 14,
@@ -151,7 +151,7 @@ function Hero() {
           }}>
             Gerencie seus{' '}
             <span style={{
-              background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+              background: 'var(--accent)',
               WebkitBackgroundClip: 'text',
               WebkitTextFillColor: 'transparent',
             }}>
@@ -174,7 +174,7 @@ function Hero() {
             <Link to="/registro" style={{
               padding: '14px 28px',
               borderRadius: 10,
-              background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+              background: 'var(--accent)',
               color: 'white',
               textDecoration: 'none',
               fontSize: 16,
@@ -208,7 +208,7 @@ function Hero() {
                   width: 18,
                   height: 18,
                   borderRadius: '50%',
-                  background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+                  background: 'var(--accent)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -247,7 +247,7 @@ function Hero() {
                   <div style={{ height: 8, width: 120, background: 'rgba(255,255,255,0.2)', borderRadius: 4, marginBottom: 6 }} />
                   <div style={{ height: 6, width: 80, background: 'rgba(255,255,255,0.1)', borderRadius: 4 }} />
                 </div>
-                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)' }} />
+                <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--accent)' }} />
               </div>
 
               {/* Stat cards */}
@@ -281,7 +281,7 @@ function Hero() {
                     justifyContent: 'space-between',
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', fontSize: 9, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
+                      <div style={{ width: 24, height: 24, borderRadius: '50%', background: 'var(--accent)', fontSize: 9, color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
                         {item.name.split(' ').map(w => w[0]).join('')}
                       </div>
                       <div>
@@ -332,7 +332,7 @@ function Benefits() {
           </span>
           <h2 style={{ fontSize: 40, fontWeight: 800, color: '#111827', margin: '0 0 16px', letterSpacing: '-0.02em' }}>
             Tudo que você precisa para{' '}
-            <span style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <span style={{ background: 'var(--accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               crescer
             </span>
           </h2>
@@ -359,7 +359,7 @@ function Benefits() {
                 width: 52,
                 height: 52,
                 borderRadius: 14,
-                background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+                background: 'var(--accent)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -397,7 +397,7 @@ function Features() {
           </span>
           <h2 style={{ fontSize: 40, fontWeight: 800, color: '#111827', margin: '0 0 16px', letterSpacing: '-0.02em' }}>
             Projetado para{' '}
-            <span style={{ background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            <span style={{ background: 'var(--accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
               personal trainers
             </span>
           </h2>
@@ -414,7 +414,7 @@ function Features() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               {['Visão geral em tempo real', 'Agenda do dia na tela inicial', 'Alunos recentes e status', 'Notificações importantes'].map(item => (
                 <div key={item} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: 22, height: 22, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Check size={12} color="white" strokeWidth={3} />
                   </div>
                   <span style={{ fontSize: 15, color: '#374151', fontWeight: 500 }}>{item}</span>
@@ -469,7 +469,7 @@ function Features() {
               gap: 20,
               border: '1px solid #F1F5F9',
             }}>
-              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Icon size={22} color="white" />
               </div>
               <div>
@@ -554,7 +554,7 @@ function Plans() {
                         width: 18,
                         height: 18,
                         borderRadius: '50%',
-                        background: isPro ? 'rgba(255,255,255,0.2)' : 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+                        background: isPro ? 'rgba(255,255,255,0.2)' : 'var(--accent)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -572,7 +572,7 @@ function Plans() {
                   textAlign: 'center',
                   padding: '12px',
                   borderRadius: 10,
-                  background: isPro ? 'rgba(255,255,255,0.2)' : 'linear-gradient(135deg, #3B82F6, #8B5CF6)',
+                  background: isPro ? 'rgba(255,255,255,0.2)' : 'var(--accent)',
                   color: 'white',
                   textDecoration: 'none',
                   fontSize: 15,
@@ -668,10 +668,10 @@ function Footer() {
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 48, flexWrap: 'wrap', gap: 32 }}>
           <div style={{ maxWidth: 280 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <Zap size={16} color="white" fill="white" />
               </div>
-              <span style={{ fontSize: 18, fontWeight: 800, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+              <span style={{ fontSize: 18, fontWeight: 800, background: 'var(--accent)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
                 WAY FIT
               </span>
             </div>

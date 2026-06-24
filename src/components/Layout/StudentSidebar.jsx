@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { Zap, LayoutDashboard, Dumbbell, Calendar, TrendingUp, History, MessageCircle, Camera, Heart, LogOut, X, Utensils, Activity } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -41,28 +41,28 @@ export default function StudentSidebar() {
         <div onClick={close} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.45)', zIndex: 99 }} className="sidebar-overlay" />
       )}
 
-      <aside className={`app-sidebar${open ? ' sidebar-open' : ''}`} style={{ width: 240, minHeight: '100vh', background: 'white', borderRight: '1px solid #F1F5F9', display: 'flex', flexDirection: 'column', padding: '20px 16px', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 100, overflowY: 'auto' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20, paddingLeft: 8 }}>
-          <div style={{ width: 34, height: 34, borderRadius: 10, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-            <Zap size={18} color="white" fill="white" />
+      <aside className={`app-sidebar${open ? ' sidebar-open' : ''}`}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '18px 16px', borderBottom: '1px solid var(--border-light)' }}>
+          <div style={{ width: 32, height: 32, borderRadius: 9, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 2px 8px rgba(99,102,241,0.3)' }}>
+            <Zap size={16} color="white" fill="white" />
           </div>
-          <span style={{ fontSize: 19, fontWeight: 800, flex: 1, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-            WAY FIT
-          </span>
-          <button onClick={close} className="sidebar-close-btn" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4, color: '#6B7280' }}>
-            <X size={20} />
+          <span className="sidebar-logo-name">WAY FIT</span>
+          <button onClick={close} className="sidebar-close-btn">
+            <X size={18} />
           </button>
         </div>
 
-        <div style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', borderRadius: 10, padding: '10px 14px', marginBottom: 18, border: '1px solid #DBEAFE' }}>
-          <p style={{ margin: 0, fontSize: 11, color: '#6B7280', fontWeight: 500 }}>Área do Aluno</p>
-          <p style={{ margin: '2px 0 0', fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'Aluno'}</p>
-          {subtitle && (
-            <span style={{ fontSize: 11, color: '#8B5CF6', fontWeight: 600 }}>{subtitle}</span>
-          )}
+        <div style={{ padding: '12px 10px 4px' }}>
+          <div style={{ background: 'var(--accent-bg)', borderRadius: 10, padding: '10px 12px', border: '1px solid rgba(99,102,241,0.2)' }}>
+            <p style={{ margin: 0, fontSize: 10, color: 'var(--accent-text)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Área do Aluno</p>
+            <p style={{ margin: '3px 0 0', fontSize: 13, fontWeight: 700, color: 'var(--gray-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{user?.name || 'Aluno'}</p>
+            {subtitle && (
+              <span style={{ fontSize: 11, color: 'var(--accent-text)', fontWeight: 500 }}>{subtitle}</span>
+            )}
+          </div>
         </div>
 
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 2, flex: 1 }}>
+        <nav className="sidebar-nav">
           {navItems.map(({ to, icon: Icon, label, end }) => (
             <NavLink
               key={to}
@@ -70,17 +70,18 @@ export default function StudentSidebar() {
               end={end}
               className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
               onClick={close}
-              style={{ fontSize: 13 }}
             >
-              <Icon size={17} />
+              <Icon size={16} />
               {label}
             </NavLink>
           ))}
         </nav>
 
-        <button onClick={handleLogout} className="sidebar-item" style={{ width: '100%', background: 'none', border: 'none', textAlign: 'left', color: '#EF4444', marginTop: 8, fontSize: 13 }}>
-          <LogOut size={17} /> Sair
-        </button>
+        <div className="sidebar-footer">
+          <button onClick={handleLogout} className="sidebar-item" style={{ width: '100%', border: 'none', textAlign: 'left', color: 'var(--red)' }}>
+            <LogOut size={16} /> Sair
+          </button>
+        </div>
       </aside>
     </>
   );

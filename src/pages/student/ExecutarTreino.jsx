@@ -1,5 +1,6 @@
-import { useState, useEffect, useRef } from 'react';
+﻿import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import confetti from 'canvas-confetti';
 import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star, TrendingUp, Loader } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -49,7 +50,7 @@ function VideoModal({ videoUrl, title, onClose }) {
       <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 680, background: '#000', borderRadius: 16, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.8)' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 18px', background: '#111' }}>
           <div>
-            <p style={{ margin: 0, fontSize: 11, color: '#6B7280', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Demonstração</p>
+            <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-500)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Demonstração</p>
             <span style={{ color: 'white', fontWeight: 800, fontSize: 15 }}>{title}</span>
           </div>
           <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', padding: 8, borderRadius: 8 }}>
@@ -98,22 +99,22 @@ function RatingModal({ plan, studentId, personalId, onClose, onSaved }) {
 
   if (done) return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 50, padding: 20 }}>
-      <div style={{ background: 'white', borderRadius: 20, padding: 40, textAlign: 'center', maxWidth: 320, width: '100%' }}>
+      <div style={{ background: 'var(--bg-surface)', borderRadius: 20, padding: 40, textAlign: 'center', maxWidth: 320, width: '100%' }}>
         <div style={{ width: 60, height: 60, borderRadius: '50%', background: '#D1FAE5', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
           <Check size={28} color="#10B981" strokeWidth={3} />
         </div>
         <h3 style={{ margin: '0 0 6px', fontSize: 18, fontWeight: 800 }}>Avaliação salva!</h3>
-        <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>Seu personal poderá ver como foi</p>
+        <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-500)' }}>Seu personal poderá ver como foi</p>
       </div>
     </div>
   );
 
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', zIndex: 50 }} onClick={onClose}>
-      <div onClick={e => e.stopPropagation()} style={{ background: 'white', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 500 }}>
-        <div style={{ width: 36, height: 4, borderRadius: 2, background: '#E5E7EB', margin: '0 auto 20px' }} />
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-surface)', borderRadius: '20px 20px 0 0', padding: '24px 20px 32px', width: '100%', maxWidth: 500 }}>
+        <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border)', margin: '0 auto 20px' }} />
         <h3 style={{ margin: '0 0 4px', fontSize: 18, fontWeight: 800 }}>Como foi o treino?</h3>
-        <p style={{ margin: '0 0 20px', fontSize: 13, color: '#6B7280' }}>{plan?.name}</p>
+        <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--gray-500)' }}>{plan?.name}</p>
 
         <div style={{ textAlign: 'center', marginBottom: 20 }}>
           <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
@@ -129,21 +130,21 @@ function RatingModal({ plan, studentId, personalId, onClose, onSaved }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 }}>
           {FEELINGS.map(f => (
             <button key={f.value} onClick={() => setFeeling(f.value)}
-              style={{ padding: '8px 12px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: feeling === f.value ? '#EFF6FF' : '#F3F4F6', color: feeling === f.value ? '#3B82F6' : '#6B7280', outline: feeling === f.value ? '2px solid #3B82F6' : '2px solid transparent' }}>
+              style={{ padding: '8px 12px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: feeling === f.value ? 'var(--accent-bg)' : 'var(--bg-page)', color: feeling === f.value ? 'var(--accent)' : 'var(--gray-500)', outline: feeling === f.value ? '2px solid var(--accent)' : '2px solid transparent' }}>
               {f.emoji} {f.label}
             </button>
           ))}
         </div>
 
         <textarea value={notes} onChange={e => setNotes(e.target.value)} placeholder="Observações opcionais..." rows={2}
-          style={{ width: '100%', resize: 'none', padding: '10px 12px', fontSize: 13, borderRadius: 10, border: '1.5px solid #E5E7EB', outline: 'none', marginBottom: 16, boxSizing: 'border-box' }} />
+          style={{ width: '100%', resize: 'none', padding: '10px 12px', fontSize: 13, borderRadius: 10, border: '1.5px solid var(--border)', outline: 'none', marginBottom: 16, boxSizing: 'border-box' }} />
 
         <div style={{ display: 'flex', gap: 10 }}>
-          <button onClick={onClose} style={{ flex: 1, padding: '13px', borderRadius: 12, border: '1.5px solid #E5E7EB', background: 'white', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: '#374151' }}>
+          <button onClick={onClose} style={{ flex: 1, padding: '13px', borderRadius: 12, border: '1.5px solid var(--border)', background: 'var(--bg-surface)', fontSize: 14, fontWeight: 600, cursor: 'pointer', color: 'var(--gray-700)' }}>
             Pular
           </button>
           <button onClick={handleSave} disabled={!stars || saving}
-            style={{ flex: 2, padding: '13px', borderRadius: 12, border: 'none', background: stars ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : '#E5E7EB', color: stars ? 'white' : '#9CA3AF', fontSize: 14, fontWeight: 700, cursor: stars ? 'pointer' : 'not-allowed' }}>
+            style={{ flex: 2, padding: '13px', borderRadius: 12, border: 'none', background: stars ? 'var(--accent)' : 'var(--border)', color: stars ? 'white' : 'var(--gray-400)', fontSize: 14, fontWeight: 700, cursor: stars ? 'pointer' : 'not-allowed' }}>
             {saving ? 'Salvando...' : 'Salvar avaliação'}
           </button>
         </div>
@@ -172,12 +173,17 @@ export default function ExecutarTreino() {
   const [restTimer, setRestTimer] = useState(null);
   const restRef = useRef(null);
   const sessionIdRef = useRef(null);
+  const sessionStartRef = useRef(null);
   const setsDataRef = useRef({});
   setsDataRef.current = setsData;
 
   const [finished, setFinished] = useState(false);
   const [showRating, setShowRating] = useState(false);
   const [ratedToday, setRatedToday] = useState(false);
+  const [sessionCalories, setSessionCalories] = useState(0);
+  const [sessionDuration, setSessionDuration] = useState(0);
+  const [studentWeight, setStudentWeight] = useState(70);
+  const [justConfirmedSet, setJustConfirmedSet] = useState(null);
   const [videoModal, setVideoModal] = useState(false);
 
   // Save indicator: 'idle' | 'saving' | 'saved' | 'error'
@@ -185,6 +191,21 @@ export default function ExecutarTreino() {
   const saveTimerRef = useRef(null);
 
   const todayDate = new Date().toISOString().slice(0, 10);
+
+  useEffect(() => {
+    if (!finished) return;
+    const fire = (opts) => confetti({
+      particleCount: 90,
+      spread: 75,
+      startVelocity: 52,
+      origin: { y: 0.55 },
+      colors: ['#6366F1', '#8B5CF6', '#F59E0B', '#10B981', '#F87171', '#ffffff'],
+      ...opts,
+    });
+    setTimeout(() => fire({}), 350);
+    setTimeout(() => fire({ particleCount: 60, spread: 50, origin: { x: 0.2, y: 0.6 } }), 750);
+    setTimeout(() => fire({ particleCount: 60, spread: 50, origin: { x: 0.8, y: 0.6 } }), 750);
+  }, [finished]);
 
   useEffect(() => {
     if (!user || !planId) return;
@@ -196,7 +217,7 @@ export default function ExecutarTreino() {
       if (!student) { navigate('/aluno/treinos'); return; }
       setStudentRecord(student);
 
-      const [{ data: p }, { data: existingSession }, { data: lastLogRows }, { data: rating }] = await Promise.all([
+      const [{ data: p }, { data: existingSession }, { data: lastLogRows }, { data: rating }, { data: ana }] = await Promise.all([
         supabase.from('training_plans').select('*, exercises(*)').eq('id', planId).single(),
         supabase.from('workout_sessions')
           .select('id, exercise_logs(exercise_id, done, sets_data, load_actual)')
@@ -205,7 +226,9 @@ export default function ExecutarTreino() {
           .eq('student_id', student.id).not('load_actual', 'is', null)
           .order('created_at', { ascending: false }).limit(500),
         supabase.from('session_ratings').select('id').eq('student_id', student.id).eq('date', todayDate).maybeSingle(),
+        supabase.from('nutrition_anamnesis').select('weight_kg').eq('student_id', student.id).maybeSingle(),
       ]);
+      if (ana?.weight_kg) setStudentWeight(ana.weight_kg);
 
       if (!p) { navigate('/aluno/treinos'); return; }
 
@@ -284,6 +307,7 @@ export default function ExecutarTreino() {
 
   const getOrCreateSession = async (student, p, exs) => {
     if (sessionIdRef.current) return sessionIdRef.current;
+    if (!sessionStartRef.current) sessionStartRef.current = Date.now();
     try {
       const { data: session } = await supabase.from('workout_sessions').upsert({
         student_id: student.id,
@@ -333,9 +357,20 @@ export default function ExecutarTreino() {
         const s = setsDataRef.current[e.id] || [];
         return s.length > 0 && s.every(set => set.done);
       });
+      const isFinishing = allExsDone.length === exercises.length;
+      let durationMins = 0;
+      let caloriesBurned = 0;
+      if (isFinishing && sessionStartRef.current) {
+        durationMins = Math.round((Date.now() - sessionStartRef.current) / 60000);
+        const MET = plan?.type === 'cardio' ? 8 : plan?.type === 'funcional' ? 6 : 5;
+        caloriesBurned = Math.round(MET * studentWeight * (durationMins / 60));
+        setSessionDuration(durationMins);
+        setSessionCalories(caloriesBurned);
+      }
       await supabase.from('workout_sessions').update({
         exercises_done: allExsDone.length,
-        finished_at: allExsDone.length === exercises.length ? new Date().toISOString() : null,
+        finished_at: isFinishing ? new Date().toISOString() : null,
+        ...(isFinishing && { duration_minutes: durationMins, calories_burned: caloriesBurned }),
       }).eq('id', sid);
 
       setSaveIndicator('saved');
@@ -350,6 +385,12 @@ export default function ExecutarTreino() {
     const currentSets = setsData[ex.id] || [];
     const isConfirming = !currentSets[setIdx]?.done;
     const isLastSet = setIdx === currentSets.length - 1;
+
+    if (isConfirming) {
+      setJustConfirmedSet({ exId: ex.id, setIdx });
+      setTimeout(() => setJustConfirmedSet(null), 350);
+      if (navigator.vibrate) navigator.vibrate(40);
+    }
 
     const newSets = [...currentSets];
     newSets[setIdx] = { ...newSets[setIdx], done: !newSets[setIdx].done };
@@ -408,7 +449,7 @@ export default function ExecutarTreino() {
   if (loading) return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh', flexDirection: 'column', gap: 16 }}>
       <Dumbbell size={36} color="#3B82F6" />
-      <p style={{ margin: 0, fontSize: 14, color: '#6B7280' }}>Carregando treino...</p>
+      <p style={{ margin: 0, fontSize: 14, color: 'var(--gray-500)' }}>Carregando treino...</p>
     </div>
   );
 
@@ -428,6 +469,8 @@ export default function ExecutarTreino() {
               {[
                 { label: 'Exercícios', value: exercises.length },
                 { label: 'Séries feitas', value: `${doneSets}/${totalSets}` },
+                ...(sessionDuration > 0 ? [{ label: 'Duração', value: `${sessionDuration} min` }] : []),
+                ...(sessionCalories > 0 ? [{ label: 'Kcal queimadas', value: `~${sessionCalories}` }] : []),
               ].map(s => (
                 <div key={s.label} style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 14, padding: '18px 12px', backdropFilter: 'blur(4px)' }}>
                   <p style={{ margin: 0, fontSize: 26, fontWeight: 900 }}>{s.value}</p>
@@ -447,7 +490,7 @@ export default function ExecutarTreino() {
 
             <button
               onClick={() => navigate('/aluno/treinos')}
-              style={{ width: '100%', padding: ratedToday ? '16px' : '14px', borderRadius: 14, background: ratedToday ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)' : 'rgba(255,255,255,0.1)', border: ratedToday ? 'none' : '1px solid rgba(255,255,255,0.15)', color: 'white', fontSize: ratedToday ? 16 : 14, fontWeight: ratedToday ? 800 : 600, cursor: 'pointer', marginBottom: 10 }}
+              style={{ width: '100%', padding: ratedToday ? '16px' : '14px', borderRadius: 14, background: ratedToday ? 'var(--accent)' : 'rgba(255,255,255,0.1)', border: ratedToday ? 'none' : '1px solid rgba(255,255,255,0.15)', color: 'white', fontSize: ratedToday ? 16 : 14, fontWeight: ratedToday ? 800 : 600, cursor: 'pointer', marginBottom: 10 }}
             >
               Ver meus treinos
             </button>
@@ -501,23 +544,23 @@ export default function ExecutarTreino() {
       {/* Sticky header */}
       <div style={{ background: 'var(--bg-surface)', borderBottom: '1px solid var(--border)', position: 'sticky', top: 0, zIndex: 20 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, height: 56, padding: '0 16px' }}>
-          <button onClick={handleQuit} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', color: '#6B7280', flexShrink: 0 }}>
+          <button onClick={handleQuit} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', color: 'var(--gray-500)', flexShrink: 0 }}>
             <ChevronLeft size={22} />
           </button>
           <div style={{ flex: 1, textAlign: 'center' }}>
-            <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#111827' }}>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: 'var(--gray-900)' }}>
               {currentIdx + 1}/{exercises.length}
-              {saveStatus === 'saving' && <span style={{ fontSize: 10, color: '#9CA3AF', marginLeft: 6 }}>● sincronizando</span>}
+              {saveStatus === 'saving' && <span style={{ fontSize: 10, color: 'var(--gray-400)', marginLeft: 6 }}>● sincronizando</span>}
               {saveStatus === 'saved' && <span style={{ fontSize: 10, color: '#10B981', marginLeft: 6 }}>✓ salvo</span>}
               {saveStatus === 'error' && <span style={{ fontSize: 10, color: '#EF4444', marginLeft: 6 }}>⚠ sem conexão</span>}
             </p>
-            <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{plan?.name}</p>
+            <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{plan?.name}</p>
           </div>
-          <button onClick={handleQuit} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', color: '#9CA3AF', flexShrink: 0 }}>
+          <button onClick={handleQuit} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', color: 'var(--gray-400)', flexShrink: 0 }}>
             <X size={18} />
           </button>
         </div>
-        <div style={{ height: 3, background: '#E5E7EB' }}>
+        <div style={{ height: 3, background: 'var(--border-light)' }}>
           <div style={{ height: '100%', width: `${pct}%`, background: `linear-gradient(90deg, ${color}, #3B82F6)`, transition: 'width 0.5s ease' }} />
         </div>
       </div>
@@ -526,7 +569,7 @@ export default function ExecutarTreino() {
       <div style={{ flex: 1, padding: '16px 16px 0', maxWidth: 560, width: '100%', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
 
         {/* Exercise header */}
-        <div style={{ background: 'white', borderRadius: 16, overflow: 'hidden', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 16, overflow: 'hidden', border: '1px solid var(--border)' }}>
           {/* Superset banner */}
           {ssGroup && (
             <div style={{ background: ssColor, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -547,8 +590,8 @@ export default function ExecutarTreino() {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <span style={{ fontSize: 11, fontWeight: 700, color: ssColor || color, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{plan?.type}</span>
-              <h2 style={{ margin: '2px 0 4px', fontSize: 19, fontWeight: 900, color: '#111827', lineHeight: 1.2 }}>{ex.name}</h2>
-              <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>
+              <h2 style={{ margin: '2px 0 4px', fontSize: 19, fontWeight: 900, color: 'var(--gray-900)', lineHeight: 1.2 }}>{ex.name}</h2>
+              <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-500)' }}>
                 {ex.sets} séries · {ex.reps} reps
                 {ex.load ? ` · ${ex.load}` : ''}
                 {ex.rest ? ` · ${ex.rest} desc.` : ''}
@@ -560,9 +603,9 @@ export default function ExecutarTreino() {
           {(hasVideo || videoFetching) && (() => {
             const ytId = effectiveVideoUrl ? getYouTubeId(effectiveVideoUrl) : null;
             if (videoFetching) return (
-              <div style={{ margin: '12px 0 0', borderRadius: 12, background: '#F3F4F6', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <div style={{ margin: '12px 0 0', borderRadius: 12, background: 'var(--bg-page)', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 <Loader size={16} color="#9CA3AF" style={{ animation: 'spin 1s linear infinite' }} />
-                <span style={{ fontSize: 12, color: '#9CA3AF', fontWeight: 600 }}>Buscando demonstração...</span>
+                <span style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 600 }}>Buscando demonstração...</span>
               </div>
             );
             if (ytId) return (
@@ -582,9 +625,9 @@ export default function ExecutarTreino() {
           })()}
 
           {ex.obs && (
-            <div style={{ marginTop: 12, background: '#FFFBEB', borderRadius: 8, padding: '8px 12px', border: '1px solid #FDE68A', display: 'flex', gap: 7, alignItems: 'flex-start' }}>
+            <div style={{ marginTop: 12, background: 'rgba(245,158,11,0.08)', borderRadius: 8, padding: '8px 12px', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', gap: 7, alignItems: 'flex-start' }}>
               <span style={{ fontSize: 15, flexShrink: 0, marginTop: 1 }}>💡</span>
-              <p style={{ margin: 0, fontSize: 12, color: '#92400E', lineHeight: 1.5 }}>{ex.obs}</p>
+              <p style={{ margin: 0, fontSize: 12, color: 'var(--yellow)', lineHeight: 1.5 }}>{ex.obs}</p>
             </div>
           )}
           {videoModal && <VideoModal videoUrl={effectiveVideoUrl} title={ex.name} onClose={() => setVideoModal(false)} />}
@@ -609,9 +652,9 @@ export default function ExecutarTreino() {
         )}
 
         {/* Sets */}
-        <div style={{ background: 'white', borderRadius: 16, padding: '16px', boxShadow: '0 1px 4px rgba(0,0,0,0.08)' }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '16px', border: '1px solid var(--border)' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: '#111827' }}>Séries</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--gray-900)' }}>Séries</p>
             <span style={{ fontSize: 13, fontWeight: 700, color: allSetsDone ? '#10B981' : '#6B7280' }}>
               {doneCount}/{sets.length} feitas
             </span>
@@ -658,8 +701,8 @@ export default function ExecutarTreino() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ margin: '0 0 1px', fontSize: 11, fontWeight: 700, color: iconColor }}>{message}</p>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                      <p style={{ margin: 0, fontSize: 13, color: '#6B7280' }}>
-                        Última: <strong style={{ color: '#374151' }}>{lastRaw}kg</strong>
+                      <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-500)' }}>
+                        Última: <strong style={{ color: 'var(--gray-700)' }}>{lastRaw}kg</strong>
                       </p>
                       {shouldIncrease && (
                         <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: '#059669' }}>
@@ -689,9 +732,9 @@ export default function ExecutarTreino() {
           })()}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {sets.map((set, si) => (
-              <div key={si} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: set.done ? '#F0FDF4' : '#F9FAFB', border: `1.5px solid ${set.done ? '#86EFAC' : '#E5E7EB'}`, transition: 'all 0.2s' }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: set.done ? '#10B981' : '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <span style={{ fontSize: 12, fontWeight: 900, color: set.done ? 'white' : '#6B7280' }}>{si + 1}</span>
+              <div key={si} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderRadius: 12, background: set.done ? 'rgba(16,185,129,0.08)' : 'var(--bg-page)', border: `1.5px solid ${set.done ? '#86EFAC' : 'var(--border)'}`, transition: 'all 0.2s' }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: set.done ? '#10B981' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <span style={{ fontSize: 12, fontWeight: 900, color: set.done ? 'white' : 'var(--gray-500)' }}>{si + 1}</span>
                 </div>
                 <input
                   type="text"
@@ -699,13 +742,14 @@ export default function ExecutarTreino() {
                   value={set.load}
                   onChange={e => updateSetLoad(si, e.target.value)}
                   placeholder={lastLoads[ex.id] ? `Última: ${lastLoads[ex.id]}` : (ex.load || 'kg')}
-                  style={{ flex: 1, maxWidth: 130, padding: '8px 10px', fontSize: 15, fontWeight: 700, borderRadius: 8, border: '1.5px solid #E5E7EB', outline: 'none', background: 'white', color: '#111827', textAlign: 'center' }}
+                  style={{ flex: 1, maxWidth: 130, padding: '8px 10px', fontSize: 15, fontWeight: 700, borderRadius: 8, border: '1.5px solid var(--border)', outline: 'none', background: 'var(--bg-surface)', color: 'var(--gray-900)', textAlign: 'center' }}
                   onClick={e => e.stopPropagation()}
                 />
-                <span style={{ fontSize: 12, color: '#9CA3AF', flexShrink: 0, minWidth: 48, textAlign: 'center' }}>{ex.reps} reps</span>
+                <span style={{ fontSize: 12, color: 'var(--gray-400)', flexShrink: 0, minWidth: 48, textAlign: 'center' }}>{ex.reps} reps</span>
                 <button onClick={() => confirmSet(si)}
-                  style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, cursor: 'pointer', border: 'none', background: set.done ? '#10B981' : '#E5E7EB', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
-                  <Check size={18} color={set.done ? 'white' : '#9CA3AF'} strokeWidth={2.5} />
+                  className={justConfirmedSet?.exId === ex.id && justConfirmedSet?.setIdx === si ? 'set-confirm-pop' : ''}
+                  style={{ width: 40, height: 40, borderRadius: '50%', flexShrink: 0, cursor: 'pointer', border: 'none', background: set.done ? '#10B981' : 'var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }}>
+                  <Check size={18} color={set.done ? 'white' : 'var(--gray-400)'} strokeWidth={2.5} />
                 </button>
               </div>
             ))}
@@ -722,8 +766,8 @@ export default function ExecutarTreino() {
         </div>
 
         {/* Exercise mini-map */}
-        <div style={{ background: 'white', borderRadius: 14, padding: '12px 14px', boxShadow: '0 1px 4px rgba(0,0,0,0.06)' }}>
-          <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exercícios</p>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 14, padding: '12px 14px', border: '1px solid var(--border)' }}>
+          <p style={{ margin: '0 0 10px', fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Exercícios</p>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
             {exercises.map((e, i) => {
               const exSets = setsData[e.id] || [];
@@ -732,7 +776,7 @@ export default function ExecutarTreino() {
               return (
                 <button key={e.id}
                   onClick={() => { saveExerciseWithSets(currentIdx, exercises[currentIdx]?.id, setsDataRef.current[exercises[currentIdx]?.id] || []); setCurrentIdx(i); setRestTimer(null); }}
-                  style={{ width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 800, background: isCurrent ? color : exAllDone ? '#D1FAE5' : '#F3F4F6', color: isCurrent ? 'white' : exAllDone ? '#10B981' : '#6B7280', transition: 'all 0.15s', outline: isCurrent ? `2px solid ${color}` : 'none', outlineOffset: 2 }}>
+                  style={{ width: 32, height: 32, borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 11, fontWeight: 800, background: isCurrent ? color : exAllDone ? 'rgba(16,185,129,0.15)' : 'var(--bg-page)', color: isCurrent ? 'white' : exAllDone ? '#10B981' : 'var(--gray-400)', transition: 'all 0.15s', outline: isCurrent ? `2px solid ${color}` : 'none', outlineOffset: 2 }}>
                   {i + 1}
                 </button>
               );
@@ -757,3 +801,5 @@ export default function ExecutarTreino() {
     </div>
   );
 }
+
+

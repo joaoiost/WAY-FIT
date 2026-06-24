@@ -1,11 +1,11 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Calendar, Dumbbell, TrendingUp, Clock, Play, Loader, Bell, BellOff, ChevronRight, Flame, Star, Camera, MessageCircle, Activity, Award, Zap, Target, Edit2, Check, Salad, Trophy } from 'lucide-react';
 import WaterTracker from '../../components/UI/WaterTracker';
 import XPBar from '../../components/UI/XPBar';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
-import { trainingPlans, appointments } from '../../data/mockData';
+// mockData removed — app requires Supabase
 import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from '../../lib/pushNotifications';
 
 const TYPE_COLORS = {
@@ -16,6 +16,77 @@ const TYPE_BG = {
   Hipertrofia: '#1E1B4B', Funcional: '#064E3B', Força: '#450A0A',
   Cardio: '#451A03', Resistência: '#1E3A5F', Mobilidade: '#0C4A6E',
 };
+
+const CHECKIN_METRICS = [
+  { key: 'mood',          label: 'Humor',   emojis: ['😫','😕','😐','🙂','😄'] },
+  { key: 'energy',        label: 'Energia', emojis: ['🪫','😪','⚡','💪','🚀'] },
+  { key: 'sleep_quality', label: 'Sono',    emojis: ['😵','😕','😐','😌','🌟'] },
+  { key: 'soreness',      label: 'Dores',   emojis: ['💚','🟢','🟡','🟠','🔴'] },
+];
+
+function DailyCheckinWidget({ studentId, personalId, todayStr, onCheckinDone }) {
+  const [form, setForm] = useState({ mood: 3, energy: 3, sleep_quality: 3, soreness: 1 });
+  const [saving, setSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    if (!studentId || !hasSupabase) { onCheckinDone(form); return; }
+    setSaving(true);
+    await supabase.from('daily_checkins').upsert(
+      { student_id: studentId, personal_id: personalId || null, date: todayStr, ...form },
+      { onConflict: 'student_id,date' }
+    );
+    onCheckinDone(form);
+    setSaving(false);
+  };
+
+  return (
+    <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '16px 18px', border: '1px solid var(--border)' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+        <span style={{ fontSize: 18 }}>📋</span>
+        <div>
+          <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--gray-900)' }}>Check-in do dia</p>
+          <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>Como você está chegando hoje?</p>
+        </div>
+      </div>
+      {CHECKIN_METRICS.map(({ key, label, emojis }) => (
+        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+          <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-400)', width: 54, flexShrink: 0 }}>{label}</span>
+          <div style={{ display: 'flex', gap: 4, flex: 1 }}>
+            {emojis.map((emoji, i) => {
+              const val = i + 1;
+              const selected = form[key] === val;
+              return (
+                <button key={i} onClick={() => setForm(prev => ({ ...prev, [key]: val }))}
+                  style={{ flex: 1, padding: '6px 2px', borderRadius: 10, border: `2px solid ${selected ? 'var(--accent)' : 'transparent'}`, background: selected ? 'var(--accent-bg)' : 'var(--gray-50)', fontSize: 18, cursor: 'pointer', transition: 'all 0.12s', lineHeight: 1 }}>
+                  {emoji}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      <button onClick={handleSubmit} disabled={saving}
+        style={{ width: '100%', marginTop: 4, padding: '12px', borderRadius: 12, border: 'none', background: 'var(--accent)', color: 'white', fontSize: 14, fontWeight: 800, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.7 : 1, transition: 'opacity 0.15s' }}>
+        {saving ? 'Salvando...' : 'Registrar check-in'}
+      </button>
+    </div>
+  );
+}
+
+function CheckinDoneCard({ checkin }) {
+  const emojis = CHECKIN_METRICS.map(m => m.emojis[(checkin[m.key] || 3) - 1]);
+  return (
+    <div style={{ background: 'rgba(16,185,129,0.08)', borderRadius: 14, padding: '12px 16px', border: '1px solid rgba(16,185,129,0.25)', display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+        <Check size={14} color="#10B981" strokeWidth={3} />
+      </div>
+      <div style={{ flex: 1 }}>
+        <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#10B981' }}>Check-in feito hoje</p>
+        <p style={{ margin: '2px 0 0', fontSize: 16 }}>{emojis.join('  ')}</p>
+      </div>
+    </div>
+  );
+}
 
 function greeting() {
   const h = new Date().getHours();
@@ -28,24 +99,24 @@ function StreakBadge({ streak }) {
   if (!streak || streak === 0) return null;
   const isHot = streak >= 7;
   return (
-    <div style={{
+    <div className={isHot ? 'streak-hot' : ''} style={{
       display: 'flex', alignItems: 'center', gap: 10,
-      background: isHot ? 'linear-gradient(135deg, #FEF3C7, #FEF9C3)' : 'linear-gradient(135deg, #FFF7ED, #FFEDD5)',
-      border: `1.5px solid ${isHot ? '#FDE68A' : '#FED7AA'}`,
+      background: isHot ? 'rgba(245,158,11,0.12)' : 'rgba(251,146,60,0.08)',
+      border: `1.5px solid ${isHot ? 'rgba(245,158,11,0.4)' : 'rgba(251,146,60,0.25)'}`,
       borderRadius: 16, padding: '12px 16px',
     }}>
       <div style={{ fontSize: 32, lineHeight: 1 }}>{isHot ? '🔥' : '⚡'}</div>
       <div style={{ flex: 1 }}>
-        <p style={{ margin: 0, fontSize: 16, fontWeight: 900, color: isHot ? '#92400E' : '#9A3412' }}>
+        <p style={{ margin: 0, fontSize: 16, fontWeight: 900, color: isHot ? '#FBBF24' : '#FB923C' }}>
           {streak} {streak === 1 ? 'dia seguido' : 'dias seguidos'}!
         </p>
-        <p style={{ margin: '2px 0 0', fontSize: 12, color: isHot ? '#B45309' : '#C2410C' }}>
+        <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-500)' }}>
           {isHot ? '🏆 Você está em chamas! Continue assim!' : 'Continue treinando para manter a sequência'}
         </p>
       </div>
-      <div style={{ textAlign: 'center', background: isHot ? '#FDE68A' : '#FED7AA', borderRadius: 12, padding: '6px 12px' }}>
-        <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: isHot ? '#92400E' : '#9A3412' }}>{streak}</p>
-        <p style={{ margin: 0, fontSize: 9, color: isHot ? '#B45309' : '#C2410C', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>streak</p>
+      <div style={{ textAlign: 'center', background: isHot ? 'rgba(245,158,11,0.2)' : 'rgba(251,146,60,0.15)', borderRadius: 12, padding: '6px 12px' }}>
+        <p style={{ margin: 0, fontSize: 22, fontWeight: 900, color: isHot ? '#FBBF24' : '#FB923C' }}>{streak}</p>
+        <p style={{ margin: 0, fontSize: 9, color: 'var(--gray-400)', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.05em' }}>streak</p>
       </div>
     </div>
   );
@@ -75,6 +146,8 @@ export default function StudentDashboard() {
   const [goalInput, setGoalInput] = useState('');
   const [waterGoalMl, setWaterGoalMl] = useState(2000);
   const [xpTotal, setXpTotal] = useState(0);
+  const [todayCheckin, setTodayCheckin] = useState(undefined);
+  const [personalId, setPersonalId] = useState(null);
 
   const now = new Date();
   const todayDay = now.getDay();
@@ -97,7 +170,7 @@ export default function StudentDashboard() {
             const neverOnboarded = !student.onboarded_at && !localStorage.getItem(`aluno_onboarded_${user.id}`);
             if (neverOnboarded) { navigate('/aluno/onboarding', { replace: true }); setLoading(false); return; }
 
-            const [{ data: plans }, { data: appts }, { data: profile }, { data: atts }, sessionsResult, weekResult, weightResult, nutritionAnam] = await Promise.all([
+            const [{ data: plans }, { data: appts }, { data: profile }, { data: atts }, sessionsResult, weekResult, weightResult, nutritionAnam, checkinRes] = await Promise.all([
               supabase.from('training_plans').select('*, exercises(*)').eq('student_id', student.id).order('created_at', { ascending: false }),
               supabase.from('appointments').select('*').eq('student_id', student.id).gte('date', todayStr).order('date').limit(1),
               student.personal_id ? supabase.from('profiles').select('name').eq('id', student.personal_id).single() : { data: null },
@@ -106,6 +179,7 @@ export default function StudentDashboard() {
               supabase.from('workout_sessions').select('id').eq('student_id', student.id).gte('date', weekAgo),
               supabase.from('physical_assessments').select('data').eq('student_id', student.id).order('created_at', { ascending: true }),
               supabase.from('nutrition_anamnesis').select('water_goal_ml').eq('student_id', student.id).maybeSingle(),
+              supabase.from('daily_checkins').select('*').eq('student_id', student.id).eq('date', todayStr).maybeSingle(),
             ]);
 
             const sessions = sessionsResult?.data || [];
@@ -141,6 +215,8 @@ export default function StudentDashboard() {
             }
 
             setXpTotal(sessions.length * 50);
+            setPersonalId(student.personal_id || null);
+            setTodayCheckin(checkinRes?.error ? null : (checkinRes?.data || null));
 
             const planList = plans || [];
             setAllPlans(planList);
@@ -160,14 +236,6 @@ export default function StudentDashboard() {
         }
       })();
     } else {
-      const myPlans = trainingPlans.filter(p => p.studentId === 1);
-      setAllPlans(myPlans);
-      setTodayPlan(myPlans[0] || null);
-      setNextAppt(appointments.find(a => a.studentId === 1 && a.date >= todayStr) || null);
-      setPersonalName('Personal Trainer');
-      setStreak(5);
-      setWeekSessions(3);
-      setAttendanceRate(85);
       setLoading(false);
     }
   }, [user?.id]);
@@ -234,6 +302,15 @@ export default function StudentDashboard() {
         </div>
       )}
 
+      {/* ── Check-in diário ── */}
+      {todayCheckin !== undefined && (
+        <div style={{ marginBottom: 12 }}>
+          {todayCheckin
+            ? <CheckinDoneCard checkin={todayCheckin} />
+            : <DailyCheckinWidget studentId={studentId} personalId={personalId} todayStr={todayStr} onCheckinDone={data => setTodayCheckin({ ...data, date: todayStr })} />}
+        </div>
+      )}
+
       {/* ── Banners (colapsados, não acumulam) ── */}
       {pushState === 'idle' && !pushDismissed && isPushSupported() && (
         <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '11px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -251,7 +328,7 @@ export default function StudentDashboard() {
             <p style={{ margin: '1px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Acesse seus treinos offline</p>
           </div>
           <button onClick={async () => { installPrompt.prompt(); const { outcome } = await installPrompt.userChoice; if (outcome === 'accepted') setInstallPrompt(null); }}
-            style={{ padding: '6px 12px', background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', color: 'white', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
+            style={{ padding: '6px 12px', background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>
             Instalar
           </button>
           <button onClick={() => { setInstallPrompt(null); setInstallDismissed(true); localStorage.setItem('pwa_install_dismissed', '1'); }}
@@ -386,7 +463,7 @@ export default function StudentDashboard() {
             <h3 style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--gray-900)' }}>Próxima Aula</h3>
           </div>
           <div style={{ background: 'var(--gray-50)', borderRadius: 12, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, border: '1px solid var(--border)' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--accent)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
               <span style={{ fontSize: 16, fontWeight: 900, color: 'white', lineHeight: 1 }}>{nextAppt.date.slice(8)}</span>
               <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.8)', fontWeight: 700 }}>
                 {new Date(nextAppt.date + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase()}
@@ -522,3 +599,4 @@ export default function StudentDashboard() {
     </div>
   );
 }
+

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { TrendingDown, TrendingUp, Plus, Ruler, Scale, X, Loader, Zap, BarChart2 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
@@ -131,22 +131,22 @@ export default function Progresso() {
           { label: 'Variação de gordura', value: fatDiff !== null ? `${fatDiff > 0 ? '+' : ''}${fatDiff}%` : '—', sub: first && last ? `De ${first.body_fat}% → ${last.body_fat}%` : 'Sem dados ainda', trend: fatDiff !== null && fatDiff < 0, color: '#EF4444' },
           { label: 'Evolução do braço', value: armDiff !== null ? `${armDiff > 0 ? '+' : ''}${armDiff}cm` : '—', sub: first && last ? `De ${first.arm}cm → ${last.arm}cm` : 'Sem dados ainda', trend: armDiff !== null && armDiff > 0, color: '#8B5CF6' },
         ].map(c => (
-          <div key={c.label} style={{ background: 'white', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+          <div key={c.label} style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '16px 18px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <span style={{ fontSize: 12, color: '#6B7280', fontWeight: 500 }}>{c.label}</span>
+              <span style={{ fontSize: 12, color: 'var(--gray-500)', fontWeight: 500 }}>{c.label}</span>
               {c.trend ? <TrendingDown size={16} color={c.color} /> : <TrendingUp size={16} color={c.color} />}
             </div>
             <p style={{ margin: 0, fontSize: 24, fontWeight: 800, color: c.color }}>{c.value}</p>
-            <p style={{ margin: '4px 0 0', fontSize: 11, color: '#9CA3AF' }}>{c.sub}</p>
+            <p style={{ margin: '4px 0 0', fontSize: 11, color: 'var(--gray-400)' }}>{c.sub}</p>
           </div>
         ))}
       </div>
 
       {!hasData && (
-        <div style={{ background: 'white', borderRadius: 12, padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '48px 24px', textAlign: 'center', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
           <Scale size={40} color="#E5E7EB" style={{ marginBottom: 12 }} />
-          <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: '#374151' }}>Nenhuma medição ainda</p>
-          <p style={{ margin: '0 0 16px', fontSize: 13, color: '#9CA3AF' }}>Registre sua primeira medição para acompanhar a evolução</p>
+          <p style={{ margin: '0 0 6px', fontSize: 15, fontWeight: 700, color: 'var(--gray-700)' }}>Nenhuma medição ainda</p>
+          <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--gray-400)' }}>Registre sua primeira medição para acompanhar a evolução</p>
           <button className="btn-primary" onClick={() => setModal(true)}>
             <Plus size={16} /> Registrar Medidas
           </button>
@@ -155,9 +155,9 @@ export default function Progresso() {
 
       {hasData && (
         <>
-          <div style={{ background: 'white', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Evolução ao longo do tempo</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--gray-900)' }}>Evolução ao longo do tempo</h3>
               <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                 {METRICS.map(m => (
                   <button key={m.key} onClick={() => setActiveMetric(m.key)} style={{ fontSize: 11, fontWeight: 600, padding: '4px 10px', borderRadius: 20, border: 'none', cursor: 'pointer', background: activeMetric === m.key ? m.color : '#F3F4F6', color: activeMetric === m.key ? 'white' : '#6B7280', transition: 'all 0.15s' }}>
@@ -177,29 +177,29 @@ export default function Progresso() {
             </ResponsiveContainer>
           </div>
 
-          <div style={{ background: 'white', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
-            <div style={{ padding: '16px 18px', borderBottom: '1px solid #F3F4F6' }}>
-              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: '#111827' }}>Histórico de Medições</h3>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, boxShadow: '0 1px 3px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
+            <div style={{ padding: '16px 18px', borderBottom: '1px solid var(--border-light)' }}>
+              <h3 style={{ margin: 0, fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>Histórico de Medições</h3>
             </div>
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
                 <thead>
-                  <tr style={{ background: '#F9FAFB' }}>
+                  <tr style={{ background: 'var(--bg-page)' }}>
                     {['Data', 'Peso', '% Gord.', 'Cintura', 'Peito', 'Braço', 'Quadril'].map(h => (
-                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{h}</th>
+                      <th key={h} style={{ padding: '10px 14px', textAlign: 'left', fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {[...measurements].reverse().map(m => (
-                    <tr key={m.id} style={{ borderBottom: '1px solid #F9FAFB' }} className="table-row">
-                      <td style={{ padding: '12px 14px', fontWeight: 600, color: '#374151' }}>{new Date(m.date + 'T12:00:00').toLocaleDateString('pt-BR')}</td>
+                    <tr key={m.id} style={{ borderBottom: '1px solid var(--border-light)' }} className="table-row">
+                      <td style={{ padding: '12px 14px', fontWeight: 600, color: 'var(--gray-700)' }}>{new Date(m.date + 'T12:00:00').toLocaleDateString('pt-BR')}</td>
                       <td style={{ padding: '12px 14px', color: '#3B82F6', fontWeight: 700 }}>{m.weight}kg</td>
                       <td style={{ padding: '12px 14px', color: '#EF4444', fontWeight: 700 }}>{m.body_fat}%</td>
-                      <td style={{ padding: '12px 14px', color: '#374151' }}>{m.waist}cm</td>
-                      <td style={{ padding: '12px 14px', color: '#374151' }}>{m.chest}cm</td>
+                      <td style={{ padding: '12px 14px', color: 'var(--gray-700)' }}>{m.waist}cm</td>
+                      <td style={{ padding: '12px 14px', color: 'var(--gray-700)' }}>{m.chest}cm</td>
                       <td style={{ padding: '12px 14px', color: '#8B5CF6', fontWeight: 700 }}>{m.arm}cm</td>
-                      <td style={{ padding: '12px 14px', color: '#374151' }}>{m.hip}cm</td>
+                      <td style={{ padding: '12px 14px', color: 'var(--gray-700)' }}>{m.hip}cm</td>
                     </tr>
                   ))}
                 </tbody>
@@ -211,11 +211,11 @@ export default function Progresso() {
 
       {/* Evolução de cargas por exercício */}
       {exerciseLogs.length > 0 && (
-        <div style={{ background: 'white', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+        <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Evolução de Cargas</h3>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--gray-900)' }}>Evolução de Cargas</h3>
             <select value={selectedExercise} onChange={e => setSelectedExercise(e.target.value)}
-              style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid #E5E7EB', fontSize: 13, color: '#374151', outline: 'none', background: 'white', maxWidth: 240 }}>
+              style={{ padding: '6px 12px', borderRadius: 8, border: '1.5px solid var(--border)', fontSize: 13, color: 'var(--gray-700)', outline: 'none', background: 'var(--bg-surface)', maxWidth: 240 }}>
               <option value="">Selecione um exercício</option>
               {exerciseNames.map(n => <option key={n} value={n}>{n}</option>)}
             </select>
@@ -226,14 +226,14 @@ export default function Progresso() {
               {diffLoad !== null && (
                 <div style={{ display: 'flex', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
                   {[
-                    { label: 'Carga inicial', value: `${firstLoad}kg`, color: '#9CA3AF' },
+                    { label: 'Carga inicial', value: `${firstLoad}kg`, color: 'var(--gray-400)' },
                     { label: 'Carga atual', value: `${lastLoad}kg`, color: '#3B82F6' },
                     { label: 'Evolução', value: `${diffLoad >= 0 ? '+' : ''}${diffLoad}kg`, color: diffLoad >= 0 ? '#10B981' : '#EF4444' },
                     { label: 'Sessões', value: loadChartData.length, color: '#8B5CF6' },
                   ].map(s => (
-                    <div key={s.label} style={{ background: '#F9FAFB', borderRadius: 10, padding: '10px 14px' }}>
+                    <div key={s.label} style={{ background: 'var(--bg-page)', borderRadius: 10, padding: '10px 14px' }}>
                       <p style={{ margin: 0, fontSize: 18, fontWeight: 900, color: s.color }}>{s.value}</p>
-                      <p style={{ margin: '2px 0 0', fontSize: 11, color: '#9CA3AF' }}>{s.label}</p>
+                      <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--gray-400)' }}>{s.label}</p>
                     </div>
                   ))}
                 </div>
@@ -250,7 +250,7 @@ export default function Progresso() {
             </>
           )}
           {!selectedExercise && (
-            <p style={{ textAlign: 'center', color: '#9CA3AF', fontSize: 13, padding: '16px 0' }}>Selecione um exercício para ver a evolução de carga</p>
+            <p style={{ textAlign: 'center', color: 'var(--gray-400)', fontSize: 13, padding: '16px 0' }}>Selecione um exercício para ver a evolução de carga</p>
           )}
         </div>
       )}
@@ -268,19 +268,19 @@ export default function Progresso() {
         const top = Object.values(exMap).sort((a, b) => b.est1rm - a.est1rm).slice(0, 8);
         if (top.length === 0) return null;
         return (
-          <div style={{ background: 'white', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
               <Zap size={16} color="#F59E0B" />
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Estimativa de Força (1RM)</h3>
-              <span style={{ marginLeft: 'auto', fontSize: 10, color: '#9CA3AF', fontStyle: 'italic' }}>Fórmula de Epley</span>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--gray-900)' }}>Estimativa de Força (1RM)</h3>
+              <span style={{ marginLeft: 'auto', fontSize: 10, color: 'var(--gray-400)', fontStyle: 'italic' }}>Fórmula de Epley</span>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {top.map((item, i) => (
-                <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: '#F9FAFB' }}>
-                  <span style={{ fontSize: 11, fontWeight: 900, color: '#D1D5DB', minWidth: 20 }}>#{i + 1}</span>
+                <div key={item.name} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', borderRadius: 10, background: 'var(--bg-page)' }}>
+                  <span style={{ fontSize: 11, fontWeight: 900, color: 'var(--gray-400)', minWidth: 20 }}>#{i + 1}</span>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#111827', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
-                    <p style={{ margin: 0, fontSize: 11, color: '#9CA3AF' }}>base: {item.load}kg × {item.reps} reps</p>
+                    <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--gray-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.name}</p>
+                    <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>base: {item.load}kg × {item.reps} reps</p>
                   </div>
                   <span style={{ fontSize: 18, fontWeight: 900, color: '#3B82F6', flexShrink: 0 }}>{item.est1rm}kg</span>
                 </div>
@@ -304,12 +304,12 @@ export default function Progresso() {
         if (weeks.length < 2) return null;
         const thisWeek = wv[getWeekKey(new Date().toISOString())] || 0;
         return (
-          <div style={{ background: 'white', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
+          <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '20px 16px', boxShadow: '0 1px 3px rgba(0,0,0,0.08)', marginBottom: 20 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
               <BarChart2 size={16} color="#8B5CF6" />
-              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#111827' }}>Volume Semanal</h3>
+              <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: 'var(--gray-900)' }}>Volume Semanal</h3>
             </div>
-            <p style={{ margin: '0 0 12px', fontSize: 12, color: '#9CA3AF' }}>Esta semana: {Math.round(thisWeek / 100) / 10}t de volume total</p>
+            <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--gray-400)' }}>Esta semana: {Math.round(thisWeek / 100) / 10}t de volume total</p>
             <svg viewBox="0 0 300 110" style={{ width: '100%', height: 120, display: 'block' }} preserveAspectRatio="none">
               {[0.25, 0.5, 0.75, 1].map(pct => (
                 <line key={pct} x1={0} y1={90 - pct * 86} x2={300} y2={90 - pct * 86} stroke="#F3F4F6" strokeWidth={0.8} />
@@ -335,9 +335,9 @@ export default function Progresso() {
       {modal && (
         <div className="modal-overlay" onClick={() => setModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid #F3F4F6' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-light)' }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Registrar Medidas</h3>
-              <button onClick={() => setModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6B7280', display: 'flex' }}><X size={20} /></button>
+              <button onClick={() => setModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-500)', display: 'flex' }}><X size={20} /></button>
             </div>
             <form onSubmit={save} style={{ padding: 24 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -348,7 +348,7 @@ export default function Progresso() {
                   ))}
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid #F3F4F6' }}>
+              <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
                 <button type="button" className="btn-secondary" onClick={() => setModal(false)}>Cancelar</button>
                 <button type="submit" className="btn-primary" disabled={saving}>{saving ? 'Salvando...' : 'Salvar Medidas'}</button>
               </div>
@@ -360,3 +360,5 @@ export default function Progresso() {
     </div>
   );
 }
+
+

@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+﻿import { useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Zap, Eye, EyeOff, AlertCircle, Dumbbell, User, ChevronLeft, Users, BarChart2, MessageCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -195,7 +195,7 @@ export default function Login() {
   const isPersonal = role === 'personal';
   const accentColor = isPersonal ? '#3B82F6' : '#10B981';
   const accentGrad = isPersonal
-    ? 'linear-gradient(135deg, #3B82F6, #8B5CF6)'
+    ? 'var(--accent)'
     : 'linear-gradient(135deg, #10B981, #059669)';
 
   /* Mobile: tap on card → ripple → form */
@@ -256,7 +256,7 @@ export default function Login() {
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: 0, position: 'relative', zIndex: 2 }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, animation: 'fadeInUp .6s ease both' }}>
-            <div style={{ width: 46, height: 46, borderRadius: 14, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'glowPulse 3s ease-in-out infinite' }}>
+            <div style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'glowPulse 3s ease-in-out infinite' }}>
               <Zap size={24} color="white" fill="white" />
             </div>
             <span style={{ fontSize: 30, fontWeight: 900, color: 'white', letterSpacing: '-1px' }}>WAY FIT</span>
@@ -336,7 +336,7 @@ export default function Login() {
               accentGrad={accentGrad}
             />
 
-            <div style={{ marginTop: 20, paddingTop: 18, borderTop: '1px solid #F3F4F6', textAlign: 'center' }}>
+            <div style={{ marginTop: 20, paddingTop: 18, borderTop: '1px solid var(--border)', textAlign: 'center' }}>
               <p style={{ margin: 0, fontSize: 13, color: '#9CA3AF' }}>
                 {isPersonal
                   ? <>Sem conta?{' '}<Link to="/registro" style={{ color: '#3B82F6', fontWeight: 700, textDecoration: 'none' }}>Cadastre-se grátis</Link></>
@@ -366,7 +366,7 @@ export default function Login() {
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: role ? 24 : 40, position: 'relative', zIndex: 1, animation: 'fadeInUp .6s ease both', transition: 'margin .4s ease' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: role ? 0 : 12 }}>
-            <div style={{ width: 50, height: 50, borderRadius: 15, background: 'linear-gradient(135deg, #3B82F6, #8B5CF6)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'logoFloat 3s ease-in-out infinite, glowPulse 3s ease-in-out infinite' }}>
+            <div style={{ width: 50, height: 50, borderRadius: 15, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'logoFloat 3s ease-in-out infinite, glowPulse 3s ease-in-out infinite' }}>
               <Zap size={27} color="white" fill="white" />
             </div>
             <span style={{ fontSize: 34, fontWeight: 900, color: 'white', letterSpacing: '-1px' }}>WAY FIT</span>
@@ -454,3 +454,4 @@ export default function Login() {
     </>
   );
 }
+

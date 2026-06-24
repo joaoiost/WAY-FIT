@@ -1,11 +1,10 @@
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Users, Calendar, Dumbbell, Salad } from 'lucide-react';
+import { LayoutDashboard, Users, Dumbbell, Salad } from 'lucide-react';
 
 const TABS = [
   { to: '/dashboard',          icon: LayoutDashboard, label: 'Início',   end: true },
   { to: '/dashboard/alunos',   icon: Users,           label: 'Alunos'   },
   { to: '/dashboard/treinos',  icon: Dumbbell,        label: 'Treinos'  },
-  { to: '/dashboard/agenda',   icon: Calendar,        label: 'Agenda'   },
   { to: '/dashboard/nutricao', icon: Salad,           label: 'Nutrição' },
 ];
 

@@ -1,6 +1,6 @@
 import { NavLink, useNavigate, Link } from 'react-router-dom';
 import {
-  Zap, LayoutDashboard, Users, Calendar, Dumbbell,
+  Zap, LayoutDashboard, Users, Dumbbell,
   DollarSign, Bell, LogOut, X, Settings, ClipboardList,
   MessageCircle, Salad, Apple, BookOpen, UsersRound, SlidersHorizontal,
 } from 'lucide-react';
@@ -14,7 +14,6 @@ const NAV = [
       { to: '/dashboard',           icon: LayoutDashboard, label: 'Início',    end: true },
       { to: '/dashboard/alunos',    icon: Users,           label: 'Alunos'    },
       { to: '/dashboard/treinos',   icon: Dumbbell,        label: 'Treinos'   },
-      { to: '/dashboard/agenda',    icon: Calendar,        label: 'Agenda'    },
       { to: '/dashboard/cartilhas', icon: BookOpen,        label: 'Cartilhas' },
       { to: '/dashboard/turmas',    icon: UsersRound,      label: 'Turmas'    },
     ],

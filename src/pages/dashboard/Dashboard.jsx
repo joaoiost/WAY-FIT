@@ -1,14 +1,14 @@
 ﻿import { useState, useEffect } from 'react';
-import { Users, Calendar, DollarSign, Check, MessageCircle, ChevronRight, Clock, Zap, AlertTriangle, TrendingUp, Bell, CheckCircle, Dumbbell, ArrowUp, ArrowDown, Activity } from 'lucide-react';
+import { Users, Calendar, DollarSign, Check, ChevronRight, Clock, Zap, AlertTriangle, TrendingUp, Bell, CheckCircle, Dumbbell, ArrowUp, ArrowDown, Activity } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/UI/Avatar';
 import Badge from '../../components/UI/Badge';
+import WeeklyAgenda from '../../components/Dashboard/WeeklyAgenda';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 // mockData removed
 
 const TODAY         = new Date().toISOString().slice(0, 10);
-const TOMORROW      = new Date(Date.now() + 86400000).toISOString().slice(0, 10);
 const MONTH_START   = `${TODAY.slice(0, 7)}-01`;
 const LAST_MONTH_START = (() => { const d = new Date(TODAY); d.setMonth(d.getMonth()-1); d.setDate(1); return d.toISOString().slice(0,10); })();
 const LAST_MONTH_END   = (() => { const d = new Date(TODAY); d.setDate(0); return d.toISOString().slice(0,10); })();
@@ -38,11 +38,9 @@ export default function Dashboard() {
   const navigate    = useNavigate();
   const [students, setStudents]             = useState([]);
   const [todayAppts, setTodayAppts]         = useState([]);
-  const [tomorrowAppts, setTomorrowAppts]   = useState([]);
   const [revenue, setRevenue]               = useState(0);
   const [lastMonthRevenue, setLastMonthRevenue] = useState(0);
   const [weekSessions, setWeekSessions]     = useState(0);
-  const [markingDone, setMarkingDone]       = useState(null);
   const [alerts, setAlerts]                 = useState([]);
   const [notifyingId, setNotifyingId]       = useState(null);
   const [notifiedIds, setNotifiedIds]       = useState(new Set());
@@ -60,7 +58,7 @@ export default function Dashboard() {
       const sevenDaysAgo = new Date(Date.now() - 7*86400000).toISOString().slice(0,10);
       Promise.all([
         supabase.from('students').select('*').eq('personal_id', user.id),
-        supabase.from('appointments').select('*').eq('personal_id', user.id).in('date', [TODAY, TOMORROW]),
+        supabase.from('appointments').select('*').eq('personal_id', user.id).eq('date', TODAY),
         supabase.from('payments').select('amount, paid_at').eq('personal_id', user.id).eq('status', 'pago'),
         supabase.from('workout_sessions').select('student_id, date').eq('personal_id', user.id).gte('date', sevenDaysAgo),
         supabase.from('students').select('id, name, color, initials').eq('personal_id', user.id).eq('status', 'ativo'),
@@ -70,9 +68,7 @@ export default function Dashboard() {
         supabase.from('payments').select('amount').eq('personal_id', user.id).eq('status', 'pendente'),
       ]).then(([{data:stds},{data:appts},{data:pays},{data:wk},{data:sts},{data:sessions},{data:latePayments},{data:sixMoPays},{data:pendingPays}]) => {
         setStudents(stds || []);
-        const all = appts || [];
-        setTodayAppts(all.filter(a => a.date === TODAY).sort((a,b) => a.time.localeCompare(b.time)));
-        setTomorrowAppts(all.filter(a => a.date === TOMORROW).sort((a,b) => a.time.localeCompare(b.time)));
+        setTodayAppts((appts || []).sort((a,b) => a.time.localeCompare(b.time)));
 
         const allPays = pays || [];
         const thisRev = allPays.filter(p => (p.paid_at||'').startsWith(TODAY.slice(0,7))).reduce((s,p)=>s+Number(p.amount),0);
@@ -103,23 +99,8 @@ export default function Dashboard() {
     }
   }, [user?.id]);
 
-  const handleMarkDone = async (appt) => {
-    setMarkingDone(appt.id);
-    if (hasSupabase) {
-      await supabase.from('appointments').update({ status:'done' }).eq('id', appt.id);
-      await supabase.from('attendances').upsert({ personal_id:user.id, student_id:appt.student_id, appointment_id:appt.id, date:appt.date, status:'present' }, { onConflict:'student_id,date' });
-    }
-    setTodayAppts(prev => prev.map(a => a.id===appt.id ? {...a, status:'done'} : a));
-    setMarkingDone(null);
-  };
-
-  const handleWhatsApp = (appt) => {
-    const student = students.find(s => String(s.id)===String(appt.student_id));
-    if (!student?.phone) return;
-    const phone = student.phone.replace(/\D/g,'');
-    const full  = phone.startsWith('55') ? phone : `55${phone}`;
-    const msg   = `Olá ${(appt.student_name||'').split(' ')[0]}! Lembrando da sua aula de ${appt.type} hoje às ${appt.time}. Te vejo lá! 💪`;
-    window.open(`https://wa.me/${full}?text=${encodeURIComponent(msg)}`, '_blank');
+  const scrollToAgenda = () => {
+    document.getElementById('agenda-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   const handleNotifyInactive = async (e, student) => {
@@ -170,6 +151,9 @@ export default function Dashboard() {
         </div>
       </div>
 
+      {/* ── Agenda da semana ── */}
+      <WeeklyAgenda />
+
       {/* ── Primeiros passos ── */}
       {students.length === 0 && (
         <div className="card card-0" style={{ marginBottom: 24 }}>
@@ -185,7 +169,7 @@ export default function Dashboard() {
           {[
             { n:1, icon:Users,    label:'accent',  title:'Convide seu primeiro aluno',  desc:'Gere um link — o aluno cria a conta pelo celular',       cta:'Ir para Alunos', to:'/dashboard/alunos' },
             { n:2, icon:Dumbbell, label:'purple',  title:'Monte o treino dele',         desc:'Crie um plano com exercícios, séries e carga',            cta:'Criar treino',   to:'/dashboard/treinos' },
-            { n:3, icon:Calendar, label:'green',   title:'Agende a primeira aula',      desc:'Confirme o horário e envie lembrete automático',          cta:'Ver agenda',     to:'/dashboard/agenda' },
+            { n:3, icon:Calendar, label:'green',   title:'Agende a primeira aula',      desc:'A agenda da semana já está aqui em cima ↑',               cta:'Ver agenda',     scroll:true },
           ].map((s, idx) => (
             <div key={s.n} className="list-row" style={{ padding:'16px 20px', borderBottom: idx < 2 ? '1px solid var(--border-light)' : 'none' }}>
               <div className={`icon-box icon-box-md icon-box-${s.label}`} style={{ borderRadius: 12 }}>
@@ -196,7 +180,7 @@ export default function Dashboard() {
                 <p className="list-row-title">{s.title}</p>
                 <p className="list-row-sub">{s.desc}</p>
               </div>
-              <button onClick={() => navigate(s.to)} className="btn-secondary" style={{ fontSize:12, padding:'7px 14px', whiteSpace:'nowrap' }}>
+              <button onClick={() => s.scroll ? scrollToAgenda() : navigate(s.to)} className="btn-secondary" style={{ fontSize:12, padding:'7px 14px', whiteSpace:'nowrap' }}>
                 {s.cta} <ChevronRight size={12} />
               </button>
             </div>
@@ -210,9 +194,9 @@ export default function Dashboard() {
           { label:'Alunos ativos',    value:activeStudents.length,                      sub:<TrendBadge current={activeStudents.length} previous={activeLastMonth||activeStudents.length-2} />, icon:Users,    iconClass:'icon-box-accent',  barColor:'var(--accent)',  to:'/dashboard/alunos',    badge: atRiskCount>0 ? {text:`${atRiskCount} em risco`, cls:'badge-yellow'} : null },
           { label:'Receita no mês',   value:`R$ ${revenue.toLocaleString('pt-BR')}`,    sub:<TrendBadge current={revenue} previous={lastMonthRevenue} />,                                       icon:DollarSign,iconClass:'icon-box-green',   barColor:'var(--green)',   to:'/dashboard/financeiro' },
           { label:'Aulas esta semana',value:weekSessions,                                sub:<span style={{fontSize:11,color:'var(--gray-400)'}}>sessões registradas</span>,                      icon:Activity, iconClass:'icon-box-purple', barColor:'#7C3AED',        to:'/dashboard/frequencia' },
-          { label:'Aulas hoje',       value:todayAppts.length,                           sub: pendingToday>0 ? <span style={{fontSize:11,color:'var(--yellow)',fontWeight:700}}>{pendingToday} pendente{pendingToday>1?'s':''}</span> : <span style={{fontSize:11,color:'var(--green)',fontWeight:700}}>em dia ✓</span>, icon:Calendar, iconClass:'icon-box-yellow', barColor:'var(--yellow)', to:'/dashboard/agenda', badge: latePayCount>0 ? {text:`${latePayCount} pgto atrasado`, cls:'badge-red'} : null },
+          { label:'Aulas hoje',       value:todayAppts.length,                           sub: pendingToday>0 ? <span style={{fontSize:11,color:'var(--yellow)',fontWeight:700}}>{pendingToday} pendente{pendingToday>1?'s':''}</span> : <span style={{fontSize:11,color:'var(--green)',fontWeight:700}}>em dia ✓</span>, icon:Calendar, iconClass:'icon-box-yellow', barColor:'var(--yellow)', scroll:true, badge: latePayCount>0 ? {text:`${latePayCount} pgto atrasado`, cls:'badge-red'} : null },
         ].map(s => (
-          <div key={s.label} className="kpi-card" onClick={() => navigate(s.to)}>
+          <div key={s.label} className="kpi-card" onClick={() => s.scroll ? scrollToAgenda() : navigate(s.to)}>
             <div className="kpi-card-top">
               <div className={`icon-box icon-box-md ${s.iconClass}`}><s.icon size={18} /></div>
               {s.badge && <span className={`badge ${s.badge.cls}`}>{s.badge.text}</span>}
@@ -271,12 +255,12 @@ export default function Dashboard() {
       {students.length > 0 && (
         <div className="filter-pills" style={{ marginBottom: 20 }}>
           {[
-            { label:'+ Nova aula',   to:'/dashboard/agenda',     cls:'icon-box-blue'   },
+            { label:'+ Nova aula',   scroll:true,                cls:'icon-box-blue'   },
             { label:'+ Aluno',       to:'/dashboard/alunos',     cls:'icon-box-green'  },
             { label:'+ Treino',      to:'/dashboard/treinos',    cls:'icon-box-purple' },
             { label:'Financeiro',    to:'/dashboard/financeiro', cls:'icon-box-yellow' },
           ].map(a => (
-            <button key={a.to} onClick={() => navigate(a.to)} className="pill active" style={{ borderRadius: 8 }}>
+            <button key={a.label} onClick={() => a.scroll ? scrollToAgenda() : navigate(a.to)} className="pill active" style={{ borderRadius: 8 }}>
               {a.label}
             </button>
           ))}
@@ -284,89 +268,7 @@ export default function Dashboard() {
       )}
 
       {/* ── Main grid ── */}
-      <div className="dashboard-main-grid" style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
-
-        {/* Agenda de hoje */}
-        <div className="card card-0">
-          <div className="card-header">
-            <div>
-              <h3 className="section-title">Agenda de Hoje</h3>
-              <p className="section-desc" style={{ textTransform:'capitalize' }}>
-                {new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'short'})}
-                {todayAppts.length > 0 && ` · ${todayAppts.length} aula${todayAppts.length>1?'s':''}`}
-              </p>
-            </div>
-            <button onClick={() => navigate('/dashboard/agenda')} className="pill active" style={{ fontSize:12 }}>
-              Ver tudo <ChevronRight size={12} />
-            </button>
-          </div>
-          <div className="card-body">
-            {todayAppts.length === 0 ? (
-              <div className="empty-state" style={{ padding:'28px 0' }}>
-                <div className="empty-state-icon"><Calendar size={24} /></div>
-                <p className="empty-state-title">Dia livre hoje</p>
-                <p className="empty-state-desc">Aproveite para planejar a semana</p>
-                <button onClick={() => navigate('/dashboard/agenda')} className="btn-primary" style={{ marginTop:4 }}>
-                  + Agendar aula
-                </button>
-              </div>
-            ) : (
-              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-                {todayAppts.map(appt => {
-                  const student   = students.find(s => String(s.id)===String(appt.student_id));
-                  const isDone    = appt.status === 'done';
-                  const isCancelled = appt.status === 'cancelled';
-                  const loading   = markingDone === appt.id;
-                  const accentColor = appt.color || 'var(--accent)';
-                  return (
-                    <div key={appt.id} style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 12px', borderRadius:'var(--radius)', background: isDone?'#F0FDF4':isCancelled?'#FEF2F2':'var(--gray-50)', border:`1px solid ${isDone?'#BBF7D0':isCancelled?'#FECACA':'var(--border-light)'}`, opacity: isCancelled?0.7:1 }}>
-                      <div style={{ width:3, height:36, borderRadius:3, background: isCancelled?'var(--red)':isDone?'var(--green)':accentColor, flexShrink:0 }} />
-                      <div style={{ width:34, height:34, borderRadius:'50%', background:student?.color||'var(--gray-500)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:12, fontWeight:800, color:'white', flexShrink:0 }}>
-                        {(student?.initials || appt.student_name?.slice(0,2) || 'AL').toUpperCase()}
-                      </div>
-                      <div className="list-row-body">
-                        <p className="list-row-title">{appt.student_name || appt.studentName}</p>
-                        <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                          <span style={{ fontSize:11, fontWeight:700, color:'var(--gray-700)' }}>{(appt.time||'').slice(0,5)}</span>
-                          <span style={{ fontSize:10, color:accentColor, fontWeight:600, background:accentColor+'18', padding:'1px 6px', borderRadius:10 }}>{appt.type}</span>
-                        </div>
-                      </div>
-                      {isDone ? (
-                        <span className="badge badge-green"><Check size={10} style={{marginRight:3}} />Feita</span>
-                      ) : isCancelled ? (
-                        <span className="badge badge-red">Cancelada</span>
-                      ) : (
-                        <div style={{ display:'flex', gap:5, flexShrink:0 }}>
-                          {student?.phone && (
-                            <button onClick={() => handleWhatsApp(appt)} className="header-icon-btn" title="Enviar lembrete WhatsApp">
-                              <MessageCircle size={15} color="#25D366" />
-                            </button>
-                          )}
-                          <button onClick={() => handleMarkDone(appt)} disabled={loading} className="header-icon-btn" style={{ background:'#ECFDF5' }} title="Marcar como concluída">
-                            <Check size={15} color="var(--green)" />
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {tomorrowAppts.length > 0 && (
-              <div style={{ marginTop:14, paddingTop:12, borderTop:'1px solid var(--border-light)' }}>
-                <p className="section-label" style={{ marginBottom:8 }}>Amanhã — {tomorrowAppts.length} aula{tomorrowAppts.length>1?'s':''}</p>
-                <div style={{ display:'flex', gap:5, flexWrap:'wrap' }}>
-                  {tomorrowAppts.map(appt => (
-                    <span key={appt.id} style={{ fontSize:11, padding:'4px 10px', borderRadius:20, background:`${appt.color||'var(--accent)'}12`, color:appt.color||'var(--accent)', fontWeight:700, border:`1px solid ${appt.color||'var(--accent)'}25` }}>
-                      {(appt.time||'').slice(0,5)} · {(appt.student_name||'').split(' ')[0]}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+      <div className="dashboard-main-grid" style={{ display:'grid', gridTemplateColumns:'1fr', gap:16 }}>
 
         {/* Alunos */}
         <div className="card card-0">

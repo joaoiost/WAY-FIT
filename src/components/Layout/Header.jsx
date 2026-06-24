@@ -16,7 +16,6 @@ const TYPE_COLORS = {
 const PAGE_NAMES = {
   '/dashboard':            'Dashboard',
   '/dashboard/alunos':     'Alunos',
-  '/dashboard/agenda':     'Agenda',
   '/dashboard/treinos':    'Treinos',
   '/dashboard/financeiro': 'Financeiro',
   '/dashboard/whatsapp':   'Notificações',

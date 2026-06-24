@@ -23,7 +23,6 @@ const OnboardingPersonal = lazy(() => import('./pages/OnboardingPersonal'));
 const Dashboard          = lazy(() => import('./pages/dashboard/Dashboard'));
 const Alunos             = lazy(() => import('./pages/dashboard/Alunos'));
 const AlunoDetalhe       = lazy(() => import('./pages/dashboard/AlunoDetalhe'));
-const Agenda             = lazy(() => import('./pages/dashboard/Agenda'));
 const Treinos            = lazy(() => import('./pages/dashboard/Treinos'));
 const Financeiro         = lazy(() => import('./pages/dashboard/Financeiro'));
 const WhatsApp           = lazy(() => import('./pages/dashboard/WhatsApp'));
@@ -152,7 +151,6 @@ export default function App() {
                 <Route path="/onboarding" element={<OnboardingPersonal />} />
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/dashboard/alunos" element={<Alunos />} />
-                <Route path="/dashboard/agenda" element={<Agenda />} />
                 <Route path="/dashboard/treinos" element={<Treinos />} />
                 <Route path="/dashboard/financeiro" element={<Financeiro />} />
                 <Route path="/dashboard/whatsapp" element={<WhatsApp />} />

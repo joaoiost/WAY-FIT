@@ -7,6 +7,7 @@ import {
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { searchExercises, EXERCISE_LIBRARY } from '../../data/exerciseLibrary';
+import { STARTER_TEMPLATES } from '../../data/starterTemplates';
 
 // ─── Constantes ────────────────────────────────────────────────────────────────
 
@@ -44,6 +45,16 @@ const TYPE_DEFAULTS = {
 
 const REPS_Q = ['6', '8', '10', '12', '15', '20', 'Falha'];
 const REST_Q  = ['30s', '45s', '60s', '75s', '90s', '2min'];
+
+// Presets de frequência semanal — elimina a decisão manual de "qual dia".
+const DAY_PRESETS = [
+  { label: '2x/sem', sub: 'Ter/Qui',     days: [2, 4] },
+  { label: '3x/sem', sub: 'Seg/Qua/Sex', days: [1, 3, 5] },
+  { label: '4x/sem', sub: 'Seg/Ter/Qui/Sex', days: [1, 2, 4, 5] },
+  { label: '5x/sem', sub: 'Seg a Sex',   days: [1, 2, 3, 4, 5] },
+  { label: '6x/sem', sub: 'Seg a Sáb',   days: [1, 2, 3, 4, 5, 6] },
+  { label: 'Todo dia', sub: '7 dias',    days: [0, 1, 2, 3, 4, 5, 6] },
+];
 const AI_LEVELS = {
   Iniciante:     { sets: '3', reps: '12', rest: '60s', n: 5 },
   Intermediário: { sets: '4', reps: '10', rest: '75s', n: 6 },
@@ -68,6 +79,25 @@ function genAI(groups, level) {
       .forEach(e => out.push({ id: Date.now() + out.length, name: e.name, sets: p.sets, reps: p.reps, rest: p.rest, load: '', obs: '', order_index: out.length }));
   });
   return out.slice(0, p.n);
+}
+
+// ─── DayPresetChips ───────────────────────────────────────────────────────────
+// Substitui a escolha manual dia-a-dia por presets de frequência.
+
+function DayPresetChips({ onApply, color = 'var(--accent)' }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+      {DAY_PRESETS.map(p => (
+        <button key={p.label} type="button" onClick={() => onApply(p.days)}
+          title={p.sub}
+          style={{ padding: '6px 10px', borderRadius: 20, fontSize: 11, fontWeight: 700, border: `1.5px solid ${color}40`, background: `${color}12`, color, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'all 0.12s' }}
+          onMouseEnter={e => e.currentTarget.style.background = `${color}22`}
+          onMouseLeave={e => e.currentTarget.style.background = `${color}12`}>
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
 }
 
 // ─── Toast ────────────────────────────────────────────────────────────────────
@@ -260,13 +290,13 @@ function ExerciseCard({ ex, index, onChange, onDelete, onDuplicate }) {
 
 // ─── AIModal ──────────────────────────────────────────────────────────────────
 
-function AIModal({ onApply, onClose }) {
+function AIModal({ onApply, onClose, zIndex = 400 }) {
   const [groups, setGroups] = useState([]);
   const [level,  setLevel]  = useState('Intermediário');
   const toggle = (g) => setGroups(p => p.includes(g) ? p.filter(x => x !== g) : [...p, g]);
 
   return (
-    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
       <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-surface)', borderRadius: 20, padding: 28, width: '100%', maxWidth: 420 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
           <div style={{ width: 40, height: 40, borderRadius: 12, background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -312,7 +342,7 @@ function AIModal({ onApply, onClose }) {
 
 // ─── TemplateEditor ───────────────────────────────────────────────────────────
 
-function TemplateEditor({ item, mode = 'template', studentId, studentName, defaultDays, students = [], onSave, onClose }) {
+function TemplateEditor({ item, mode = 'template', studentId, studentName, defaultDays, students = [], onSave, onClose, zIndex = 300 }) {
   const isNew   = !item?.id;
   const [name,        setName]        = useState(item?.name  || '');
   const [type,        setType]        = useState(item?.type  || 'Hipertrofia');
@@ -348,6 +378,11 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
     [dv]: prev[dv] === 'empty' ? 'plan' : prev[dv] === 'plan' ? 'rest' : 'empty',
   }));
   const clearAssignWeek = () => setAssignWeek(prev => { const w = {}; DAYS.forEach(d => { w[d.v] = 'empty'; }); return w; });
+  const applyAssignPreset = (presetDays) => {
+    const w = {};
+    DAYS.forEach(d => { w[d.v] = presetDays.includes(d.v) ? 'plan' : 'empty'; });
+    setAssignWeek(w);
+  };
 
   const planDays  = Object.entries(assignWeek).filter(([, s]) => s === 'plan').map(([d]) => parseInt(d));
   const assignSet = assignStu && planDays.length > 0;
@@ -382,7 +417,7 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
 
   return (
     <>
-      <div style={{ position: 'fixed', inset: 0, zIndex: 300, background: 'var(--bg-page)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex, background: 'var(--bg-page)', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
 
         {/* Header */}
         <div style={{ padding: '14px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, background: 'var(--bg-surface)' }}>
@@ -432,7 +467,11 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
 
               {mode === 'plan' && (
                 <>
-                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Dias do treino</label>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Frequência</label>
+                  <div style={{ marginBottom: 10 }}>
+                    <DayPresetChips color={color} onApply={setDays} />
+                  </div>
+                  <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', display: 'block', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Ou escolha os dias manualmente</label>
                   <div style={{ display: 'flex', gap: 6 }}>
                     {DAYS.map(d => { const sel = days.includes(d.v); return (
                       <button key={d.v} onClick={() => toggleDay(d.v)}
@@ -512,6 +551,9 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
                 {/* Grade 7 dias */}
                 {assignStu ? (
                   <>
+                    <div style={{ marginBottom: 10 }}>
+                      <DayPresetChips color={color} onApply={applyAssignPreset} />
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 8 }}>
                       {DAYS.map(d => {
                         const state = assignWeek[d.v];
@@ -561,6 +603,7 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
 
       {showAI && (
         <AIModal
+          zIndex={zIndex + 100}
           onApply={newExs => {
             setExs(newExs);
             setTimeout(() => exsListRef.current?.lastElementChild?.scrollIntoView({ behavior: 'smooth', block: 'end' }), 100);
@@ -690,7 +733,7 @@ function DayCell({ plan, isTarget, onAdd, onEdit, onRemove, onCopyTo }) {
 
 // ─── TemplateCard ─────────────────────────────────────────────────────────────
 
-function TemplateCard({ tpl, targeting, onSelect, onEdit, onAssignMultiple, onDelete, onDuplicate }) {
+function TemplateCard({ tpl, onEdit, onAssignMultiple, onDelete, onDuplicate }) {
   const [hov, setHov] = useState(false);
   const color   = tc(tpl.type);
   const exs     = [...(tpl.exercises || [])].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
@@ -699,22 +742,13 @@ function TemplateCard({ tpl, targeting, onSelect, onEdit, onAssignMultiple, onDe
 
   return (
     <div onMouseEnter={() => setHov(true)} onMouseLeave={() => setHov(false)}
-      onClick={targeting ? onSelect : undefined}
       style={{
-        background: targeting && hov ? color + '06' : 'var(--bg-surface)',
+        background: 'var(--bg-surface)',
         borderRadius: 16, overflow: 'hidden',
-        border: targeting
-          ? `2px solid ${hov ? color : 'var(--border)'}`
-          : '1.5px solid var(--border-light)',
-        boxShadow: targeting && hov
-          ? `0 8px 24px ${color}30`
-          : hov && !targeting
-          ? '0 8px 24px rgba(0,0,0,0.1)'
-          : '0 2px 8px rgba(0,0,0,0.05)',
-        cursor: targeting ? 'pointer' : 'default',
+        border: '1.5px solid var(--border-light)',
+        boxShadow: hov ? '0 8px 24px rgba(0,0,0,0.1)' : '0 2px 8px rgba(0,0,0,0.05)',
         transition: 'all 0.18s',
         display: 'flex', flexDirection: 'column',
-        transform: targeting && hov ? 'translateY(-2px)' : 'none',
       }}>
       <div style={{ height: 5, background: `linear-gradient(90deg, ${color}, ${color}77)` }} />
       <div style={{ padding: '13px 15px 10px', flex: 1 }}>
@@ -726,22 +760,20 @@ function TemplateCard({ tpl, targeting, onSelect, onEdit, onAssignMultiple, onDe
             </div>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--gray-900)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', letterSpacing: '-0.01em' }}>{tpl.name || 'Sem nome'}</p>
           </div>
-          {!targeting && (
-            <div style={{ display: 'flex', gap: 1, flexShrink: 0 }}>
-              <button onClick={e => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', padding: '4px 5px', display: 'flex', transition: 'color 0.1s', borderRadius: 6 }}
-                onMouseEnter={e => e.currentTarget.style.color = '#3B82F6'}
-                onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}>
-                <Copy size={12} />
-              </button>
-              <button onClick={e => { e.stopPropagation(); onDelete(); }}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', padding: '4px 5px', display: 'flex', transition: 'color 0.1s', borderRadius: 6 }}
-                onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
-                onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}>
-                <Trash2 size={13} />
-              </button>
-            </div>
-          )}
+          <div style={{ display: 'flex', gap: 1, flexShrink: 0 }}>
+            <button onClick={e => { e.stopPropagation(); onDuplicate(); }} title="Duplicar"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', padding: '4px 5px', display: 'flex', transition: 'color 0.1s', borderRadius: 6 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#3B82F6'}
+              onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}>
+              <Copy size={12} />
+            </button>
+            <button onClick={e => { e.stopPropagation(); onDelete(); }}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', padding: '4px 5px', display: 'flex', transition: 'color 0.1s', borderRadius: 6 }}
+              onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
+              onMouseLeave={e => e.currentTarget.style.color = '#D1D5DB'}>
+              <Trash2 size={13} />
+            </button>
+          </div>
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {preview.map((ex, i) => (
@@ -755,27 +787,20 @@ function TemplateCard({ tpl, targeting, onSelect, onEdit, onAssignMultiple, onDe
         {extra > 0 && <p style={{ margin: '5px 0 0', fontSize: 10, color: '#C4C9D4', fontStyle: 'italic' }}>+{extra} mais</p>}
       </div>
       <div style={{ padding: '10px 14px 13px', borderTop: '1px solid var(--border)' }}>
-        {targeting ? (
-          <button onClick={onSelect}
-            style={{ width: '100%', padding: '10px', borderRadius: 10, border: 'none', background: hov ? `linear-gradient(135deg, ${color}, ${color}bb)` : 'var(--bg-page)', color: hov ? 'white' : 'var(--gray-400)', fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, transition: 'all 0.15s', boxShadow: hov ? `0 4px 14px ${color}40` : 'none' }}>
-            <Check size={13} /> Usar neste dia
+        <div style={{ display: 'flex', gap: 6 }}>
+          <button onClick={e => { e.stopPropagation(); onEdit(); }}
+            style={{ flex: 1, padding: '9px 8px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--bg-surface)', fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, transition: 'border-color 0.1s, background 0.1s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gray-400)'; e.currentTarget.style.background = 'var(--bg-page)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}>
+            <Edit3 size={12} /> Editar
           </button>
-        ) : (
-          <div style={{ display: 'flex', gap: 6 }}>
-            <button onClick={e => { e.stopPropagation(); onEdit(); }}
-              style={{ flex: 1, padding: '9px 8px', borderRadius: 9, border: '1.5px solid var(--border)', background: 'var(--bg-surface)', fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, transition: 'border-color 0.1s, background 0.1s' }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gray-400)'; e.currentTarget.style.background = 'var(--bg-page)'; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}>
-              <Edit3 size={12} /> Editar
-            </button>
-            <button onClick={e => { e.stopPropagation(); onAssignMultiple(); }}
-              style={{ flex: 1, padding: '9px 8px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${color}, ${color}bb)`, fontSize: 12, fontWeight: 700, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, boxShadow: `0 3px 10px ${color}30`, transition: 'opacity 0.15s' }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
-              <Send size={11} /> Atribuir
-            </button>
-          </div>
-        )}
+          <button onClick={e => { e.stopPropagation(); onAssignMultiple(); }}
+            style={{ flex: 1, padding: '9px 8px', borderRadius: 9, border: 'none', background: `linear-gradient(135deg, ${color}, ${color}bb)`, fontSize: 12, fontWeight: 700, color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, boxShadow: `0 3px 10px ${color}30`, transition: 'opacity 0.15s' }}
+            onMouseEnter={e => e.currentTarget.style.opacity = '0.9'}
+            onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
+            <Send size={11} /> Atribuir
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -816,7 +841,11 @@ function AssignModal({ tpl, students, onAssign, onClose }) {
               </div>
               <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={18} /></button>
             </div>
-            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', display: 'block', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Dias da semana</label>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', display: 'block', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Frequência</label>
+            <div style={{ marginBottom: 12 }}>
+              <DayPresetChips color="#3B82F6" onApply={setDays} />
+            </div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', display: 'block', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Ou escolha manualmente</label>
             <div style={{ display: 'flex', gap: 5, marginBottom: 18 }}>
               {DAYS.map(d => { const sel = days.includes(d.v); return (
                 <button key={d.v} onClick={() => setDays(p => p.includes(d.v) ? p.filter(x => x !== d.v) : [...p, d.v])}
@@ -853,7 +882,7 @@ function AssignModal({ tpl, students, onAssign, onClose }) {
 
 // ─── WeekBuilderModal ─────────────────────────────────────────────────────────
 
-function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose }) {
+function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose, onCreateTemplate }) {
   const [week, setWeek] = useState(() => {
     const w = {};
     DAYS.forEach(d => {
@@ -864,6 +893,7 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose })
   });
   const [selected, setSelected] = useState(null); // null | 'rest' | template
   const [saving,   setSaving]   = useState(false);
+  const [creatingTemplate, setCreatingTemplate] = useState(false);
   const todayDow = new Date().getDay();
 
   const setDay = (dayV) => {
@@ -872,6 +902,17 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose })
       ...prev,
       [dayV]: selected === 'rest' ? { type: 'rest' } : { type: 'plan', tpl: selected },
     }));
+  };
+
+  const applyPreset = (presetDays) => {
+    if (!selected) return;
+    setWeek(prev => {
+      const next = { ...prev };
+      presetDays.forEach(dv => {
+        next[dv] = selected === 'rest' ? { type: 'rest' } : { type: 'plan', tpl: selected };
+      });
+      return next;
+    });
   };
 
   const clearDay = (dayV, e) => {
@@ -883,6 +924,15 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose })
     setSaving(true);
     await onSave(week, student.id);
     setSaving(false);
+  };
+
+  const handleCreateTemplate = async (payload) => {
+    const result = await onCreateTemplate(payload);
+    if (result) {
+      setSelected(result);
+      setCreatingTemplate(false);
+    }
+    return result;
   };
 
   const trainCount = Object.values(week).filter(d => d.type === 'plan').length;
@@ -910,17 +960,20 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose })
       </div>
 
       {/* Banner de instrução */}
-      <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--border-light)', background: selected ? selColor + '0c' : 'var(--bg-page)', flexShrink: 0, minHeight: 44, display: 'flex', alignItems: 'center' }}>
+      <div style={{ padding: '10px 20px', borderBottom: '1px solid var(--border-light)', background: selected ? selColor + '0c' : 'var(--bg-page)', flexShrink: 0, minHeight: 44, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10 }}>
         {selected ? (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}>
-            <div style={{ width: 8, height: 8, borderRadius: '50%', background: selColor, flexShrink: 0 }} />
-            <span style={{ fontSize: 13, fontWeight: 700, color: selColor, flex: 1 }}>
-              {selected === 'rest' ? 'Clique nos dias para marcar como folga' : `"${selected.name}" — clique nos dias para atribuir`}
-            </span>
-            <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex' }}>
-              <X size={15} />
-            </button>
-          </div>
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%' }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: selColor, flexShrink: 0 }} />
+              <span style={{ fontSize: 13, fontWeight: 700, color: selColor, flex: 1 }}>
+                {selected === 'rest' ? 'Clique nos dias para marcar como folga' : `"${selected.name}" — clique nos dias ou use um preset`}
+              </span>
+              <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex' }}>
+                <X size={15} />
+              </button>
+            </div>
+            <DayPresetChips color={selColor} onApply={applyPreset} />
+          </>
         ) : (
           <span style={{ fontSize: 13, color: 'var(--gray-400)' }}>
             Selecione uma cartilha abaixo e clique nos dias da semana para atribuir
@@ -1005,13 +1058,25 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose })
             </div>
             {selected === 'rest' && <Check size={14} color="#7C3AED" strokeWidth={3} />}
           </button>
+
+          {/* Criar novo treino sem saber da biblioteca */}
+          <button onClick={() => setCreatingTemplate(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, border: '2px dashed var(--border)', background: 'var(--bg-surface)', cursor: 'pointer', transition: 'all 0.15s' }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--accent)'; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; }}>
+            <Plus size={18} color="var(--accent)" />
+            <div style={{ textAlign: 'left' }}>
+              <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--gray-700)' }}>Criar novo treino</p>
+              <p style={{ margin: 0, fontSize: 10, color: 'var(--gray-400)' }}>Não achou pronto? Monte aqui</p>
+            </div>
+          </button>
         </div>
 
         {templates.length === 0 ? (
           <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--gray-400)', fontSize: 13 }}>
             <BookOpen size={32} color="var(--border)" style={{ marginBottom: 10 }} />
             <p style={{ margin: 0 }}>Nenhuma cartilha criada ainda</p>
-            <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>Crie cartilhas na página principal primeiro</p>
+            <p style={{ margin: '4px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>Use "Criar novo treino" acima pra montar a primeira</p>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 9 }}>
@@ -1051,6 +1116,64 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose })
           </div>
         )}
       </div>
+
+      {creatingTemplate && (
+        <TemplateEditor
+          item={null}
+          mode="template"
+          students={[]}
+          zIndex={600}
+          onSave={handleCreateTemplate}
+          onClose={() => setCreatingTemplate(false)} />
+      )}
+    </div>
+  );
+}
+
+// ─── StarterTemplatesModal ────────────────────────────────────────────────────
+// Modelos prontos — pra não começar do zero.
+
+function StarterTemplatesModal({ onUse, onClose }) {
+  const [usingId, setUsingId] = useState(null);
+
+  const handleUse = async (tpl, idx) => {
+    setUsingId(idx);
+    await onUse(tpl);
+    setUsingId(null);
+  };
+
+  return (
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 400, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: 'var(--bg-surface)', borderRadius: 20, padding: 26, width: '100%', maxWidth: 640, maxHeight: '85vh', overflowY: 'auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 18 }}>
+          <div>
+            <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>Modelos prontos</h3>
+            <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-500)' }}>Clique pra adicionar na sua biblioteca — depois é só editar</p>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={18} /></button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>
+          {STARTER_TEMPLATES.map((tpl, idx) => {
+            const color = tc(tpl.type);
+            const busy  = usingId === idx;
+            return (
+              <div key={tpl.name} style={{ border: '1.5px solid var(--border)', borderRadius: 13, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div style={{ height: 4, background: `linear-gradient(90deg, ${color}, ${color}77)` }} />
+                <div style={{ padding: '12px 14px', flex: 1 }}>
+                  <span style={{ fontSize: 9, fontWeight: 800, color, textTransform: 'uppercase', letterSpacing: '0.07em', background: color + '12', padding: '2px 7px', borderRadius: 20, display: 'inline-block', marginBottom: 5 }}>{tpl.type}</span>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--gray-900)' }}>{tpl.name}</p>
+                  <p style={{ margin: '2px 0 0', fontSize: 11, color: 'var(--gray-400)' }}>{tpl.exercises.length} exercícios</p>
+                </div>
+                <button onClick={() => handleUse(tpl, idx)} disabled={busy}
+                  style={{ padding: '9px 8px', border: 'none', borderTop: '1px solid var(--border)', background: busy ? 'var(--bg-page)' : `${color}12`, color, fontSize: 12, fontWeight: 700, cursor: busy ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                  {busy ? 'Adicionando...' : <><Plus size={13} /> Usar este modelo</>}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1064,15 +1187,14 @@ export default function Treinos() {
   const [plans,       setPlans]       = useState([]);
   const [loading,     setLoading]     = useState(true);
   const [selStudent,  setSelStudent]  = useState(null);
-  const [targetDay,   setTargetDay]   = useState(null);
   const [editor,      setEditor]      = useState(null);
   const [assignModal, setAssignModal] = useState(null);
   const [search,      setSearch]      = useState('');
   const [typeFilter,  setTypeFilter]  = useState('');
   const [toasts,      setToasts]      = useState([]);
   const [weekBuilder, setWeekBuilder] = useState(null);
+  const [showStarter, setShowStarter] = useState(false);
 
-  const templatesRef = useRef(null);
   const todayDow     = new Date().getDay();
 
   const addToast = (msg, type = 'success') => {
@@ -1151,7 +1273,24 @@ export default function Treinos() {
       addToast(isTemplate ? 'Cartilha salva com sucesso!' : 'Treino salvo com sucesso!');
     }
     setEditor(null);
-    return true;
+    return savedPlan;
+  };
+
+  const createTemplate = ({ name, type, exercises }) =>
+    saveItem({ id: undefined, name, type, days: [], exercises, studentId: null });
+
+  const addStarterTemplate = async (starter) => {
+    if (!hasSupabase) return;
+    const { data: newPlan, error } = await supabase.from('training_plans').insert({
+      personal_id: user.id, student_id: null, name: starter.name, type: starter.type, days: [],
+    }).select().single();
+    if (error || !newPlan) { addToast('Erro ao adicionar modelo', 'error'); return; }
+    await supabase.from('exercises').insert(starter.exercises.map((e, i) => ({
+      plan_id: newPlan.id, name: e.name, sets: parseInt(e.sets) || 4, reps: e.reps, rest: e.rest, load: '', obs: '', order_index: i,
+    })));
+    const { data: full } = await supabase.from('training_plans').select('*, exercises(*)').eq('id', newPlan.id).single();
+    if (full) setTemplates(prev => [full, ...prev]);
+    addToast(`"${starter.name}" adicionado à sua biblioteca!`);
   };
 
   const deleteItem = async (item, isTemplate) => {
@@ -1260,19 +1399,6 @@ export default function Treinos() {
     addToast('Cartilha duplicada!');
   };
 
-  // ── Handlers ─────────────────────────────────────────────────────────────────
-
-  const handleDayClick = (day) => {
-    setTargetDay(prev => prev?.v === day.v ? null : day);
-    setTimeout(() => templatesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
-  };
-
-  const handleTemplateSelect = async (tpl) => {
-    if (!targetDay || !selStudent) return;
-    await assignTemplate(tpl, [selStudent], [targetDay.v]);
-    setTargetDay(null);
-  };
-
   // ── Dados computados ─────────────────────────────────────────────────────────
 
   const selectedStudent = students.find(s => s.id === selStudent);
@@ -1308,6 +1434,9 @@ export default function Treinos() {
           </p>
         </div>
         <div className="page-actions">
+          <button onClick={() => setShowStarter(true)} className="btn-secondary">
+            <Sparkles size={15} /> Modelos prontos
+          </button>
           <button onClick={() => setEditor({ item: null, mode: 'template' })} className="btn-primary">
             <Plus size={16} /> Nova cartilha
           </button>
@@ -1332,7 +1461,7 @@ export default function Treinos() {
               const studentPlansForS = plans.filter(p => p.student_id === s.id);
               const trainDays   = [...new Set(studentPlansForS.flatMap(p => p.days || []))].length;
               return (
-                <button key={s.id} onClick={() => { setSelStudent(s.id); setTargetDay(null); }}
+                <button key={s.id} onClick={() => setSelStudent(s.id)}
                   style={{
                     display: 'flex', flexDirection: 'column', gap: 8,
                     padding: '10px 14px 9px', borderRadius: 16,
@@ -1393,8 +1522,8 @@ export default function Treinos() {
                   </div>
                   <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)' }}>
                     {activeDays === 0
-                      ? 'Clique em "Montar semana" ou em um dia vazio para começar'
-                      : 'Clique num dia vazio para adicionar, ou use "Copiar" nas células para duplicar'}
+                      ? 'Clique em "Montar semana" ou em qualquer dia pra começar'
+                      : 'Clique em qualquer dia pra ajustar, ou use "Copiar" nas células pra duplicar'}
                   </p>
                 </div>
                 <div style={{ display: 'flex', gap: 7 }}>
@@ -1404,12 +1533,6 @@ export default function Treinos() {
                     onMouseLeave={e => e.currentTarget.style.opacity = '1'}>
                     <Dumbbell size={13} /> Montar semana
                   </button>
-                  <button onClick={() => setEditor({ item: null, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name, defaultDays: targetDay ? [targetDay.v] : [] })}
-                    style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '9px 13px', borderRadius: 10, border: '1.5px solid var(--border)', background: 'var(--bg-surface)', fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', cursor: 'pointer', transition: 'border-color 0.1s, background 0.1s' }}
-                    onMouseEnter={e => { e.currentTarget.style.borderColor = 'var(--gray-400)'; e.currentTarget.style.background = 'var(--bg-page)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.borderColor = 'var(--border)'; e.currentTarget.style.background = 'var(--bg-surface)'; }}>
-                    <Plus size={13} /> Do zero
-                  </button>
                 </div>
               </div>
 
@@ -1418,7 +1541,6 @@ export default function Treinos() {
                   {DAYS.map(d => {
                     const plan    = byDay[d.v];
                     const isToday = d.v === todayDow;
-                    const isTgt   = targetDay?.v === d.v;
                     return (
                       <div key={d.v}>
                         <div style={{ textAlign: 'center', marginBottom: 8, padding: '6px 4px', borderRadius: 10, background: isToday ? '#EFF6FF' : 'transparent', transition: 'background 0.15s' }}>
@@ -1429,8 +1551,8 @@ export default function Treinos() {
                         </div>
                         <DayCell
                           plan={plan}
-                          isTarget={!plan && isTgt}
-                          onAdd={() => handleDayClick(d)}
+                          isTarget={false}
+                          onAdd={() => setWeekBuilder(selStudent)}
                           onEdit={() => setEditor({ item: plan, mode: 'plan', studentId: selStudent, studentName: selectedStudent.name })}
                           onRemove={() => deleteItem(plan, false)}
                           onCopyTo={(destDay) => copyPlanToDay(plan, destDay)}
@@ -1446,27 +1568,7 @@ export default function Treinos() {
       )}
 
       {/* ── Biblioteca de cartilhas ─────────────────────────────────────── */}
-      <div ref={templatesRef}>
-        {/* Banner de targeting */}
-        {targetDay && selectedStudent && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 18px', borderRadius: 14, background: 'linear-gradient(135deg, #EFF6FF, #F0F9FF)', border: '2px solid #BFDBFE', marginBottom: 16, boxShadow: '0 4px 16px rgba(59,130,246,0.12)' }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 4px 10px rgba(59,130,246,0.3)' }}>
-              <BookOpen size={17} color="white" />
-            </div>
-            <div style={{ flex: 1 }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: '#1D4ED8', lineHeight: 1.3 }}>
-                Escolha uma cartilha para <strong>{targetDay.full}</strong>
-              </p>
-              <p style={{ margin: '1px 0 0', fontSize: 12, color: '#3B82F6', opacity: 0.8 }}>
-                Clique em qualquer cartilha abaixo para atribuir a {selectedStudent.name}
-              </p>
-            </div>
-            <button onClick={() => setTargetDay(null)} style={{ background: '#DBEAFE', border: 'none', cursor: 'pointer', color: '#3B82F6', display: 'flex', padding: 7, borderRadius: 8 }}>
-              <X size={14} />
-            </button>
-          </div>
-        )}
-
+      <div>
         {/* Cabeçalho da biblioteca */}
         <div className="section-header" style={{ marginBottom: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -1474,9 +1576,7 @@ export default function Treinos() {
               <BookOpen size={16} />
             </div>
             <div>
-              <h3 className="section-title">
-                {targetDay ? `Atribuir para ${targetDay.full}` : 'Suas cartilhas'}
-              </h3>
+              <h3 className="section-title">Suas cartilhas</h3>
               {filtered.length > 0 && (
                 <p className="section-desc">{filtered.length} disponíve{filtered.length !== 1 ? 'is' : 'l'}</p>
               )}
@@ -1513,11 +1613,17 @@ export default function Treinos() {
               <BookOpen size={24} color="#8B5CF6" />
             </div>
             <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>Nenhuma cartilha ainda</h3>
-            <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--gray-500)' }}>Crie cartilhas reutilizáveis — a IA gera exercícios em segundos</p>
-            <button onClick={() => setEditor({ item: null, mode: 'template' })}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 22px', borderRadius: 11, border: 'none', background: 'var(--accent)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
-              <Plus size={15} /> Criar primeira cartilha
-            </button>
+            <p style={{ margin: '0 0 20px', fontSize: 13, color: 'var(--gray-500)' }}>Comece com um modelo pronto ou crie a sua — a IA gera exercícios em segundos</p>
+            <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
+              <button onClick={() => setShowStarter(true)}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 22px', borderRadius: 11, border: '1.5px solid var(--border)', background: 'var(--bg-surface)', color: 'var(--gray-700)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                <Sparkles size={15} /> Modelos prontos
+              </button>
+              <button onClick={() => setEditor({ item: null, mode: 'template' })}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 22px', borderRadius: 11, border: 'none', background: 'var(--accent)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                <Plus size={15} /> Criar do zero
+              </button>
+            </div>
           </div>
         ) : filtered.length === 0 ? (
           <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '32px 24px', textAlign: 'center', border: '1.5px solid var(--border-light)' }}>
@@ -1527,8 +1633,6 @@ export default function Treinos() {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: 12 }}>
             {filtered.map(t => (
               <TemplateCard key={t.id} tpl={t}
-                targeting={!!targetDay}
-                onSelect={() => handleTemplateSelect(t)}
                 onEdit={() => setEditor({ item: t, mode: 'template' })}
                 onAssignMultiple={() => setAssignModal(t)}
                 onDelete={() => deleteItem(t, true)}
@@ -1562,9 +1666,14 @@ export default function Treinos() {
             currentPlans={plans.filter(p => p.student_id === weekBuilder)}
             templates={templates}
             onSave={saveWeek}
+            onCreateTemplate={createTemplate}
             onClose={() => setWeekBuilder(null)} />
         ) : null;
       })()}
+
+      {showStarter && (
+        <StarterTemplatesModal onUse={addStarterTemplate} onClose={() => setShowStarter(false)} />
+      )}
     </div>
   );
 }

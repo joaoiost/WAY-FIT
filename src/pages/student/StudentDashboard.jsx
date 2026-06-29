@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Calendar, Dumbbell, TrendingUp, Clock, Play, Loader, Bell, BellOff, ChevronRight, Flame, Star, Camera, MessageCircle, Activity, Award, Zap, Target, Edit2, Check, Salad, Trophy } from 'lucide-react';
+import { Calendar, Dumbbell, TrendingUp, Clock, Play, Loader, Bell, BellOff, ChevronRight, Flame, Star, Camera, MessageCircle, Activity, Award, Zap, Target, Edit2, Check, Salad, Trophy, X, Smartphone, Moon } from 'lucide-react';
 import WaterTracker from '../../components/UI/WaterTracker';
 import XPBar from '../../components/UI/XPBar';
 import { useAuth } from '../../context/AuthContext';
@@ -18,11 +18,15 @@ const TYPE_BG = {
 };
 
 const CHECKIN_METRICS = [
-  { key: 'mood',          label: 'Humor',   emojis: ['😫','😕','😐','🙂','😄'] },
-  { key: 'energy',        label: 'Energia', emojis: ['🪫','😪','⚡','💪','🚀'] },
-  { key: 'sleep_quality', label: 'Sono',    emojis: ['😵','😕','😐','😌','🌟'] },
-  { key: 'soreness',      label: 'Dores',   emojis: ['💚','🟢','🟡','🟠','🔴'] },
+  { key: 'mood',          label: 'Humor',   invert: false },
+  { key: 'energy',        label: 'Energia', invert: false },
+  { key: 'sleep_quality', label: 'Sono',    invert: false },
+  { key: 'soreness',      label: 'Dores',   invert: true  },
 ];
+const SCALE_COLOR = (val, invert) => {
+  const score = invert ? 6 - val : val;
+  return score <= 2 ? 'var(--red)' : score === 3 ? 'var(--yellow)' : 'var(--green)';
+};
 
 function DailyCheckinWidget({ studentId, personalId, todayStr, onCheckinDone }) {
   const [form, setForm] = useState({ mood: 3, energy: 3, sleep_quality: 3, soreness: 1 });
@@ -42,23 +46,22 @@ function DailyCheckinWidget({ studentId, personalId, todayStr, onCheckinDone }) 
   return (
     <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '16px 18px', border: '1px solid var(--border)' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-        <span style={{ fontSize: 18 }}>📋</span>
         <div>
           <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'var(--gray-900)' }}>Check-in do dia</p>
           <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>Como você está chegando hoje?</p>
         </div>
       </div>
-      {CHECKIN_METRICS.map(({ key, label, emojis }) => (
+      {CHECKIN_METRICS.map(({ key, label, invert }) => (
         <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
           <span style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-400)', width: 54, flexShrink: 0 }}>{label}</span>
           <div style={{ display: 'flex', gap: 4, flex: 1 }}>
-            {emojis.map((emoji, i) => {
-              const val = i + 1;
+            {[1, 2, 3, 4, 5].map(val => {
               const selected = form[key] === val;
+              const color = SCALE_COLOR(val, invert);
               return (
-                <button key={i} onClick={() => setForm(prev => ({ ...prev, [key]: val }))}
-                  style={{ flex: 1, padding: '6px 2px', borderRadius: 10, border: `2px solid ${selected ? 'var(--accent)' : 'transparent'}`, background: selected ? 'var(--accent-bg)' : 'var(--gray-50)', fontSize: 18, cursor: 'pointer', transition: 'all 0.12s', lineHeight: 1 }}>
-                  {emoji}
+                <button key={val} onClick={() => setForm(prev => ({ ...prev, [key]: val }))}
+                  style={{ flex: 1, padding: '7px 2px', borderRadius: 10, border: `2px solid ${selected ? color : 'transparent'}`, background: selected ? color + '1c' : 'var(--gray-50)', color: selected ? color : 'var(--gray-400)', fontSize: 13, fontWeight: 800, cursor: 'pointer', transition: 'all 0.12s', lineHeight: 1 }}>
+                  {val}
                 </button>
               );
             })}
@@ -105,13 +108,13 @@ function StreakBadge({ streak }) {
       border: `1.5px solid ${isHot ? 'rgba(245,158,11,0.4)' : 'rgba(251,146,60,0.25)'}`,
       borderRadius: 16, padding: '12px 16px',
     }}>
-      <div style={{ fontSize: 32, lineHeight: 1 }}>{isHot ? '🔥' : '⚡'}</div>
+      {isHot ? <Flame size={32} color="#FBBF24" fill="#FBBF24" /> : <Zap size={32} color="#FB923C" />}
       <div style={{ flex: 1 }}>
         <p style={{ margin: 0, fontSize: 16, fontWeight: 900, color: isHot ? '#FBBF24' : '#FB923C' }}>
           {streak} {streak === 1 ? 'dia seguido' : 'dias seguidos'}!
         </p>
         <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-500)' }}>
-          {isHot ? '🏆 Você está em chamas! Continue assim!' : 'Continue treinando para manter a sequência'}
+          {isHot ? 'Você está em alta. Continue assim.' : 'Continue treinando para manter a sequência'}
         </p>
       </div>
       <div style={{ textAlign: 'center', background: isHot ? 'rgba(245,158,11,0.2)' : 'rgba(251,146,60,0.15)', borderRadius: 12, padding: '6px 12px' }}>
@@ -281,7 +284,7 @@ export default function StudentDashboard() {
       {/* ── Header ── */}
       <div style={{ marginBottom: 20 }}>
         <h2 style={{ margin: 0, fontSize: 24, fontWeight: 900, color: 'var(--gray-900)', letterSpacing: '-0.3px' }}>
-          {greeting()}, {firstName}! {streak >= 3 ? '🔥' : '👋'}
+          {greeting()}, {firstName}
         </h2>
         <p style={{ margin: '3px 0 0', fontSize: 13, color: 'var(--gray-400)', textTransform: 'capitalize' }}>
           {now.toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' })}
@@ -317,12 +320,12 @@ export default function StudentDashboard() {
           <Bell size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
           <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-900)', flex: 1 }}>Ative notificações do seu personal</p>
           <button onClick={handleEnableNotifications} style={{ background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Ativar</button>
-          <button onClick={() => { setPushDismissed(true); localStorage.setItem('push_banner_dismissed', '1'); }} style={{ background: 'none', border: 'none', color: 'var(--gray-400)', cursor: 'pointer', padding: 4, fontSize: 16, flexShrink: 0 }}>✕</button>
+          <button onClick={() => { setPushDismissed(true); localStorage.setItem('push_banner_dismissed', '1'); }} style={{ background: 'none', border: 'none', color: 'var(--gray-400)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}><X size={16} /></button>
         </div>
       )}
       {installPrompt && !installDismissed && (
         <div style={{ background: 'linear-gradient(135deg, #0F172A, #1E3A5F)', borderRadius: 12, padding: '11px 14px', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ fontSize: 20 }}>📱</span>
+          <Smartphone size={20} color="white" style={{ flexShrink: 0 }} />
           <div style={{ flex: 1 }}>
             <p style={{ margin: 0, fontSize: 13, fontWeight: 800, color: 'white' }}>Instalar o WAY FIT</p>
             <p style={{ margin: '1px 0 0', fontSize: 11, color: 'rgba(255,255,255,0.6)' }}>Acesse seus treinos offline</p>
@@ -332,7 +335,7 @@ export default function StudentDashboard() {
             Instalar
           </button>
           <button onClick={() => { setInstallPrompt(null); setInstallDismissed(true); localStorage.setItem('pwa_install_dismissed', '1'); }}
-            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 4, flexShrink: 0, fontSize: 16 }}>✕</button>
+            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}><X size={16} /></button>
         </div>
       )}
 
@@ -364,7 +367,7 @@ export default function StudentDashboard() {
             <div style={{ padding: '20px 20px 0', position: 'relative' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
                 <span style={{ fontSize: 11, fontWeight: 800, color: workoutColor, background: workoutColor + '25', padding: '4px 12px', borderRadius: 20, letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-                  ⚡ Treino de hoje
+                  Treino de hoje
                 </span>
                 <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.5)' }}>
                   {exercises.length} exercício{exercises.length !== 1 ? 's' : ''}
@@ -410,10 +413,10 @@ export default function StudentDashboard() {
         ) : (
           <div style={{ background: 'linear-gradient(135deg, #0F172A, #1E293B)', padding: '32px 24px', textAlign: 'center' }}>
             <div style={{ width: 64, height: 64, borderRadius: 20, background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <Dumbbell size={30} color="rgba(255,255,255,0.3)" />
+              {isRestDay ? <Moon size={28} color="rgba(255,255,255,0.3)" /> : <Dumbbell size={30} color="rgba(255,255,255,0.3)" />}
             </div>
             <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 900, color: 'white' }}>
-              {isRestDay ? '😴 Dia de descanso' : 'Nenhum treino hoje'}
+              {isRestDay ? 'Dia de descanso' : 'Nenhum treino hoje'}
             </h3>
             <p style={{ margin: '0 0 16px', fontSize: 13, color: 'rgba(255,255,255,0.5)', lineHeight: 1.5 }}>
               {isRestDay
@@ -583,7 +586,7 @@ export default function StudentDashboard() {
                 {hasGoal && hasCurrent && (
                   <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: reached ? 'var(--green)' : (isLosing ? 'var(--yellow)' : 'var(--accent)') }}>
                     {reached
-                      ? '🎉 Meta atingida! Parabéns!'
+                      ? 'Meta atingida'
                       : isLosing
                         ? `↓ Faltam ${diff}kg para a meta`
                         : `↑ Faltam ${diff}kg para a meta`}

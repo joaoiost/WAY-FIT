@@ -2,7 +2,7 @@
 import {
   Plus, Dumbbell, X, Save, Trash2, Sparkles, Check, Send,
   Search, Edit3, Users, BookOpen,
-  Copy, AlertCircle, MessageSquare,
+  Copy, AlertCircle, MessageSquare, Moon,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -571,7 +571,7 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
                               {state === 'plan'
                                 ? <Dumbbell size={15} color={color} />
                                 : state === 'rest'
-                                ? <span style={{ fontSize: 15 }}>🌙</span>
+                                ? <Moon size={14} color="#8B5CF6" />
                                 : <span style={{ fontSize: 9, color: 'var(--gray-400)', fontWeight: 600 }}>livre</span>}
                             </div>
                           </button>
@@ -1015,8 +1015,8 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose, o
                 <div style={{ minHeight: 80, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '8px 6px' }}>
                   {dayData.type === 'rest' ? (
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: 22, marginBottom: 3 }}>🌙</div>
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6' }}>Folga</span>
+                      <Moon size={20} color="#8B5CF6" style={{ marginBottom: 3 }} />
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#8B5CF6', display: 'block' }}>Folga</span>
                     </div>
                   ) : dayData.type === 'plan' ? (
                     <div style={{ width: '100%' }}>
@@ -1051,7 +1051,7 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose, o
           {/* Folga */}
           <button onClick={() => setSelected(selected === 'rest' ? null : 'rest')}
             style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 16px', borderRadius: 12, border: `2px solid ${selected === 'rest' ? '#8B5CF6' : 'var(--border)'}`, background: selected === 'rest' ? '#F5F3FF' : 'var(--bg-surface)', cursor: 'pointer', transition: 'all 0.15s', boxShadow: selected === 'rest' ? '0 4px 14px rgba(139,92,246,0.2)' : '0 1px 4px rgba(0,0,0,0.05)' }}>
-            <span style={{ fontSize: 18 }}>🌙</span>
+            <Moon size={18} color={selected === 'rest' ? '#7C3AED' : '#8B5CF6'} />
             <div style={{ textAlign: 'left' }}>
               <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: selected === 'rest' ? '#7C3AED' : 'var(--gray-700)' }}>Folga / Descanso</p>
               <p style={{ margin: 0, fontSize: 10, color: selected === 'rest' ? '#8B5CF6' : 'var(--gray-400)' }}>Dia de recuperação</p>

@@ -100,7 +100,7 @@ export default function Financeiro() {
     const full = phone.startsWith('55') ? phone : `55${phone}`;
     const name = (payment.student_name || student?.name || '').split(' ')[0];
     const due = new Date((payment.due_date) + 'T12:00:00').toLocaleDateString('pt-BR');
-    const msg = `Olá ${name}! 😊\n\nVencimento da sua mensalidade:\n• Plano: ${payment.plan}\n• Valor: R$ ${Number(payment.amount).toLocaleString('pt-BR')}\n• Vencimento: ${due}\n\nChave PIX: *${pixKey}*\n\nApós o pagamento, me confirme aqui! 🙏`;
+    const msg = `Olá ${name}!\n\nVencimento da sua mensalidade:\n• Plano: ${payment.plan}\n• Valor: R$ ${Number(payment.amount).toLocaleString('pt-BR')}\n• Vencimento: ${due}\n\nChave PIX: *${pixKey}*\n\nApós o pagamento, me confirme aqui.`;
     window.open(`https://wa.me/${full}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 

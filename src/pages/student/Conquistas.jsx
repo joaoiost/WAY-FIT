@@ -1,31 +1,31 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Trophy, Zap } from 'lucide-react';
+import { Trophy, Zap, Dumbbell, Repeat, Flame, Award, Calendar, Droplet, Waves, Ruler, BarChart2, TrendingDown, Sunrise, Star, Salad, Apple, Target, Crown, Camera, CheckCircle2, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import XPBar, { LEVELS, getLevel, calcXP } from '../../components/UI/XPBar';
 
 const ACHIEVEMENTS = [
-  { key: 'first_workout',  emoji: '🏋️', label: 'Primeiro Passo',    desc: 'Complete seu primeiro treino',        xp: 100, check: s => s.workouts >= 1 },
-  { key: 'workouts10',     emoji: '💪', label: 'Dedicação',          desc: 'Complete 10 treinos',                 xp: 150, check: s => s.workouts >= 10 },
-  { key: 'workouts30',     emoji: '🔥', label: 'Consistência',       desc: 'Complete 30 treinos',                 xp: 300, check: s => s.workouts >= 30 },
-  { key: 'workouts100',    emoji: '🏆', label: 'Centurião',          desc: 'Complete 100 treinos',                xp: 500, check: s => s.workouts >= 100 },
-  { key: 'streak7',        emoji: '⚡', label: 'Sequência de Fogo',  desc: '7 dias consecutivos de atividade',   xp: 200, check: s => s.maxStreak >= 7 },
-  { key: 'streak30',       emoji: '🌟', label: 'Imbatível',          desc: '30 dias consecutivos',                xp: 500, check: s => s.maxStreak >= 30 },
-  { key: 'week5',          emoji: '🗓️', label: 'Semana Cheia',       desc: '5 treinos em uma semana',             xp: 150, check: s => s.maxWeekWorkouts >= 5 },
-  { key: 'water7',         emoji: '💧', label: 'Hidratado',          desc: 'Bata a meta de água 7 dias',          xp: 150, check: s => s.waterGoalDays >= 7 },
-  { key: 'water30',        emoji: '🌊', label: 'Oceano',             desc: 'Bata a meta de água 30 dias',         xp: 300, check: s => s.waterGoalDays >= 30 },
-  { key: 'measure1',       emoji: '📏', label: 'Me Conheço',         desc: 'Registre sua primeira medição',       xp: 100, check: s => s.measurements >= 1 },
-  { key: 'measure6',       emoji: '📊', label: 'Controle Total',     desc: 'Registre 6 medições',                 xp: 200, check: s => s.measurements >= 6 },
-  { key: 'weight_loss3',   emoji: '⬇️', label: 'Transformação',      desc: 'Perca 3kg em relação ao início',      xp: 300, check: s => s.weightDelta <= -3 },
-  { key: 'early_bird',     emoji: '🌅', label: 'Madrugador',         desc: 'Complete 5 treinos antes das 7h',     xp: 200, check: s => s.earlyWorkouts >= 5 },
-  { key: 'rating5',        emoji: '⭐', label: 'Satisfeito',         desc: 'Avalie um treino com nota máxima',    xp: 100, check: s => s.maxRating >= 5 },
-  { key: 'food_log7',      emoji: '🥗', label: 'Nutrido',            desc: 'Registre alimentação por 7 dias',     xp: 200, check: s => s.foodLogDays >= 7 },
-  { key: 'food_log30',     emoji: '🍎', label: 'Nutricional',        desc: 'Registre alimentação por 30 dias',    xp: 400, check: s => s.foodLogDays >= 30 },
-  { key: 'challenge1',     emoji: '🎯', label: 'Desafiador',         desc: 'Complete um desafio',                 xp: 200, check: s => s.challengesCompleted >= 1 },
-  { key: 'challenge5',     emoji: '🎪', label: 'Campeão',            desc: 'Complete 5 desafios',                 xp: 500, check: s => s.challengesCompleted >= 5 },
-  { key: 'photo_progress', emoji: '📸', label: 'Transformador',      desc: 'Registre 2 fotos de progresso',       xp: 150, check: s => s.photos >= 2 },
-  { key: 'perfect_week',   emoji: '💯', label: 'Semana Perfeita',    desc: '5+ treinos e meta de água na semana', xp: 250, check: s => s.maxWeekWorkouts >= 5 && s.waterGoalDays >= 5 },
+  { key: 'first_workout',  icon: Dumbbell,     label: 'Primeiro Passo',    desc: 'Complete seu primeiro treino',        xp: 100, check: s => s.workouts >= 1 },
+  { key: 'workouts10',     icon: Repeat,       label: 'Dedicação',          desc: 'Complete 10 treinos',                 xp: 150, check: s => s.workouts >= 10 },
+  { key: 'workouts30',     icon: Flame,        label: 'Consistência',       desc: 'Complete 30 treinos',                 xp: 300, check: s => s.workouts >= 30 },
+  { key: 'workouts100',    icon: Trophy,       label: 'Centurião',          desc: 'Complete 100 treinos',                xp: 500, check: s => s.workouts >= 100 },
+  { key: 'streak7',        icon: Zap,          label: 'Sequência de Fogo',  desc: '7 dias consecutivos de atividade',   xp: 200, check: s => s.maxStreak >= 7 },
+  { key: 'streak30',       icon: Award,        label: 'Imbatível',          desc: '30 dias consecutivos',                xp: 500, check: s => s.maxStreak >= 30 },
+  { key: 'week5',          icon: Calendar,     label: 'Semana Cheia',       desc: '5 treinos em uma semana',             xp: 150, check: s => s.maxWeekWorkouts >= 5 },
+  { key: 'water7',         icon: Droplet,      label: 'Hidratado',          desc: 'Bata a meta de água 7 dias',          xp: 150, check: s => s.waterGoalDays >= 7 },
+  { key: 'water30',        icon: Waves,        label: 'Oceano',             desc: 'Bata a meta de água 30 dias',         xp: 300, check: s => s.waterGoalDays >= 30 },
+  { key: 'measure1',       icon: Ruler,        label: 'Me Conheço',         desc: 'Registre sua primeira medição',       xp: 100, check: s => s.measurements >= 1 },
+  { key: 'measure6',       icon: BarChart2,    label: 'Controle Total',     desc: 'Registre 6 medições',                 xp: 200, check: s => s.measurements >= 6 },
+  { key: 'weight_loss3',   icon: TrendingDown, label: 'Transformação',      desc: 'Perca 3kg em relação ao início',      xp: 300, check: s => s.weightDelta <= -3 },
+  { key: 'early_bird',     icon: Sunrise,      label: 'Madrugador',         desc: 'Complete 5 treinos antes das 7h',     xp: 200, check: s => s.earlyWorkouts >= 5 },
+  { key: 'rating5',        icon: Star,         label: 'Satisfeito',         desc: 'Avalie um treino com nota máxima',    xp: 100, check: s => s.maxRating >= 5 },
+  { key: 'food_log7',      icon: Salad,        label: 'Nutrido',            desc: 'Registre alimentação por 7 dias',     xp: 200, check: s => s.foodLogDays >= 7 },
+  { key: 'food_log30',     icon: Apple,        label: 'Nutricional',        desc: 'Registre alimentação por 30 dias',    xp: 400, check: s => s.foodLogDays >= 30 },
+  { key: 'challenge1',     icon: Target,       label: 'Desafiador',         desc: 'Complete um desafio',                 xp: 200, check: s => s.challengesCompleted >= 1 },
+  { key: 'challenge5',     icon: Crown,        label: 'Campeão',            desc: 'Complete 5 desafios',                 xp: 500, check: s => s.challengesCompleted >= 5 },
+  { key: 'photo_progress', icon: Camera,       label: 'Transformador',      desc: 'Registre 2 fotos de progresso',       xp: 150, check: s => s.photos >= 2 },
+  { key: 'perfect_week',   icon: CheckCircle2, label: 'Semana Perfeita',    desc: '5+ treinos e meta de água na semana', xp: 250, check: s => s.maxWeekWorkouts >= 5 && s.waterGoalDays >= 5 },
 ];
 
 function calcMaxStreak(sessions) {
@@ -132,7 +132,7 @@ export default function Conquistas() {
 
       {/* XP Hero */}
       <div style={{ background: 'linear-gradient(135deg, var(--bg-surface) 0%, #1a1f2e 100%)', border: '1px solid var(--border)', borderRadius: 16, padding: 20, marginBottom: 16, textAlign: 'center' }}>
-        <div style={{ fontSize: 52, marginBottom: 6 }}>{level.emoji}</div>
+        <Award size={48} color={level.color} style={{ marginBottom: 6 }} />
         <p style={{ margin: '0 0 2px', fontSize: 22, fontWeight: 900, color: level.color }}>{level.name}</p>
         <p style={{ margin: '0 0 14px', fontSize: 36, fontWeight: 900, color: 'var(--gray-900)', lineHeight: 1 }}>{totalXP} <span style={{ fontSize: 16, color: 'var(--gray-400)', fontWeight: 600 }}>XP</span></p>
         <div style={{ height: 10, borderRadius: 99, background: 'var(--border)', overflow: 'hidden', marginBottom: 6 }}>
@@ -140,10 +140,10 @@ export default function Conquistas() {
         </div>
         {nextLevel ? (
           <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)' }}>
-            {nextLevel.min - totalXP} XP para {nextLevel.emoji} {nextLevel.name}
+            {nextLevel.min - totalXP} XP para o nível {nextLevel.name}
           </p>
         ) : (
-          <p style={{ margin: 0, fontSize: 12, color: level.color, fontWeight: 700 }}>Nível máximo atingido! 🎉</p>
+          <p style={{ margin: 0, fontSize: 12, color: level.color, fontWeight: 700 }}>Nível máximo atingido</p>
         )}
       </div>
 
@@ -185,11 +185,13 @@ export default function Conquistas() {
                   +{a.xp} XP
                 </div>
               )}
-              <div style={{ fontSize: 26, marginBottom: 6 }}>{a.emoji}</div>
+              <a.icon size={24} color={done ? 'var(--accent)' : 'var(--gray-400)'} style={{ marginBottom: 6 }} />
               <p style={{ margin: '0 0 3px', fontSize: 13, fontWeight: 800, color: 'var(--gray-900)' }}>{a.label}</p>
               <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)', lineHeight: 1.3 }}>{a.desc}</p>
               {!done && (
-                <p style={{ margin: '6px 0 0', fontSize: 10, color: 'var(--gray-400)' }}>🔒 +{a.xp} XP</p>
+                <p style={{ margin: '6px 0 0', fontSize: 10, color: 'var(--gray-400)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <Lock size={10} /> +{a.xp} XP
+                </p>
               )}
             </div>
           );

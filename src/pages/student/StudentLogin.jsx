@@ -71,7 +71,7 @@ const CSS = `
 
 /* ─── Typewriter ──────────────────────────────────────────────── */
 const PHRASES = [
-  'Seu treino de hoje te espera 💪',
+  'Seu treino de hoje te espera',
   'Cada repetição conta',
   'Você evoluiu. Prove isso.',
   'Consistência > Intensidade.',

@@ -23,7 +23,7 @@ function useCountUp(target, duration = 550) {
   }, [target, duration]);
   return display;
 }
-import { Search, Plus, Trash2, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, Droplets, Copy, BookOpen, Camera, Bookmark, Flame, BarChart2 } from 'lucide-react';
+import { Search, Plus, Trash2, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRight, Droplets, Copy, BookOpen, Camera, Bookmark, Flame, BarChart2, Coffee, Apple, Zap, UtensilsCrossed, CupSoda, Moon, MoonStar, Dumbbell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -31,14 +31,14 @@ import tacoFoods from '../../data/taco_foods.json';
 import BarcodeScanner from '../../components/UI/BarcodeScanner';
 
 const MEALS = [
-  { key: 'cafe',        label: 'Café da manhã', emoji: '☀️' },
-  { key: 'lanche1',    label: 'Lanche manhã',  emoji: '🍌' },
-  { key: 'pre_treino', label: 'Pré-treino',    emoji: '⚡' },
-  { key: 'almoco',     label: 'Almoço',        emoji: '🍱' },
-  { key: 'lanche2',    label: 'Lanche tarde',  emoji: '🥤' },
-  { key: 'jantar',     label: 'Jantar',        emoji: '🌙' },
-  { key: 'pos_treino', label: 'Pós-treino',    emoji: '💪' },
-  { key: 'ceia',       label: 'Ceia',          emoji: '🌛' },
+  { key: 'cafe',        label: 'Café da manhã', icon: Coffee },
+  { key: 'lanche1',    label: 'Lanche manhã',  icon: Apple },
+  { key: 'pre_treino', label: 'Pré-treino',    icon: Zap },
+  { key: 'almoco',     label: 'Almoço',        icon: UtensilsCrossed },
+  { key: 'lanche2',    label: 'Lanche tarde',  icon: CupSoda },
+  { key: 'jantar',     label: 'Jantar',        icon: Moon },
+  { key: 'pos_treino', label: 'Pós-treino',    icon: Dumbbell },
+  { key: 'ceia',       label: 'Ceia',          icon: MoonStar },
 ];
 
 const MACRO_COLORS = { kcal: '#F59E0B', protein_g: '#3B82F6', carbs_g: '#10B981', fat_g: '#F87171' };
@@ -169,7 +169,7 @@ export default function LogAlimentar() {
     const ml = Math.max(0, newMl);
     setWaterIntake(ml);
     await supabase.from('water_logs').upsert(
-      { student_id: user.studentId, personal_id: personalId, date, intake_ml: ml, goal_ml: waterGoal },
+      { student_id: user.studentId, date, intake_ml: ml, goal_ml: waterGoal },
       { onConflict: 'student_id,date' }
     );
   }
@@ -452,7 +452,7 @@ export default function LogAlimentar() {
           <div key={meal.key} style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, marginBottom: 8, overflow: 'hidden' }}>
             <button onClick={() => setExpandedMeal(open ? null : meal.key)}
               style={{ width: '100%', padding: '13px 16px', display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left' }}>
-              <span style={{ fontSize: 18 }}>{meal.emoji}</span>
+              <meal.icon size={17} color="var(--gray-500)" />
               <span style={{ flex: 1, fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>{meal.label}</span>
               {mealLogs.length > 0 && <span style={{ fontSize: 12, color: 'var(--gray-400)' }}>{Math.round(mealKcal)} kcal</span>}
               {open ? <ChevronUp size={16} color="var(--gray-400)" /> : <ChevronDown size={16} color="var(--gray-400)" />}
@@ -533,7 +533,7 @@ export default function LogAlimentar() {
             <div style={{ padding: '10px 16px 0', flexShrink: 0 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
                 <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'var(--gray-900)' }}>
-                  {MEALS.find(m => m.key === addingMeal)?.emoji} {MEALS.find(m => m.key === addingMeal)?.label}
+                  {MEALS.find(m => m.key === addingMeal)?.label}
                 </p>
                 <button onClick={() => setAddingMeal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
                   <X size={20} color="var(--gray-400)" />
@@ -542,8 +542,8 @@ export default function LogAlimentar() {
               <div style={{ display: 'flex', overflowX: 'auto', gap: 0, borderBottom: '1px solid var(--border)', marginBottom: 0 }}>
                 {[
                   { key: 'search',    label: 'Buscar' },
-                  { key: 'scanner',   label: '📷 Scanner' },
-                  { key: 'templates', label: '⭐ Salvos' },
+                  { key: 'scanner',   label: 'Scanner', icon: Camera },
+                  { key: 'templates', label: 'Salvos', icon: Bookmark },
                   { key: 'manual',    label: 'Manual' },
                 ].map(t => (
                   <button key={t.key}
@@ -551,8 +551,8 @@ export default function LogAlimentar() {
                       if (t.key === 'scanner') { setShowScanner(true); return; }
                       setModalTab(t.key); setSelectedFood(null); setSearchQuery('');
                     }}
-                    style={{ flex: '0 0 auto', padding: '10px 16px', background: 'none', border: 'none', borderBottom: `2px solid ${modalTab === t.key ? 'var(--accent)' : 'transparent'}`, marginBottom: -1, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: modalTab === t.key ? 'var(--accent)' : 'var(--gray-400)', whiteSpace: 'nowrap' }}>
-                    {t.label}
+                    style={{ flex: '0 0 auto', padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 5, background: 'none', border: 'none', borderBottom: `2px solid ${modalTab === t.key ? 'var(--accent)' : 'transparent'}`, marginBottom: -1, cursor: 'pointer', fontSize: 13, fontWeight: 700, color: modalTab === t.key ? 'var(--accent)' : 'var(--gray-400)', whiteSpace: 'nowrap' }}>
+                    {t.icon && <t.icon size={13} />}{t.label}
                   </button>
                 ))}
               </div>

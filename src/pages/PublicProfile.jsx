@@ -1,15 +1,14 @@
 ﻿import { useEffect, useState } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { Zap, Star, Users, CheckCircle, Loader, Eye, EyeOff, ChevronRight, ArrowRight } from 'lucide-react';
+import { Zap, Star, Users, CheckCircle, Loader, Eye, EyeOff, ChevronRight, ArrowRight, Flame, Dumbbell, Activity, HeartPulse, Search, Mail } from 'lucide-react';
 import { supabase, hasSupabase } from '../lib/supabase';
 
 const GOALS = [
-  { value: 'Emagrecer',    emoji: '🔥', label: 'Emagrecer' },
-  { value: 'Hipertrofia',  emoji: '💪', label: 'Ganhar massa' },
-  { value: 'Condicionamento', emoji: '🏃', label: 'Condicionamento' },
-  { value: 'Saúde',        emoji: '🌟', label: 'Qualidade de vida' },
-  { value: 'Definição',    emoji: '⚡', label: 'Definição' },
-  { value: 'Vingança',     emoji: '😈', label: 'Fazer ela se arrepender' },
+  { value: 'Emagrecer',       icon: Flame,      label: 'Emagrecer' },
+  { value: 'Hipertrofia',     icon: Dumbbell,   label: 'Ganhar massa' },
+  { value: 'Condicionamento', icon: Activity,   label: 'Condicionamento' },
+  { value: 'Saúde',           icon: HeartPulse, label: 'Qualidade de vida' },
+  { value: 'Definição',       icon: Zap,        label: 'Definição' },
 ];
 
 export default function PublicProfile() {
@@ -100,7 +99,7 @@ export default function PublicProfile() {
   if (notFound) return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#0F172A', padding: 24 }}>
       <div style={{ textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
+        <Search size={40} color="#475569" style={{ marginBottom: 16 }} />
         <h1 style={{ fontSize: 22, fontWeight: 800, color: 'white', margin: '0 0 8px' }}>Perfil não encontrado</h1>
         <p style={{ color: '#94A3B8', margin: '0 0 24px', fontSize: 14 }}>Este link não existe ou foi removido.</p>
         <Link to="/login" style={{ background: '#3B82F6', color: 'white', padding: '10px 20px', borderRadius: 8, textDecoration: 'none', fontWeight: 600 }}>Ir para o app</Link>
@@ -177,7 +176,7 @@ export default function PublicProfile() {
             {stage === 'done' ? (
               <div style={{ textAlign: 'center', padding: '16px 0' }}>
                 <div style={{ width: 72, height: 72, borderRadius: '50%', background: needsEmailConf ? '#FEF3C7' : 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                  <span style={{ fontSize: 34 }}>{needsEmailConf ? '📧' : '🎉'}</span>
+                  {needsEmailConf ? <Mail size={32} color="#D97706" /> : <CheckCircle size={32} color="white" />}
                 </div>
                 <h2 style={{ margin: '0 0 10px', fontSize: 22, fontWeight: 800 }}>
                   {needsEmailConf ? 'Confirme seu email' : 'Bem-vindo(a)!'}
@@ -253,7 +252,7 @@ export default function PublicProfile() {
                             transition: 'all 0.12s',
                           }}
                         >
-                          <div style={{ fontSize: 18 }}>{g.emoji}</div>
+                          <g.icon size={18} color={form.goal === g.value ? '#1D4ED8' : '#6B7280'} style={{ margin: '0 auto', display: 'block' }} />
                           <div style={{ fontSize: 10, fontWeight: 700, color: form.goal === g.value ? '#1D4ED8' : '#374151', marginTop: 3, lineHeight: 1.3 }}>{g.label}</div>
                         </button>
                       ))}

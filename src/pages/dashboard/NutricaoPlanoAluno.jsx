@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft, Plus, Trash2, Search, X, Save, ChevronDown,
   Droplets, AlertCircle, Check, Target, Zap, Calculator,
+  Coffee, UtensilsCrossed, Salad, Moon, MoonStar,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -45,13 +46,13 @@ const ANAMNESE_INIT = {
 
 // Temas visuais por tipo de refeição
 const MEAL_THEMES = {
-  cafe:    { color: '#D97706', bg: 'rgba(217,119,6,0.12)',   emoji: '☕' },
-  almoco:  { color: '#2563EB', bg: 'rgba(37,99,235,0.1)',    emoji: '🍽️' },
-  lanche:  { color: '#059669', bg: 'rgba(5,150,105,0.1)',    emoji: '🥗' },
-  jantar:  { color: '#9333EA', bg: 'rgba(147,51,234,0.1)',   emoji: '🌙' },
-  ceia:    { color: '#0284C7', bg: 'rgba(2,132,199,0.1)',    emoji: '⭐' },
-  pre:     { color: '#E11D48', bg: 'rgba(225,29,72,0.1)',    emoji: '⚡' },
-  default: { color: '#64748B', bg: 'rgba(100,116,139,0.1)', emoji: '🥘' },
+  cafe:    { color: '#D97706', bg: 'rgba(217,119,6,0.12)',   icon: Coffee },
+  almoco:  { color: '#2563EB', bg: 'rgba(37,99,235,0.1)',    icon: UtensilsCrossed },
+  lanche:  { color: '#059669', bg: 'rgba(5,150,105,0.1)',    icon: Salad },
+  jantar:  { color: '#9333EA', bg: 'rgba(147,51,234,0.1)',   icon: Moon },
+  ceia:    { color: '#0284C7', bg: 'rgba(2,132,199,0.1)',    icon: MoonStar },
+  pre:     { color: '#E11D48', bg: 'rgba(225,29,72,0.1)',    icon: Zap },
+  default: { color: '#64748B', bg: 'rgba(100,116,139,0.1)', icon: UtensilsCrossed },
 };
 
 function getMealTheme(name) {
@@ -477,12 +478,12 @@ function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: open ? '1px solid var(--border-light)' : 'none' }}>
 
-        {/* Emoji icon */}
+        {/* Meal icon */}
         <div
           onClick={() => setOpen(o => !o)}
-          style={{ width: 42, height: 42, borderRadius: 13, background: theme.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, fontSize: 20, cursor: 'pointer' }}
+          style={{ width: 42, height: 42, borderRadius: 13, background: theme.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}
         >
-          {theme.emoji}
+          <theme.icon size={19} color={theme.color} />
         </div>
 
         {/* Name + time */}

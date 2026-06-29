@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Check, ChevronRight, Dumbbell, Calendar, Users, BarChart2, Zap } from 'lucide-react';
+import { Check, ChevronRight, Dumbbell, Calendar, Users, BarChart2, Zap, Rocket } from 'lucide-react';
 
 const CSS = `
   @keyframes fadeInUp {
@@ -56,7 +56,7 @@ const CSS = `
 const STEPS = [
   {
     id: 'welcome',
-    emoji: '⚡',
+    icon: Zap,
     title: 'Bem-vindo ao WAY FIT!',
     subtitle: 'A plataforma que vai mudar a forma como você gerencia seus alunos.',
     gradient: 'var(--accent)',
@@ -64,7 +64,7 @@ const STEPS = [
   },
   {
     id: 'students',
-    emoji: '👥',
+    icon: Users,
     title: 'Seus alunos, organizados',
     subtitle: 'Cadastre alunos, envie convites e tenha todos os dados em um só lugar.',
     gradient: 'linear-gradient(135deg, #10B981, #3B82F6)',
@@ -72,7 +72,7 @@ const STEPS = [
   },
   {
     id: 'workouts',
-    emoji: '🏋️',
+    icon: Dumbbell,
     title: 'Treinos profissionais',
     subtitle: 'Monte programas completos com exercícios, séries, cargas e vídeos — em minutos.',
     gradient: 'linear-gradient(135deg, #8B5CF6, #EF4444)',
@@ -80,7 +80,7 @@ const STEPS = [
   },
   {
     id: 'results',
-    emoji: '📈',
+    icon: BarChart2,
     title: 'Veja a evolução real',
     subtitle: 'Acompanhe o que cada aluno executou, os pesos que usou e como está evoluindo.',
     gradient: 'linear-gradient(135deg, #F59E0B, #EF4444)',
@@ -88,7 +88,7 @@ const STEPS = [
   },
   {
     id: 'ready',
-    emoji: '🚀',
+    icon: Rocket,
     title: 'Você está pronto!',
     subtitle: 'Comece cadastrando seu primeiro aluno. O resto você aprende no caminho.',
     gradient: 'linear-gradient(135deg, #10B981, #3B82F6)',
@@ -166,7 +166,7 @@ function StepVisual({ stepId, gradient }) {
             </div>
           </div>
         ))}
-        <p style={{ margin: '12px 0 0', fontSize: 13, fontWeight: 800, color: '#10B981', textAlign: 'center' }}>+25% em 4 semanas 🔥</p>
+        <p style={{ margin: '12px 0 0', fontSize: 13, fontWeight: 800, color: '#10B981', textAlign: 'center' }}>+25% em 4 semanas</p>
       </div>
     </div>
   );
@@ -261,7 +261,7 @@ export default function OnboardingPersonal() {
             style={{ width: '100%', padding: '16px', borderRadius: 14, border: 'none', background: current.gradient, color: 'white', fontSize: 16, fontWeight: 800, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, letterSpacing: '-0.3px', boxShadow: `0 8px 32px ${current.glow}`, animation: 'fadeInUp 0.5s ease 0.3s both', transition: 'transform 0.2s ease, box-shadow 0.2s ease' }}
             onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 14px 40px ${current.glow}`; }}
             onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 8px 32px ${current.glow}`; }}>
-            {isLast ? '🚀 Ir para o painel' : (
+            {isLast ? <>Ir para o painel <ChevronRight size={18} /></> : (
               <>Próximo <ChevronRight size={18} /></>
             )}
           </button>

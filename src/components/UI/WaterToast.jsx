@@ -24,7 +24,7 @@ export default function WaterToast() {
         <Droplets size={22} color="white" />
       </div>
       <div style={{ flex: 1 }}>
-        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>Hora de beber água! 💧</p>
+        <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#111827' }}>Hora de beber água</p>
         <p style={{ margin: '3px 0 0', fontSize: 12, color: '#6B7280', lineHeight: 1.4 }}>
           Mantenha-se hidratado. Beba pelo menos um copo agora!
         </p>

@@ -59,20 +59,20 @@ export default function Dashboard() {
       Promise.all([
         supabase.from('students').select('*').eq('personal_id', user.id),
         supabase.from('appointments').select('*').eq('personal_id', user.id).eq('date', TODAY),
-        supabase.from('payments').select('amount, paid_at').eq('personal_id', user.id).eq('status', 'pago'),
+        supabase.from('payments').select('amount, paid_date').eq('personal_id', user.id).eq('status', 'pago'),
         supabase.from('workout_sessions').select('student_id, date').eq('personal_id', user.id).gte('date', sevenDaysAgo),
         supabase.from('students').select('id, name, color, initials').eq('personal_id', user.id).eq('status', 'ativo'),
         supabase.from('workout_sessions').select('student_id, date').eq('personal_id', user.id).gte('date', sevenDaysAgo),
         supabase.from('payments').select('student_id, due_date, amount').eq('personal_id', user.id).eq('status', 'pendente').lt('due_date', TODAY),
-        supabase.from('payments').select('amount, paid_at').eq('personal_id', user.id).eq('status', 'pago').gte('paid_at', SIX_MONTHS_AGO),
+        supabase.from('payments').select('amount, paid_date').eq('personal_id', user.id).eq('status', 'pago').gte('paid_date', SIX_MONTHS_AGO),
         supabase.from('payments').select('amount').eq('personal_id', user.id).eq('status', 'pendente'),
       ]).then(([{data:stds},{data:appts},{data:pays},{data:wk},{data:sts},{data:sessions},{data:latePayments},{data:sixMoPays},{data:pendingPays}]) => {
         setStudents(stds || []);
         setTodayAppts((appts || []).sort((a,b) => a.time.localeCompare(b.time)));
 
         const allPays = pays || [];
-        const thisRev = allPays.filter(p => (p.paid_at||'').startsWith(TODAY.slice(0,7))).reduce((s,p)=>s+Number(p.amount),0);
-        const lastRev = allPays.filter(p => { const d=p.paid_at||''; return d>=LAST_MONTH_START&&d<=LAST_MONTH_END; }).reduce((s,p)=>s+Number(p.amount),0);
+        const thisRev = allPays.filter(p => (p.paid_date||'').startsWith(TODAY.slice(0,7))).reduce((s,p)=>s+Number(p.amount),0);
+        const lastRev = allPays.filter(p => { const d=p.paid_date||''; return d>=LAST_MONTH_START&&d<=LAST_MONTH_END; }).reduce((s,p)=>s+Number(p.amount),0);
         setRevenue(thisRev || allPays.reduce((s,p)=>s+Number(p.amount),0));
         setLastMonthRevenue(lastRev);
         setWeekSessions((wk||[]).length);
@@ -88,7 +88,7 @@ export default function Dashboard() {
 
         const byMonth = {};
         for (let i=5;i>=0;i--) { const d=new Date(TODAY); d.setMonth(d.getMonth()-i); d.setDate(1); byMonth[d.toISOString().slice(0,7)]=0; }
-        (sixMoPays||[]).forEach(p => { const k=(p.paid_at||'').slice(0,7); if (k in byMonth) byMonth[k]+=Number(p.amount); });
+        (sixMoPays||[]).forEach(p => { const k=(p.paid_date||'').slice(0,7); if (k in byMonth) byMonth[k]+=Number(p.amount); });
         setMonthlyRevenue(Object.entries(byMonth).map(([month,amount])=>({month,amount})));
         setTotalPending((pendingPays||[]).reduce((s,p)=>s+Number(p.amount),0));
       });
@@ -108,7 +108,7 @@ export default function Dashboard() {
     setNotifyingId(student.id);
     try {
       await supabase.functions.invoke('send-push', {
-        body: { student_ids:[student.id], title:'Sentimos sua falta! 💪', message:'Seu personal está esperando você. Que tal retomar os treinos hoje?', personal_id:user.id, url:'/aluno/dashboard' },
+        body: { student_ids:[student.id], title:'Sentimos sua falta', message:'Seu personal está esperando você. Que tal retomar os treinos hoje?', personal_id:user.id, url:'/aluno/dashboard' },
       });
       setNotifiedIds(prev => new Set([...prev, student.id]));
     } catch {}

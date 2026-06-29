@@ -1,9 +1,11 @@
+import { Award } from 'lucide-react';
+
 export const LEVELS = [
-  { name: 'Iniciante', min: 0,    max: 499,      emoji: '🌱', color: '#10B981' },
-  { name: 'Bronze',    min: 500,  max: 1499,     emoji: '🥉', color: '#CD7F32' },
-  { name: 'Prata',     min: 1500, max: 3499,     emoji: '🥈', color: '#9CA3AF' },
-  { name: 'Ouro',      min: 3500, max: 6999,     emoji: '🥇', color: '#F59E0B' },
-  { name: 'Elite',     min: 7000, max: Infinity, emoji: '💎', color: '#818CF8' },
+  { name: 'Iniciante', min: 0,    max: 499,      color: '#10B981' },
+  { name: 'Bronze',    min: 500,  max: 1499,     color: '#CD7F32' },
+  { name: 'Prata',     min: 1500, max: 3499,     color: '#9CA3AF' },
+  { name: 'Ouro',      min: 3500, max: 6999,     color: '#F59E0B' },
+  { name: 'Elite',     min: 7000, max: Infinity, color: '#818CF8' },
 ];
 
 export function getLevel(xp) {
@@ -30,7 +32,7 @@ export default function XPBar({ totalXP = 0, compact = false }) {
   if (compact) {
     return (
       <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
-        <span style={{ fontSize: 20 }}>{current.emoji}</span>
+        <Award size={20} color={current.color} />
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
             <span style={{ fontSize: 12, fontWeight: 700, color: current.color }}>{current.name}</span>
@@ -47,7 +49,7 @@ export default function XPBar({ totalXP = 0, compact = false }) {
   return (
     <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '14px 16px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 10 }}>
-        <span style={{ fontSize: 28, lineHeight: 1 }}>{current.emoji}</span>
+        <Award size={28} color={current.color} />
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
             <span style={{ fontSize: 15, fontWeight: 800, color: current.color }}>{current.name}</span>
@@ -55,7 +57,7 @@ export default function XPBar({ totalXP = 0, compact = false }) {
           </div>
           {next && (
             <span style={{ fontSize: 10, color: 'var(--gray-400)' }}>
-              {next.min - totalXP} XP para {next.emoji} {next.name}
+              {next.min - totalXP} XP para o nível {next.name}
             </span>
           )}
         </div>

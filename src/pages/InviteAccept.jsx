@@ -1,16 +1,15 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
-import { Zap, Eye, EyeOff, CheckCircle, AlertCircle, Loader, ChevronRight } from 'lucide-react';
+import { Zap, Eye, EyeOff, CheckCircle, AlertCircle, Loader, ChevronRight, Flame, Dumbbell, Activity, HeartPulse, Mail } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { supabase, hasSupabase } from '../lib/supabase';
 
 const GOALS = [
-  { value: 'Emagrecer', emoji: '🔥', label: 'Emagrecer', desc: 'Perder peso e reduzir gordura' },
-  { value: 'Hipertrofia', emoji: '💪', label: 'Ganhar massa muscular', desc: 'Aumentar força e volume' },
-  { value: 'Condicionamento', emoji: '🏃', label: 'Condicionamento físico', desc: 'Mais energia e resistência' },
-  { value: 'Definição', emoji: '⚡', label: 'Definição corporal', desc: 'Tonificar e secar' },
-  { value: 'Saúde', emoji: '🌟', label: 'Qualidade de vida', desc: 'Saúde e bem-estar' },
-  { value: 'Vingança', emoji: '😈', label: 'Fazer ela se arrepender', desc: 'A motivação mais poderosa do mundo' },
+  { value: 'Emagrecer', icon: Flame, label: 'Emagrecer', desc: 'Perder peso e reduzir gordura' },
+  { value: 'Hipertrofia', icon: Dumbbell, label: 'Ganhar massa muscular', desc: 'Aumentar força e volume' },
+  { value: 'Condicionamento', icon: Activity, label: 'Condicionamento físico', desc: 'Mais energia e resistência' },
+  { value: 'Definição', icon: Zap, label: 'Definição corporal', desc: 'Tonificar e secar' },
+  { value: 'Saúde', icon: HeartPulse, label: 'Qualidade de vida', desc: 'Saúde e bem-estar' },
 ];
 
 export default function InviteAccept() {
@@ -154,7 +153,7 @@ export default function InviteAccept() {
               <p style={{ margin: '4px 0 0', fontSize: 16, fontWeight: 700, color: '#111827' }}>
                 {invite.personal_name || 'Seu Personal Trainer'}
               </p>
-              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#3B82F6' }}>para acessar sua área exclusiva 🎉</p>
+              <p style={{ margin: '2px 0 0', fontSize: 12, color: '#3B82F6' }}>para acessar sua área exclusiva</p>
             </div>
 
             <h2 style={{ fontSize: 20, fontWeight: 800, color: '#111827', margin: '0 0 4px' }}>
@@ -251,15 +250,15 @@ export default function InviteAccept() {
                       style={{
                         padding: '12px 14px',
                         borderRadius: 10,
-                        border: `2px solid ${onboarding.goal === g.value ? (g.value === 'Vingança' ? '#7C3AED' : '#3B82F6') : '#E5E7EB'}`,
-                        background: onboarding.goal === g.value ? (g.value === 'Vingança' ? '#F5F3FF' : '#EFF6FF') : 'white',
+                        border: `2px solid ${onboarding.goal === g.value ? '#3B82F6' : '#E5E7EB'}`,
+                        background: onboarding.goal === g.value ? '#EFF6FF' : 'white',
                         cursor: 'pointer',
                         textAlign: 'left',
                         transition: 'all 0.15s',
                       }}
                     >
-                      <div style={{ fontSize: 20, marginBottom: 4 }}>{g.emoji}</div>
-                      <div style={{ fontSize: 12, fontWeight: 700, color: onboarding.goal === g.value ? (g.value === 'Vingança' ? '#5B21B6' : '#1D4ED8') : '#111827', lineHeight: 1.3 }}>{g.label}</div>
+                      <g.icon size={20} color={onboarding.goal === g.value ? '#1D4ED8' : '#6B7280'} style={{ marginBottom: 4 }} />
+                      <div style={{ fontSize: 12, fontWeight: 700, color: onboarding.goal === g.value ? '#1D4ED8' : '#111827', lineHeight: 1.3 }}>{g.label}</div>
                       <div style={{ fontSize: 11, color: '#9CA3AF', marginTop: 2, lineHeight: 1.3 }}>{g.desc}</div>
                     </button>
                   ))}
@@ -282,7 +281,7 @@ export default function InviteAccept() {
         {stage === 'emailconf' && (
           <div style={{ textAlign: 'center' }}>
             <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#FEF3C7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-              <span style={{ fontSize: 32 }}>📧</span>
+              <Mail size={28} color="#D97706" />
             </div>
             <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 800 }}>Verifique seu email</h2>
             <p style={{ margin: '0 0 12px', fontSize: 14, color: '#6B7280' }}>
@@ -301,17 +300,12 @@ export default function InviteAccept() {
         {stage === 'done' && (
           <div style={{ textAlign: 'center' }}>
             <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-              <span style={{ fontSize: 36 }}>🎉</span>
+              <CheckCircle size={32} color="white" />
             </div>
             <h2 style={{ margin: '0 0 8px', fontSize: 22, fontWeight: 800 }}>Tudo pronto!</h2>
-            <p style={{ margin: '0 0 8px', fontSize: 14, color: '#6B7280' }}>
+            <p style={{ margin: '0 0 20px', fontSize: 14, color: '#6B7280' }}>
               Sua conta foi configurada com sucesso.
             </p>
-            {onboarding.goal === 'Vingança' && (
-              <div style={{ background: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)', border: '1px solid #DDD6FE', borderRadius: 10, padding: '12px 16px', marginBottom: 20, fontSize: 13, color: '#5B21B6', fontWeight: 600 }}>
-                😈 Vai arrasar! Ela já vai estar se arrependendo.
-              </div>
-            )}
             <button className="btn-primary" style={{ width: '100%', justifyContent: 'center', padding: 13, fontSize: 15 }} onClick={() => navigate('/aluno')}>
               Acessar minha área
             </button>

@@ -698,7 +698,7 @@ function Footer() {
 
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: 32, display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 16 }}>
           <p style={{ margin: 0, fontSize: 14 }}>© 2026 WAY FIT. Todos os direitos reservados.</p>
-          <p style={{ margin: 0, fontSize: 14 }}>Feito com ❤️ para personal trainers brasileiros</p>
+          <p style={{ margin: 0, fontSize: 14 }}>Desenvolvido para personal trainers brasileiros</p>
         </div>
       </div>
     </footer>

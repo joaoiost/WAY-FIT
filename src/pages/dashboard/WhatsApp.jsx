@@ -76,7 +76,7 @@ function ScheduleModal({ schedule, students, onSave, onClose }) {
               type="text"
               value={form.title}
               onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-              placeholder="Ex: Hora do treino! 💪"
+              placeholder="Ex: Hora do treino"
               maxLength={80}
             />
           </div>
@@ -253,7 +253,7 @@ export default function Notificacoes() {
           );
           setNotifResult({ ok: true, message: `Notificação salva para ${targetIds.length} aluno(s) — aparece quando abrirem o app.` });
         } else {
-          setNotifResult({ ok: true, message: `Push enviado para ${data.sent ?? targetIds.length} aluno(s)! 🎉` });
+          setNotifResult({ ok: true, message: `Push enviado para ${data.sent ?? targetIds.length} aluno(s).` });
         }
       } else {
         setNotifResult({ ok: true, message: `(demo) Push enviado para ${targetIds.length} aluno(s)` });
@@ -347,7 +347,7 @@ export default function Notificacoes() {
                 type="text"
                 value={notifTitle}
                 onChange={e => setNotifTitle(e.target.value)}
-                placeholder="Ex: Treino de hoje disponível! 🏋️"
+                placeholder="Ex: Treino de hoje disponível"
                 maxLength={80}
               />
             </div>
@@ -356,7 +356,7 @@ export default function Notificacoes() {
               <textarea
                 value={notifMessage}
                 onChange={e => setNotifMessage(e.target.value)}
-                placeholder="Ex: Seu treino A está pronto. Bora! 💪"
+                placeholder="Ex: Seu treino A está pronto"
                 rows={3}
                 style={{ resize: 'vertical' }}
               />
@@ -520,7 +520,7 @@ export default function Notificacoes() {
           )}
 
           <div style={{ marginTop: 20, padding: '16px 18px', background: '#F5F3FF', borderRadius: 12, border: '1px solid #DDD6FE' }}>
-            <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#5B21B6' }}>⚙️ Como funciona o envio automático</p>
+            <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: '#5B21B6' }}>Como funciona o envio automático</p>
             <p style={{ margin: 0, fontSize: 12, color: '#7C3AED', lineHeight: 1.6 }}>
               Um robô (GitHub Actions) roda a cada 30 minutos e dispara os lembretes agendados via Edge Function no Supabase.
               A notificação chega no celular mesmo com o app fechado.<br />

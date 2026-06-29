@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect } from 'react';
-import { Save, CheckCircle, Loader } from 'lucide-react';
+import { Save, CheckCircle, Loader, User, HeartPulse, Bandage, Target, Leaf } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
@@ -37,11 +37,11 @@ function CheckGroup({ items, field, cols = 2, form, onToggle }) {
   );
 }
 const SECTIONS = [
-  { id: 'basics', label: 'Dados Pessoais', icon: '👤' },
-  { id: 'health', label: 'Saúde', icon: '❤️' },
-  { id: 'injuries', label: 'Lesões', icon: '🩹' },
-  { id: 'goals', label: 'Objetivos', icon: '🎯' },
-  { id: 'lifestyle', label: 'Estilo de Vida', icon: '🌿' },
+  { id: 'basics', label: 'Dados Pessoais', icon: User },
+  { id: 'health', label: 'Saúde', icon: HeartPulse },
+  { id: 'injuries', label: 'Lesões', icon: Bandage },
+  { id: 'goals', label: 'Objetivos', icon: Target },
+  { id: 'lifestyle', label: 'Estilo de Vida', icon: Leaf },
 ];
 
 export default function Anamnese() {
@@ -210,7 +210,7 @@ export default function Anamnese() {
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, overflowX: 'auto', paddingBottom: 4 }}>
         {SECTIONS.map(s => (
           <button key={s.id} onClick={() => setActiveSection(s.id)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 20, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 13, whiteSpace: 'nowrap', background: activeSection === s.id ? 'var(--accent)' : '#F3F4F6', color: activeSection === s.id ? 'white' : '#6B7280', transition: 'all 0.15s', flexShrink: 0 }}>
-            {s.icon} {s.label}
+            <s.icon size={14} /> {s.label}
           </button>
         ))}
       </div>

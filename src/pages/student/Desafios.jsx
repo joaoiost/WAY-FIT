@@ -1,15 +1,15 @@
 import { useState, useEffect } from 'react';
-import { Target, CheckCircle } from 'lucide-react';
+import { Target, CheckCircle, Dumbbell, Droplet, Salad, Flame, TrendingDown, Ruler, Clock, XCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
 const TYPE_META = {
-  workouts:       { emoji: '🏋️', unit: 'treinos' },
-  water_days:     { emoji: '💧', unit: 'dias' },
-  food_log_days:  { emoji: '🥗', unit: 'dias' },
-  streak_days:    { emoji: '🔥', unit: 'dias' },
-  weight_loss_kg: { emoji: '⬇️', unit: 'kg' },
-  measurements:   { emoji: '📏', unit: 'medições' },
+  workouts:       { icon: Dumbbell,     unit: 'treinos' },
+  water_days:     { icon: Droplet,      unit: 'dias' },
+  food_log_days:  { icon: Salad,        unit: 'dias' },
+  streak_days:    { icon: Flame,        unit: 'dias' },
+  weight_loss_kg: { icon: TrendingDown, unit: 'kg' },
+  measurements:   { icon: Ruler,        unit: 'medições' },
 };
 
 function computeProgress(challenge, sessions, waterLogs, foodLogs) {
@@ -119,7 +119,7 @@ export default function Desafios() {
       {/* XP earned */}
       {xpEarned > 0 && (
         <div className="kpi-card" style={{ cursor: 'default', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 12 }}>
-          <span style={{ fontSize: 28 }}>🎯</span>
+          <Target size={28} color="var(--yellow)" />
           <div>
             <p className="kpi-card-label">XP de Desafios</p>
             <p className="kpi-card-value" style={{ fontSize: 22, color: 'var(--yellow)' }}>{xpEarned} XP</p>
@@ -146,7 +146,7 @@ export default function Desafios() {
 
       {done.length > 0 && (
         <>
-          <h3 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Concluídos ✓</h3>
+          <h3 style={{ margin: '0 0 10px', fontSize: 13, fontWeight: 700, color: 'var(--green)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Concluídos</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {done.map(ch => <ChallengeCard key={ch.id} ch={ch} progress={ch.target_value} done={true} />)}
           </div>
@@ -157,7 +157,7 @@ export default function Desafios() {
 }
 
 function ChallengeCard({ ch, progress, done }) {
-  const meta = TYPE_META[ch.type] || { emoji: '🎯', unit: '' };
+  const meta = TYPE_META[ch.type] || { icon: Target, unit: '' };
   const pct = Math.min(100, Math.round((progress / ch.target_value) * 100));
   const left = daysLeft(ch.end_date);
 
@@ -167,11 +167,11 @@ function ChallengeCard({ ch, progress, done }) {
       borderRadius: 14, padding: 18,
     }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 10 }}>
-        <span style={{ fontSize: 28, flexShrink: 0 }}>{meta.emoji}</span>
+        <meta.icon size={24} color={done ? 'var(--green)' : 'var(--accent)'} style={{ flexShrink: 0 }} />
         <div style={{ flex: 1 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: done ? 'var(--green)' : 'var(--gray-900)' }}>
-              {done && '✅ '}{ch.title}
+            <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: done ? 'var(--green)' : 'var(--gray-900)', display: 'flex', alignItems: 'center', gap: 6 }}>
+              {done && <CheckCircle size={14} color="var(--green)" />}{ch.title}
             </p>
             {ch.xp_reward && (
               <span style={{ fontSize: 11, fontWeight: 700, color: 'var(--yellow)', background: 'rgba(210,153,34,0.12)', padding: '2px 8px', borderRadius: 20, flexShrink: 0, marginLeft: 8 }}>
@@ -196,8 +196,8 @@ function ChallengeCard({ ch, progress, done }) {
       </div>
 
       {!done && left !== null && (
-        <p style={{ margin: 0, fontSize: 11, color: left < 3 ? 'var(--red)' : left < 7 ? 'var(--yellow)' : 'var(--gray-400)', fontWeight: 600 }}>
-          {left > 0 ? `⏱ ${left} dia${left !== 1 ? 's' : ''} restante${left !== 1 ? 's' : ''}` : '🔴 Encerrado'}
+        <p style={{ margin: 0, fontSize: 11, color: left < 3 ? 'var(--red)' : left < 7 ? 'var(--yellow)' : 'var(--gray-400)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+          {left > 0 ? <><Clock size={11} /> {left} dia{left !== 1 ? 's' : ''} restante{left !== 1 ? 's' : ''}</> : <><XCircle size={11} /> Encerrado</>}
         </p>
       )}
     </div>

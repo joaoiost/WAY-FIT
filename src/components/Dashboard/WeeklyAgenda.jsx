@@ -406,7 +406,7 @@ export default function WeeklyAgenda() {
     if (!student?.phone) return;
     const phone = student.phone.replace(/\D/g, '');
     const full = phone.startsWith('55') ? phone : `55${phone}`;
-    const msg = `Olá ${student.name.split(' ')[0]}! Confirmando sua aula de ${appt.type} amanhã às ${appt.time}. Confirma sua presença? 💪`;
+    const msg = `Olá ${student.name.split(' ')[0]}! Confirmando sua aula de ${appt.type} amanhã às ${appt.time}. Confirma sua presença?`;
     window.open(`https://wa.me/${full}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -653,8 +653,8 @@ export default function WeeklyAgenda() {
           {!editingId && (
             <div style={{ display: 'flex', background: 'var(--bg-page)', borderRadius: 10, padding: 4, gap: 4, marginBottom: 18 }}>
               {[
-                { key: 'single', label: '📅 Aula avulsa' },
-                { key: 'weekly', label: '🔄 Agenda semanal' },
+                { key: 'single', label: 'Aula avulsa' },
+                { key: 'weekly', label: 'Agenda semanal' },
               ].map(m => (
                 <button
                   key={m.key}

@@ -12,7 +12,7 @@ const CSS = `
   .header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #F3F4F6; }
   .logo-area { display: flex; align-items: center; gap: 10px; }
   .logo-box { width: 40px; height: 40px; border-radius: 10px; background: var(--accent); display: flex; align-items: center; justify-content: center; }
-  .logo-zap { font-size: 22px; color: white; font-weight: 900; }
+  .logo-zap { font-size: 14px; color: white; font-weight: 900; letter-spacing: -0.5px; }
   .logo-name { font-size: 22px; font-weight: 900; color: #111827; }
   .logo-sub { font-size: 11px; color: #9CA3AF; font-weight: 500; margin-top: 2px; }
   .header-date { text-align: right; }
@@ -205,7 +205,7 @@ export default function RelatorioAluno() {
         <div className="header">
           <div className="logo-area">
             <div className="logo-box">
-              <span className="logo-zap">⚡</span>
+              <span className="logo-zap">WF</span>
             </div>
             <div>
               <div className="logo-name">WAY FIT</div>
@@ -225,7 +225,7 @@ export default function RelatorioAluno() {
           <div className="student-info">
             <h2>{student.name}</h2>
             <p>{student.email || student.phone || ''}{student.plan ? ` · Plano ${student.plan}` : ''}</p>
-            {student.goal && <div className="goal-badge">🎯 {student.goal}</div>}
+            {student.goal && <div className="goal-badge">{student.goal}</div>}
           </div>
         </div>
 

@@ -17,11 +17,11 @@ const DAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const DAYS_FULL = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
 
 const FEELINGS = [
-  { value: 'otimo', label: 'Ótimo', emoji: '💪' },
-  { value: 'bem', label: 'Bem', emoji: '😊' },
-  { value: 'regular', label: 'Regular', emoji: '😐' },
-  { value: 'cansado', label: 'Cansado', emoji: '😓' },
-  { value: 'mal', label: 'Mal', emoji: '😩' },
+  { value: 'otimo', label: 'Ótimo' },
+  { value: 'bem', label: 'Bem' },
+  { value: 'regular', label: 'Regular' },
+  { value: 'cansado', label: 'Cansado' },
+  { value: 'mal', label: 'Mal' },
 ];
 
 function getYouTubeId(url) {
@@ -116,7 +116,7 @@ function RatingModal({ plan, studentId, personalId, onClose, onSaved }) {
               {FEELINGS.map(f => (
                 <button key={f.value} onClick={() => setFeeling(f.value)}
                   style={{ padding: '8px 14px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: feeling === f.value ? 'var(--accent-bg)' : 'var(--gray-100)', color: feeling === f.value ? 'var(--accent-text)' : 'var(--gray-400)', outline: feeling === f.value ? '2px solid var(--accent)' : '2px solid transparent', transition: 'all 0.15s' }}>
-                  {f.emoji} {f.label}
+                  {f.label}
                 </button>
               ))}
             </div>
@@ -405,7 +405,7 @@ export default function MeusTreinos() {
                         <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-400)' }}>
                           {ex.sets}x · {ex.reps} reps{ex.load ? ` · ${ex.load}` : ''}{ex.rest ? ` · ${ex.rest} desc.` : ''}
                         </p>
-                        {ex.obs && <p style={{ margin: '3px 0 0', fontSize: 11, color: 'var(--gray-400)', fontStyle: 'italic' }}>💡 {ex.obs}</p>}
+                        {ex.obs && <p style={{ margin: '3px 0 0', fontSize: 11, color: 'var(--gray-400)', fontStyle: 'italic' }}>{ex.obs}</p>}
                       </div>
                       {videoLoading && (
                         <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 4, fontSize: 11, color: 'var(--gray-400)' }}>
@@ -429,12 +429,12 @@ export default function MeusTreinos() {
                 {!ratedToday ? (
                   <button
                     onClick={() => setRatingModal(plan)}
-                    style={{ background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                    style={{ background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 8, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 6 }}
                   >
-                    ⭐ Avaliar sessão
+                    <Star size={13} fill="white" /> Avaliar sessão
                   </button>
                 ) : (
-                  <p style={{ margin: 0, fontSize: 13, color: '#10B981', fontWeight: 600 }}>✓ Avaliação registrada hoje</p>
+                  <p style={{ margin: 0, fontSize: 13, color: '#10B981', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}><CheckCircle size={14} /> Avaliação registrada hoje</p>
                 )}
               </div>
             )}

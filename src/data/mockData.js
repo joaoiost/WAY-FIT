@@ -228,14 +228,14 @@ export const monthlyRevenue = [
 export const messageTemplates = [
   { id: 1, name: 'Lembrete de Aula', message: 'Olá {nome}! Lembrando que sua aula é amanhã às {horario}. Confirme sua presença!' },
   { id: 2, name: 'Pagamento Pendente', message: 'Olá {nome}! Seu pagamento do plano {plano} está pendente. Regularize para continuar treinando!' },
-  { id: 3, name: 'Parabéns pelo Resultado', message: 'Parabéns {nome}! Você atingiu sua meta de {meta}. Continue assim, você é incrível! 💪' },
+  { id: 3, name: 'Parabéns pelo Resultado', message: 'Parabéns {nome}! Você atingiu sua meta de {meta}. Continue assim, você é incrível.' },
   { id: 4, name: 'Novo Treino Disponível', message: 'Olá {nome}! Seu novo treino já está disponível no app. Acesse e confira as novidades!' },
   { id: 5, name: 'Falta de Assiduidade', message: 'Olá {nome}! Sentimos sua falta esta semana. Está tudo bem? Pode contar comigo para retomar seus treinos!' },
 ];
 
 export const sentMessages = [
   { id: 1, studentName: 'Lucas Mendes', template: 'Lembrete de Aula', message: 'Olá Lucas! Lembrando que sua aula é amanhã às 09:00. Confirme sua presença!', sentAt: '2026-05-22 18:30', status: 'enviado' },
-  { id: 2, studentName: 'Ana Beatriz', template: 'Parabéns pelo Resultado', message: 'Parabéns Ana! Você atingiu sua meta de perder 5kg. Continue assim, você é incrível! 💪', sentAt: '2026-05-21 14:15', status: 'enviado' },
+  { id: 2, studentName: 'Ana Beatriz', template: 'Parabéns pelo Resultado', message: 'Parabéns Ana! Você atingiu sua meta de perder 5kg. Continue assim, você é incrível.', sentAt: '2026-05-21 14:15', status: 'enviado' },
   { id: 3, studentName: 'Rafael Costa', template: 'Pagamento Pendente', message: 'Olá Rafael! Seu pagamento do plano Start está pendente. Regularize para continuar treinando!', sentAt: '2026-05-20 09:00', status: 'enviado' },
   { id: 4, studentName: 'Marina Silva', template: 'Falta de Assiduidade', message: 'Olá Marina! Sentimos sua falta esta semana. Está tudo bem? Pode contar comigo para retomar seus treinos!', sentAt: '2026-05-19 11:00', status: 'enviado' },
 ];

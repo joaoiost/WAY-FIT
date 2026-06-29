@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { Bell, Menu, CheckCheck, Search, X } from 'lucide-react';
+import { Bell, Menu, CheckCheck, Search, X, MessageCircle, Dumbbell, DollarSign, Calendar, AlertTriangle, Users, Droplets, Trophy, TrendingUp } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
@@ -11,6 +11,12 @@ const TYPE_COLORS = {
   payment: '#EF4444', absence: '#F59E0B', appointment: '#3B82F6',
   student: '#10B981', workout: '#8B5CF6', water: '#60A5FA',
   achievement: '#F59E0B', message: '#10B981', progress: '#8B5CF6',
+};
+
+const TYPE_ICON_COMPONENTS = {
+  message: MessageCircle, workout: Dumbbell, payment: DollarSign,
+  appointment: Calendar, custom: Bell, absence: AlertTriangle,
+  student: Users, water: Droplets, achievement: Trophy, progress: TrendingUp,
 };
 
 const PAGE_NAMES = {
@@ -94,7 +100,7 @@ export default function Header() {
         </button>
 
         <div style={{ minWidth: 0 }}>
-          <h1 className="header-greeting">{greeting}, {firstName}! 👋</h1>
+          <h1 className="header-greeting">{greeting}, {firstName}</h1>
           <h1 className="header-pagename">{pageName}</h1>
           <p className="header-date">
             {now.toLocaleDateString('pt-BR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
@@ -198,8 +204,8 @@ export default function Header() {
                     onMouseEnter={e => e.currentTarget.style.background = 'var(--gray-50)'}
                     onMouseLeave={e => e.currentTarget.style.background = n.read ? 'var(--bg-surface)' : 'var(--accent-bg)'}
                   >
-                    <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TYPE_COLORS[n.type] || 'var(--gray-400)'}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 17, flexShrink: 0 }}>
-                      {n.icon}
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: `${TYPE_COLORS[n.type] || 'var(--gray-400)'}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      {(() => { const Icon = TYPE_ICON_COMPONENTS[n.type] || Bell; return <Icon size={16} color={TYPE_COLORS[n.type] || 'var(--gray-400)'} />; })()}
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>

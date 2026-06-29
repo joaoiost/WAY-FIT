@@ -237,29 +237,30 @@ export default function FotosProgresso() {
       {/* Tabs */}
       <div style={{ display: 'flex', background: 'var(--bg-page)', borderRadius: 10, padding: 4, marginBottom: 20, width: 'fit-content', gap: 2 }}>
         {[
-          { key: 'galeria', label: '📸 Galeria' },
-          { key: 'comparar', label: '🔀 Comparar' },
+          { key: 'galeria', label: 'Galeria', icon: Camera },
+          { key: 'comparar', label: 'Comparar', icon: GitCompare },
         ].map(t => (
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
             style={{
               padding: '7px 18px', borderRadius: 8, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
+              display: 'flex', alignItems: 'center', gap: 6,
               background: tab === t.key ? 'white' : 'transparent',
               color: tab === t.key ? '#111827' : '#6B7280',
               boxShadow: tab === t.key ? '0 1px 4px rgba(0,0,0,0.1)' : 'none',
               transition: 'all 0.15s',
             }}
-          >{t.label}</button>
+          ><t.icon size={14} /> {t.label}</button>
         ))}
       </div>
 
       {tab === 'galeria' && (
         <>
           <div style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', border: '1px solid #DBEAFE', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-            <span style={{ fontSize: 20 }}>📸</span>
+            <Camera size={20} color="#1E40AF" />
             <div>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1E40AF' }}>Registre sua evolução!</p>
+              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1E40AF' }}>Registre sua evolução</p>
               <p style={{ margin: '4px 0 0', fontSize: 13, color: '#3B82F6' }}>
                 Tire fotos no mesmo horário, posição e iluminação para uma comparação mais precisa.
               </p>

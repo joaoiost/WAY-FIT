@@ -241,7 +241,7 @@ export default function AlunoDetalhe() {
               <span className={`tag ${student.status === 'ativo' ? 'tag-green' : 'tag-yellow'}`}>
                 {student.status === 'ativo' ? 'Ativo' : 'Pendente'}
               </span>
-              {latePay.length > 0 && <span className="tag tag-red">💰 Pagamento atrasado</span>}
+              {latePay.length > 0 && <span className="tag tag-red">Pagamento atrasado</span>}
             </div>
             <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-500)' }}>
               {student.goal && <span>{student.goal} · </span>}
@@ -731,7 +731,7 @@ export default function AlunoDetalhe() {
           {(student.goal || student.notes) && (
             <div style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: 20, border: '1px solid var(--border)' }}>
               <h3 style={{ margin: '0 0 12px', fontSize: 15, fontWeight: 700, color: 'var(--gray-900)' }}>Objetivo</h3>
-              {student.goal && <p style={{ margin: '0 0 8px', fontSize: 14, color: 'var(--gray-700)', fontWeight: 600 }}>🎯 {student.goal}</p>}
+              {student.goal && <p style={{ margin: '0 0 8px', fontSize: 14, color: 'var(--gray-700)', fontWeight: 600 }}>{student.goal}</p>}
               {student.notes && <p style={{ margin: 0, fontSize: 13, color: 'var(--gray-500)' }}>{student.notes}</p>}
             </div>
           )}
@@ -775,7 +775,7 @@ export default function AlunoDetalhe() {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 4 }}>
                       <Droplets size={15} color={goalReached ? 'rgba(255,255,255,0.9)' : '#0284C7'} />
                       <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: goalReached ? 'white' : 'var(--gray-900)' }}>
-                        {goalReached ? 'Meta de água atingida! 💧' : 'Hidratação Hoje'}
+                        {goalReached ? 'Meta de água atingida' : 'Hidratação Hoje'}
                       </p>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 5, marginBottom: 10 }}>
@@ -917,11 +917,22 @@ export default function AlunoDetalhe() {
                       <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', width: 64, flexShrink: 0 }}>
                         {new Date(c.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: 'numeric', month: 'short' })}
                       </p>
-                      <div style={{ display: 'flex', gap: 8, flex: 1 }} title={`Humor ${c.mood} · Energia ${c.energy} · Sono ${c.sleep_quality} · Dores ${c.soreness}`}>
-                        <span style={{ fontSize: 20 }}>{['😫','😕','😐','🙂','😄'][(c.mood || 3) - 1]}</span>
-                        <span style={{ fontSize: 20 }}>{['🪫','😪','⚡','💪','🚀'][(c.energy || 3) - 1]}</span>
-                        <span style={{ fontSize: 20 }}>{['😵','😕','😐','😌','🌟'][(c.sleep_quality || 3) - 1]}</span>
-                        <span style={{ fontSize: 20 }}>{['💚','🟢','🟡','🟠','🔴'][(c.soreness || 1) - 1]}</span>
+                      <div style={{ display: 'flex', gap: 6, flex: 1, flexWrap: 'wrap' }}>
+                        {[
+                          { label: 'Humor',   value: c.mood,          invert: false },
+                          { label: 'Energia', value: c.energy,        invert: false },
+                          { label: 'Sono',    value: c.sleep_quality, invert: false },
+                          { label: 'Dores',   value: c.soreness,      invert: true  },
+                        ].map(m => {
+                          const v = m.value || 3;
+                          const score = m.invert ? 6 - v : v;
+                          const color = score <= 2 ? 'var(--red)' : score === 3 ? 'var(--yellow)' : 'var(--green)';
+                          return (
+                            <span key={m.label} style={{ fontSize: 10, fontWeight: 700, color, background: color + '14', padding: '3px 7px', borderRadius: 6, whiteSpace: 'nowrap' }}>
+                              {m.label} {v}/5
+                            </span>
+                          );
+                        })}
                       </div>
                       {c.notes && <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-400)', maxWidth: 120, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{c.notes}</p>}
                     </div>
@@ -990,7 +1001,7 @@ export default function AlunoDetalhe() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <h3 style={{ margin: '4px 0 0', fontSize: 13, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Feedback do Aluno</h3>
               {ratings.map(r => {
-                const FEELINGS = { otimo: '💪 Ótimo', bem: '😊 Bem', regular: '😐 Regular', cansado: '😓 Cansado', mal: '😩 Mal' };
+                const FEELINGS = { otimo: 'Ótimo', bem: 'Bem', regular: 'Regular', cansado: 'Cansado', mal: 'Mal' };
                 return (
                   <div key={r.id} style={{ background: 'var(--bg-surface)', borderRadius: 12, padding: '14px 18px', border: '1px solid var(--border)', display: 'flex', alignItems: 'flex-start', gap: 14 }}>
                     <div style={{ minWidth: 56, textAlign: 'center' }}>

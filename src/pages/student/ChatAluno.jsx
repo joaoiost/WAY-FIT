@@ -55,7 +55,7 @@ function DateDivider({ dateStr }) {
 }
 
 const MOCK_MSGS = [
-  { id: 1, from_role: 'personal', text: 'Olá! Bem-vindo ao chat. Pode me chamar aqui a qualquer hora! 💪', created_at: new Date(Date.now() - 3600000).toISOString() },
+  { id: 1, from_role: 'personal', text: 'Olá! Bem-vindo ao chat. Pode me chamar aqui a qualquer hora.', created_at: new Date(Date.now() - 3600000).toISOString() },
 ];
 
 export default function ChatAluno() {

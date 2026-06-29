@@ -134,7 +134,7 @@ export default function WaterTracker({ goalMl = 2000, studentId }) {
             }} />
           ))}
           <div className="water-celebrate-msg">
-            <div style={{ fontSize: 64, lineHeight: 1, marginBottom: 16 }}>💧</div>
+            <Droplets size={56} color="white" style={{ marginBottom: 16 }} />
             <p style={{ margin: '0 0 8px', fontSize: 28, fontWeight: 900, color: 'white', letterSpacing: '-0.5px' }}>
               Meta atingida!
             </p>
@@ -186,7 +186,7 @@ export default function WaterTracker({ goalMl = 2000, studentId }) {
             borderRadius: 10, padding: '7px 12px',
             marginBottom: 14,
           }}>
-            <span style={{ fontSize: 16 }}>💧</span>
+            <Droplets size={16} color="#38BDF8" />
             <p style={{ margin: 0, fontSize: 12, fontWeight: 700, color: '#38BDF8' }}>
               Lembrou de beber água hoje? Anota agora!
             </p>
@@ -210,7 +210,7 @@ export default function WaterTracker({ goalMl = 2000, studentId }) {
             </div>
             <div>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 800, color: 'white' }}>
-                {goalReachedAnim ? 'Meta atingida! 🎉' : 'Hidratação'}
+                {goalReachedAnim ? 'Meta atingida' : 'Hidratação'}
               </p>
               <p style={{ margin: 0, fontSize: 11, color: 'rgba(255,255,255,0.5)', fontWeight: 500 }}>
                 meta: {goalGlasses} copos · {goalL}L
@@ -308,7 +308,7 @@ export default function WaterTracker({ goalMl = 2000, studentId }) {
                 : isLow
                   ? `● ${goalGlasses - glasses} copos para a meta`
                   : goalReachedAnim
-                    ? '● Meta do dia batida! 🏆'
+                    ? '● Meta do dia batida'
                     : `● ${goalGlasses - glasses} copo${goalGlasses - glasses !== 1 ? 's' : ''} restante${goalGlasses - glasses !== 1 ? 's' : ''}`
               }
             </p>

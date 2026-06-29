@@ -4,8 +4,6 @@ import { supabase, hasSupabase } from '../lib/supabase';
 
 const NotificationsContext = createContext();
 
-const TYPE_ICONS = { message: '💬', workout: '💪', payment: '💰', appointment: '📅', custom: '🔔', absence: '⚠️', student: '👤', water: '💧', achievement: '🔥', progress: '📊' };
-
 function formatTime(ts) {
   const d = new Date(ts);
   const now = new Date();
@@ -19,8 +17,8 @@ function formatTime(ts) {
 }
 
 const STUDENT_NOTIFS_STATIC = [
-  { id: 'sw1', icon: '💪', title: 'Treino disponível', message: 'Seu treino de hoje está pronto! Bora treinar!', time: 'Hoje', read: false, type: 'workout' },
-  { id: 'sw2', icon: '🔥', title: 'Continue assim!', message: 'Registre seu progresso regularmente para acompanhar sua evolução.', time: 'Hoje', read: true, type: 'achievement' },
+  { id: 'sw1', title: 'Treino disponível', message: 'Seu treino de hoje está pronto.', time: 'Hoje', read: false, type: 'workout' },
+  { id: 'sw2', title: 'Continue assim', message: 'Registre seu progresso regularmente para acompanhar sua evolução.', time: 'Hoje', read: true, type: 'achievement' },
 ];
 
 async function loadPersonalNotifications(userId) {
@@ -48,7 +46,6 @@ async function loadPersonalNotifications(userId) {
   (upcoming || []).forEach((a, i) => {
     notifs.push({
       id: `upcoming-${i}`,
-      icon: '📅',
       title: 'Aula em breve',
       message: `${a.student_name} — ${a.type} às ${a.time.slice(0,5)}`,
       time: 'Hoje',
@@ -71,7 +68,6 @@ async function loadPersonalNotifications(userId) {
     const daysLate = Math.floor((Date.now() - new Date(p.due_date).getTime()) / 86400000);
     notifs.push({
       id: `pay-${i}`,
-      icon: '💰',
       title: 'Pagamento pendente',
       message: `${p.student_name} — R$ ${Number(p.amount).toLocaleString('pt-BR')} (${daysLate}d atraso)`,
       time: new Date(p.due_date).toLocaleDateString('pt-BR'),
@@ -101,7 +97,6 @@ async function loadPersonalNotifications(userId) {
     inactive.slice(0, 3).forEach((s, i) => {
       notifs.push({
         id: `absent-${i}`,
-        icon: '⚠️',
         title: 'Aluno sem treinar',
         message: `${s.name} não treina há mais de 7 dias`,
         time: 'Esta semana',
@@ -127,7 +122,6 @@ async function loadPersonalNotifications(userId) {
     const daysUntil = Math.ceil((new Date(p.due_date) - new Date()) / 86400000);
     notifs.push({
       id: `renew-${i}`,
-      icon: '🔔',
       title: 'Pagamento vencendo em breve',
       message: `${p.student_name} — vence em ${daysUntil}d (R$ ${Number(p.amount).toLocaleString('pt-BR')})`,
       time: new Date(p.due_date + 'T12:00:00').toLocaleDateString('pt-BR'),
@@ -148,8 +142,7 @@ async function loadPersonalNotifications(userId) {
   (invites || []).forEach(inv => {
     notifs.push({
       id: `invite-${inv.id}`,
-      icon: '👤',
-      title: 'Novo aluno entrou!',
+      title: 'Novo aluno entrou',
       message: `${inv.student_name || inv.email} aceitou seu convite`,
       time: new Date(inv.created_at).toLocaleDateString('pt-BR'),
       read: false,
@@ -175,7 +168,7 @@ export function NotificationsProvider({ children }) {
       } else {
         // Offline fallback — no fake names
         setNotifications([
-          { id: 'off1', icon: '📅', title: 'Sem conexão', message: 'Notificações carregam quando online', time: 'Agora', read: false, type: 'appointment' },
+          { id: 'off1', title: 'Sem conexão', message: 'Notificações carregam quando online', time: 'Agora', read: false, type: 'appointment' },
         ]);
       }
       return;
@@ -198,7 +191,6 @@ export function NotificationsProvider({ children }) {
           if (!data?.length) return;
           const realNotifs = data.map(n => ({
             id: `sn-${n.id}`,
-            icon: TYPE_ICONS[n.type] || '🔔',
             title: n.title,
             message: n.message,
             time: formatTime(n.created_at),
@@ -218,7 +210,6 @@ export function NotificationsProvider({ children }) {
         }, ({ new: n }) => {
           setNotifications(prev => [{
             id: `sn-${n.id}`,
-            icon: TYPE_ICONS[n.type] || '🔔',
             title: n.title,
             message: n.message,
             time: 'Agora',
@@ -240,8 +231,8 @@ export function NotificationsProvider({ children }) {
     const t = setInterval(() => {
       setWaterToast(true);
       setNotifications(prev => [{
-        id: Date.now(), icon: '💧', title: 'Hora de beber água!',
-        message: 'Beba um copo de água agora. Hidratação é fundamental! 💧',
+        id: Date.now(), title: 'Hora de beber água',
+        message: 'Beba um copo de água agora. Hidratação é fundamental.',
         time: 'Agora', read: false, type: 'water',
       }, ...prev]);
     }, 30 * 60 * 1000);

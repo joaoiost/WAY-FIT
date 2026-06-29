@@ -1,7 +1,7 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import confetti from 'canvas-confetti';
-import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star, TrendingUp, Loader } from 'lucide-react';
+import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star, TrendingUp, Loader, Trophy, Lightbulb } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { fetchExerciseVideo } from '../../lib/youtubeVideo';
@@ -12,11 +12,11 @@ const TYPE_COLORS = {
 };
 
 const FEELINGS = [
-  { value: 'otimo', label: 'Ótimo', emoji: '💪' },
-  { value: 'bem', label: 'Bem', emoji: '😊' },
-  { value: 'regular', label: 'Regular', emoji: '😐' },
-  { value: 'cansado', label: 'Cansado', emoji: '😓' },
-  { value: 'mal', label: 'Mal', emoji: '😩' },
+  { value: 'otimo', label: 'Ótimo' },
+  { value: 'bem', label: 'Bem' },
+  { value: 'regular', label: 'Regular' },
+  { value: 'cansado', label: 'Cansado' },
+  { value: 'mal', label: 'Mal' },
 ];
 
 function parseRestSeconds(rest) {
@@ -131,7 +131,7 @@ function RatingModal({ plan, studentId, personalId, onClose, onSaved }) {
           {FEELINGS.map(f => (
             <button key={f.value} onClick={() => setFeeling(f.value)}
               style={{ padding: '8px 12px', borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', border: 'none', background: feeling === f.value ? 'var(--accent-bg)' : 'var(--bg-page)', color: feeling === f.value ? 'var(--accent)' : 'var(--gray-500)', outline: feeling === f.value ? '2px solid var(--accent)' : '2px solid transparent' }}>
-              {f.emoji} {f.label}
+              {f.label}
             </button>
           ))}
         </div>
@@ -226,9 +226,9 @@ export default function ExecutarTreino() {
           .eq('student_id', student.id).not('load_actual', 'is', null)
           .order('created_at', { ascending: false }).limit(500),
         supabase.from('session_ratings').select('id').eq('student_id', student.id).eq('date', todayDate).maybeSingle(),
-        supabase.from('nutrition_anamnesis').select('weight_kg').eq('student_id', student.id).maybeSingle(),
+        supabase.from('nutrition_anamnesis').select('weight').eq('student_id', student.id).maybeSingle(),
       ]);
-      if (ana?.weight_kg) setStudentWeight(ana.weight_kg);
+      if (ana?.weight) setStudentWeight(ana.weight);
 
       if (!p) { navigate('/aluno/treinos'); return; }
 
@@ -461,7 +461,7 @@ export default function ExecutarTreino() {
       <>
         <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg, #0F172A 0%, #1E3A5F 60%, #0F172A 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
           <div style={{ textAlign: 'center', color: 'white', maxWidth: 380, width: '100%' }}>
-            <div style={{ fontSize: 80, marginBottom: 16, lineHeight: 1 }}>🏆</div>
+            <Trophy size={64} color="#F59E0B" style={{ marginBottom: 16 }} />
             <h1 style={{ fontSize: 30, fontWeight: 900, margin: '0 0 8px', letterSpacing: '-0.5px' }}>Treino concluído!</h1>
             <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.6)', margin: '0 0 36px' }}>{plan?.name}</p>
 
@@ -482,9 +482,9 @@ export default function ExecutarTreino() {
             {!ratedToday && (
               <button
                 onClick={() => setShowRating(true)}
-                style={{ width: '100%', padding: '16px', borderRadius: 14, background: 'linear-gradient(135deg, #F59E0B, #EF4444)', border: 'none', color: 'white', fontSize: 16, fontWeight: 800, cursor: 'pointer', marginBottom: 12, letterSpacing: '-0.3px' }}
+                style={{ width: '100%', padding: '16px', borderRadius: 14, background: 'linear-gradient(135deg, #F59E0B, #EF4444)', border: 'none', color: 'white', fontSize: 16, fontWeight: 800, cursor: 'pointer', marginBottom: 12, letterSpacing: '-0.3px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
               >
-                ⭐ Avaliar sessão
+                <Star size={17} fill="white" /> Avaliar sessão
               </button>
             )}
 
@@ -574,7 +574,7 @@ export default function ExecutarTreino() {
           {ssGroup && (
             <div style={{ background: ssColor, padding: '6px 16px', display: 'flex', alignItems: 'center', gap: 8 }}>
               <span style={{ fontSize: 11, fontWeight: 900, color: 'white', letterSpacing: '0.08em' }}>
-                ⚡ SUPERSET {ssGroup} — {ssPositionInGroup} de {ssExercises.length}
+                SUPERSET {ssGroup} — {ssPositionInGroup} de {ssExercises.length}
               </span>
               {nextInSameSuperset && (
                 <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.8)', marginLeft: 'auto' }}>
@@ -626,7 +626,7 @@ export default function ExecutarTreino() {
 
           {ex.obs && (
             <div style={{ marginTop: 12, background: 'rgba(245,158,11,0.08)', borderRadius: 8, padding: '8px 12px', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', gap: 7, alignItems: 'flex-start' }}>
-              <span style={{ fontSize: 15, flexShrink: 0, marginTop: 1 }}>💡</span>
+              <Lightbulb size={15} color="var(--yellow)" style={{ flexShrink: 0, marginTop: 1 }} />
               <p style={{ margin: 0, fontSize: 12, color: 'var(--yellow)', lineHeight: 1.5 }}>{ex.obs}</p>
             </div>
           )}
@@ -756,9 +756,9 @@ export default function ExecutarTreino() {
           </div>
           {allSetsDone && sets.length > 0 && parseFloat(sets[0]?.load || 0) > 0 && (
             <div style={{ marginTop: 12, padding: '10px 14px', borderRadius: 10, background: '#F0FDF4', border: '1px solid #86EFAC', display: 'flex', alignItems: 'center', gap: 8 }}>
-              <span style={{ fontSize: 18 }}>💪</span>
+              <TrendingUp size={18} color="#10B981" />
               <div>
-                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#10B981' }}>Sugestão de progressão!</p>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#10B981' }}>Sugestão de progressão</p>
                 <p style={{ margin: 0, fontSize: 11, color: '#059669' }}>Você concluiu todas as séries. Tente +2.5kg na próxima sessão.</p>
               </div>
             </div>
@@ -795,7 +795,7 @@ export default function ExecutarTreino() {
         </button>
         <button onClick={goNext}
           style={{ flex: 2.5, padding: '14px', borderRadius: 12, border: 'none', fontSize: 15, fontWeight: 800, cursor: 'pointer', background: allSetsDone ? 'linear-gradient(135deg, #10B981, #059669)' : `linear-gradient(135deg, ${color}, #3B82F6)`, color: 'white', transition: 'background 0.3s', letterSpacing: '-0.2px' }}>
-          {isLastExercise ? (allSetsDone ? '🏁 Concluir treino' : 'Encerrar treino') : (allSetsDone ? '✓ Próximo →' : 'Próximo →')}
+          {isLastExercise ? (allSetsDone ? 'Concluir treino' : 'Encerrar treino') : (allSetsDone ? '✓ Próximo →' : 'Próximo →')}
         </button>
       </div>
     </div>

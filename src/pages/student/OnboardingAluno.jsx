@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronRight, Dumbbell, Target, Scale } from 'lucide-react';
+import { ChevronRight, Dumbbell, Target, Scale, Flame, Zap, HeartPulse, Leaf, Stethoscope, Hand } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
@@ -38,12 +38,12 @@ const CSS = `
 `;
 
 const GOALS = [
-  { value: 'Hipertrofia', label: 'Ganho de massa', emoji: '💪' },
-  { value: 'Emagrecimento', label: 'Emagrecimento', emoji: '🔥' },
-  { value: 'Condicionamento', label: 'Condicionamento físico', emoji: '⚡' },
-  { value: 'Força', label: 'Ganho de força', emoji: '🏋️' },
-  { value: 'Saúde', label: 'Saúde e bem-estar', emoji: '🌱' },
-  { value: 'Reabilitação', label: 'Reabilitação', emoji: '🩺' },
+  { value: 'Hipertrofia', label: 'Ganho de massa', icon: Dumbbell },
+  { value: 'Emagrecimento', label: 'Emagrecimento', icon: Flame },
+  { value: 'Condicionamento', label: 'Condicionamento físico', icon: Zap },
+  { value: 'Força', label: 'Ganho de força', icon: Dumbbell },
+  { value: 'Saúde', label: 'Saúde e bem-estar', icon: Leaf },
+  { value: 'Reabilitação', label: 'Reabilitação', icon: Stethoscope },
 ];
 
 export default function OnboardingAluno() {
@@ -109,7 +109,7 @@ export default function OnboardingAluno() {
         <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(16,185,129,0.2)', animation: 'ripple 2.5s ease-out infinite' }} />
         <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(16,185,129,0.12)', animation: 'ripple 2.5s ease-out infinite 0.7s' }} />
         <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', background: 'linear-gradient(135deg, #10B981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 60px rgba(16,185,129,0.5)', animation: 'float 3s ease-in-out infinite, bounceIn 0.7s cubic-bezier(0.34,1.56,0.64,1) both' }}>
-          <span style={{ fontSize: 72 }}>👋</span>
+          <Hand size={64} color="white" />
         </div>
       </div>
 
@@ -147,7 +147,7 @@ export default function OnboardingAluno() {
               style={{ padding: '14px 12px', borderRadius: 14, border: `2px solid ${selected ? 'rgba(139,92,246,0.8)' : 'rgba(255,255,255,0.1)'}`, background: selected ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.06)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 0.2s ease', backdropFilter: 'blur(8px)', animation: `goalPop 0.4s ease ${i * 0.07}s both`, transform: selected ? 'scale(1.04)' : 'scale(1)' }}
               onMouseEnter={e => { if (!selected) e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
               onMouseLeave={e => { if (!selected) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}>
-              <span style={{ fontSize: 26 }}>{g.emoji}</span>
+              <g.icon size={24} color={selected ? 'white' : 'rgba(255,255,255,0.65)'} />
               <span style={{ fontSize: 12, fontWeight: 700, color: selected ? 'white' : 'rgba(255,255,255,0.65)', textAlign: 'center', lineHeight: 1.3 }}>{g.label}</span>
             </button>
           );
@@ -200,7 +200,7 @@ export default function OnboardingAluno() {
         onMouseLeave={e => { e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(245,158,11,0.45)'; }}>
         {saving
           ? <><div style={{ width: 18, height: 18, border: '2.5px solid rgba(255,255,255,0.4)', borderTopColor: 'white', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} /> Salvando...</>
-          : <>🏋️ Ver meu treino</>
+          : <><Dumbbell size={18} /> Ver meu treino</>
         }
       </button>
 

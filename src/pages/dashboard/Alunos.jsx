@@ -1,5 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react';
-import { Search, Plus, Edit2, Trash2, Download, Copy, Check, ExternalLink, Calendar, UserCheck, Smartphone, X, AlertCircle, Users, AlertTriangle, Clock } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, Download, Copy, Check, ExternalLink, Calendar, UserCheck, Smartphone, X, AlertCircle, Users, AlertTriangle, Clock, Mail } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import Avatar from '../../components/UI/Avatar';
 import Badge from '../../components/UI/Badge';
@@ -92,7 +92,7 @@ function InviteSheet({ student, sendInvite, onClose }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const waText = `Olá ${name}! 👋\nSou seu personal trainer e criei sua área exclusiva no *WAY FIT*.\n\n✅ Treinos personalizados\n📅 Agenda de aulas\n💬 Chat direto comigo\n\n👉 Crie sua conta agora:\n${tokenUrl || '...'}`;
+  const waText = `Olá ${name}! Sou seu personal trainer e criei sua área exclusiva no *WAY FIT*.\n\n- Treinos personalizados\n- Agenda de aulas\n- Chat direto comigo\n\nCrie sua conta agora:\n${tokenUrl || '...'}`;
   const waMsg = encodeURIComponent(waText);
 
   return (
@@ -153,7 +153,7 @@ function InviteSheet({ student, sendInvite, onClose }) {
         <a
           href={`mailto:${student.email}?subject=Seu acesso ao WAY FIT&body=${encodeURIComponent(`Olá ${name}!\n\nSeu personal trainer criou sua área exclusiva no WAY FIT.\n\nCrie sua conta pelo link abaixo:\n${tokenUrl}\n\nAbsolutamente qualquer dúvida é só responder este email!`)}`}
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7, padding: '12px', background: '#EFF6FF', color: '#1D4ED8', border: '1px solid #BFDBFE', borderRadius: 12, textDecoration: 'none', fontSize: 14, fontWeight: 700, marginBottom: 10 }}>
-          ✉️ Enviar por email
+          <Mail size={15} /> Enviar por email
         </a>
       )}
 

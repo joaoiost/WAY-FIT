@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star, TrendingUp, Loader, Trophy, Lightbulb } from 'lucide-react';
+import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star, TrendingUp, Loader, Trophy, Lightbulb, ExternalLink } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { fetchExerciseVideo } from '../../lib/youtubeVideo';
@@ -584,16 +584,18 @@ export default function ExecutarTreino() {
             </div>
           </div>
 
-          {/* Thumbnail YouTube inline — toca para reproduzir sem sair do app */}
-          {(hasVideo || videoFetching) && (() => {
-            const ytId = effectiveVideoUrl ? getYouTubeId(effectiveVideoUrl) : null;
-            if (videoFetching) return (
-              <div style={{ margin: '12px 0 0', borderRadius: 12, background: 'var(--bg-page)', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-                <Loader size={16} color="#9CA3AF" style={{ animation: 'spin 1s linear infinite' }} />
-                <span style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 600 }}>Buscando demonstração...</span>
-              </div>
-            );
-            if (ytId) return (
+          {/* Vídeo de demonstração */}
+          {videoFetching && (
+            <div style={{ margin: '12px 0 0', borderRadius: 12, background: 'var(--bg-page)', height: 60, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <Loader size={16} color="#9CA3AF" style={{ animation: 'spin 1s linear infinite' }} />
+              <span style={{ fontSize: 12, color: 'var(--gray-400)', fontWeight: 600 }}>Buscando demonstração...</span>
+            </div>
+          )}
+
+          {hasVideo && !videoFetching && (() => {
+            const ytId = getYouTubeId(effectiveVideoUrl);
+            if (!ytId) return null;
+            return (
               <div onClick={() => setVideoModal(true)} style={{ margin: '12px 0 0', borderRadius: 12, overflow: 'hidden', cursor: 'pointer', position: 'relative', background: '#000', lineHeight: 0 }}>
                 <img src={`https://img.youtube.com/vi/${ytId}/mqdefault.jpg`} alt={ex.name} style={{ width: '100%', display: 'block' }} onError={e => { e.currentTarget.style.display = 'none'; }} />
                 <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.22)' }}>
@@ -606,8 +608,31 @@ export default function ExecutarTreino() {
                 </div>
               </div>
             );
-            return null;
           })()}
+
+          {/* Fallback: botão de busca no YouTube — aparece sempre que não há vídeo embutido */}
+          {!videoFetching && !hasVideo && ex.name && (
+            <a
+              href={`https://www.youtube.com/results?search_query=${encodeURIComponent(ex.name + ' execução correta')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display: 'flex', alignItems: 'center', gap: 8,
+                margin: '12px 0 0', padding: '10px 14px',
+                borderRadius: 10, border: '1px solid var(--border)',
+                background: 'var(--bg-page)', textDecoration: 'none',
+                color: 'var(--gray-700)', fontSize: 13, fontWeight: 600,
+              }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = '#EF4444'}
+              onMouseLeave={e => e.currentTarget.style.borderColor = 'var(--border)'}
+            >
+              <div style={{ width: 30, height: 30, borderRadius: 8, background: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <Play size={14} color="white" fill="white" />
+              </div>
+              <span style={{ flex: 1 }}>Ver demonstração — {ex.name}</span>
+              <ExternalLink size={13} color="var(--gray-400)" />
+            </a>
+          )}
 
           {ex.obs && (
             <div style={{ marginTop: 12, background: 'rgba(245,158,11,0.08)', borderRadius: 8, padding: '8px 12px', border: '1px solid rgba(245,158,11,0.3)', display: 'flex', gap: 7, alignItems: 'flex-start' }}>

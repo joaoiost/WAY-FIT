@@ -1,6 +1,6 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Dumbbell, ChevronDown, ChevronUp, Play, X, Star, Loader, CheckCircle, FileText, Zap, Trophy, CalendarOff } from 'lucide-react';
+import { Dumbbell, ChevronDown, ChevronUp, Play, X, Star, Loader, CheckCircle, FileText, Zap, Trophy, CalendarOff, ExternalLink } from 'lucide-react';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useAuth } from '../../context/AuthContext';
@@ -390,7 +390,8 @@ export default function MeusTreinos() {
                 const done = !!doneMap[ex.id];
                 const videoUrl = getVideoUrl(ex);
                 const hasVideo = !!getYouTubeId(videoUrl);
-                const videoLoading = !ex.video_url && !ex.videoUrl && autoVideoUrls[ex.id] === null;
+                const videoLoading = !ex.video_url && !ex.videoUrl && autoVideoUrls[ex.id] === undefined;
+                const noVideoFound = !ex.video_url && !ex.videoUrl && autoVideoUrls[ex.id] === null;
                 return (
                   <div key={ex.id} style={{ padding: '11px 0', borderBottom: i < exercises.length - 1 ? '1px solid var(--border)' : 'none' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
@@ -416,6 +417,15 @@ export default function MeusTreinos() {
                         <button className="video-btn" onClick={() => setVideoModal(ex)} style={{ flexShrink: 0 }}>
                           <Play size={10} /> Vídeo
                         </button>
+                      )}
+                      {noVideoFound && ex.name && (
+                        <a
+                          href={`https://www.youtube.com/results?search_query=${encodeURIComponent(ex.name + ' execução correta')}`}
+                          target="_blank" rel="noopener noreferrer"
+                          style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0, padding: '4px 8px', borderRadius: 6, border: '1px solid var(--border)', background: 'none', color: 'var(--gray-500)', fontSize: 11, fontWeight: 600, textDecoration: 'none' }}
+                        >
+                          <Play size={9} /> Ver
+                        </a>
                       )}
                     </div>
                   </div>

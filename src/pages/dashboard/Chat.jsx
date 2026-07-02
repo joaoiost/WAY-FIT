@@ -195,7 +195,7 @@ export default function Chat() {
     setText('');
 
     if (hasSupabase) {
-      const { data } = await supabase
+      const { data, error: sendErr } = await supabase
         .from('messages')
         .insert({ student_id: selectedId, personal_id: user.id, from_role: 'personal', text: optimistic.text })
         .select().single();
@@ -204,6 +204,13 @@ export default function Chat() {
         setMessages(prev => ({
           ...prev,
           [sid]: prev[sid].map(m => m.id === optimistic.id ? data : m),
+        }));
+      } else if (sendErr) {
+        console.error('[Chat] Erro ao enviar:', sendErr.message);
+        // remove mensagem otimista se falhou
+        setMessages(prev => ({
+          ...prev,
+          [sid]: prev[sid].filter(m => m.id !== optimistic.id),
         }));
       }
     }

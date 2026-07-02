@@ -648,6 +648,7 @@ export default function NutricaoPlanoAluno() {
   const [loading,    setLoading]    = useState(true);
   const [saving,     setSaving]     = useState(false);
   const [saved,      setSaved]      = useState(false);
+  const [saveError,  setSaveError]  = useState('');
   const [planName,   setPlanName]   = useState('Plano Alimentar');
   const [showCalc,   setShowCalc]   = useState(false);
 
@@ -661,7 +662,7 @@ export default function NutricaoPlanoAluno() {
     const [{ data: s }, { data: fi }, { data: mp }] = await Promise.all([
       supabase.from('students').select('id, name, color, initials, goal').eq('id', id).maybeSingle(),
       supabase.from('food_items').select('*').eq('personal_id', user.id).order('name'),
-      supabase.from('meal_plans').select('*').eq('student_id', id).eq('is_active', true).maybeSingle(),
+      supabase.from('meal_plans').select('*').eq('student_id', id).eq('is_active', true).order('updated_at', { ascending: false }).limit(1).maybeSingle(),
     ]);
     setStudent(s);
     setAllFoods(fi || []);
@@ -737,6 +738,7 @@ export default function NutricaoPlanoAluno() {
   const handleSave = async () => {
     if (!hasSupabase) return;
     setSaving(true);
+    setSaveError('');
     try {
       let planId = plan?.id;
 
@@ -750,28 +752,32 @@ export default function NutricaoPlanoAluno() {
       };
 
       if (planId) {
-        await supabase.from('meal_plans').update(planPayload).eq('id', planId);
-        await supabase.from('meal_plan_meals').delete().eq('meal_plan_id', planId);
+        const { error: upErr } = await supabase.from('meal_plans').update(planPayload).eq('id', planId);
+        if (upErr) throw new Error('Erro ao atualizar plano: ' + upErr.message);
+        const { error: delErr } = await supabase.from('meal_plan_meals').delete().eq('meal_plan_id', planId);
+        if (delErr) throw new Error('Erro ao limpar refeições: ' + delErr.message);
       } else {
-        const { data: newPlan } = await supabase.from('meal_plans').insert({
+        const { data: newPlan, error: planErr } = await supabase.from('meal_plans').insert({
           student_id: id, personal_id: user.id, is_active: true, ...planPayload,
         }).select().single();
+        if (planErr || !newPlan) throw new Error('Erro ao criar plano: ' + (planErr?.message || 'resposta vazia'));
         planId = newPlan.id;
         setPlan(newPlan);
       }
 
       for (const meal of meals) {
-        const { data: newMeal } = await supabase.from('meal_plan_meals').insert({
+        const { data: newMeal, error: mealErr } = await supabase.from('meal_plan_meals').insert({
           meal_plan_id: planId,
           name:         meal.name,
           time_of_day:  meal.time_of_day || '',
           order_index:  meal.order_index,
           notes:        meal.notes || null,
         }).select().single();
+        if (mealErr || !newMeal) throw new Error('Erro ao salvar refeição "' + meal.name + '": ' + (mealErr?.message || 'resposta vazia'));
 
         const foods = mealFoods[meal._tempId] || [];
         if (foods.length > 0) {
-          await supabase.from('meal_plan_foods').insert(
+          const { error: foodErr } = await supabase.from('meal_plan_foods').insert(
             foods.map((f, i) => ({
               meal_id:      newMeal.id,
               food_item_id: f.food_item_id || null,
@@ -784,10 +790,11 @@ export default function NutricaoPlanoAluno() {
               order_index:  i,
             })),
           );
+          if (foodErr) throw new Error('Erro ao salvar alimentos de "' + meal.name + '": ' + foodErr.message);
         }
       }
 
-      await supabase.from('nutrition_anamnesis').upsert({
+      const { error: anaErr } = await supabase.from('nutrition_anamnesis').upsert({
         student_id:     id,
         personal_id:    user.id,
         goal:           anamnese.goal          || null,
@@ -799,7 +806,7 @@ export default function NutricaoPlanoAluno() {
         weight:         anamnese.weight        ? Number(anamnese.weight)  : null,
         height:         anamnese.height        ? Number(anamnese.height)  : null,
         age:            anamnese.age           ? Number(anamnese.age)     : null,
-        sex:            anamnese.sex           || 'feminino',
+        sex:            anamnese.sex           || 'M',
         activity_level: anamnese.activity_level || 'moderado',
         conditions:     anamnese.conditions    || null,
         medications:    anamnese.medications   || null,
@@ -807,11 +814,15 @@ export default function NutricaoPlanoAluno() {
         meal_count:     anamnese.meal_count    ? Number(anamnese.meal_count) : 5,
         updated_at:     new Date().toISOString(),
       }, { onConflict: 'student_id' });
+      if (anaErr) throw new Error('Erro ao salvar anamnese: ' + anaErr.message);
 
+      // Recarrega do banco para sincronizar _tempId com UUIDs reais
+      await load();
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       console.error('Save error:', err);
+      setSaveError(err.message || 'Erro ao salvar. Tente novamente.');
     }
     setSaving(false);
   };
@@ -876,12 +887,25 @@ export default function NutricaoPlanoAluno() {
         <button
           onClick={handleSave}
           disabled={saving}
-          className="btn-primary"
-          style={{ gap: 6, opacity: saving ? 0.7 : 1, flexShrink: 0 }}
+          className={saved ? 'btn-secondary' : 'btn-primary'}
+          style={{ gap: 6, opacity: saving ? 0.7 : 1, flexShrink: 0, background: saved ? '#10B981' : undefined, color: saved ? 'white' : undefined, borderColor: saved ? '#10B981' : undefined }}
         >
-          {saved ? <><Check size={15} /> Salvo!</> : saving ? 'Salvando...' : <><Save size={15} /> Salvar</>}
+          {saved ? <><Check size={15} /> Salvo!</> : saving ? 'Salvando...' : <><Save size={15} /> Salvar plano</>}
         </button>
       </div>
+
+      {saveError && (
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10, background: '#FEF2F2', border: '1px solid #FECACA', borderRadius: 10, padding: '12px 14px', marginBottom: 16 }}>
+          <AlertCircle size={16} color="#EF4444" style={{ flexShrink: 0, marginTop: 1 }} />
+          <div>
+            <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#DC2626' }}>Erro ao salvar</p>
+            <p style={{ margin: '2px 0 0', fontSize: 12, color: '#EF4444' }}>{saveError}</p>
+          </div>
+          <button onClick={() => setSaveError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', marginLeft: 'auto', display: 'flex', padding: 0 }}>
+            <X size={14} />
+          </button>
+        </div>
+      )}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 20, background: 'var(--bg-page)', borderRadius: 10, padding: 4, border: '1px solid var(--border-light)' }}>

@@ -160,14 +160,16 @@ export default function ChatAluno() {
       created_at: new Date().toISOString(),
     };
 
-    if (hasSupabase && studentId) {
-      const { data } = await supabase
+    if (hasSupabase && studentId && personalId) {
+      const { data, error } = await supabase
         .from('messages')
         .insert({ student_id: studentId, personal_id: personalId, from_role: 'student', text: text.trim() })
         .select().single();
       if (data) {
         setMessages(prev => prev.find(m => m.id === data.id) ? prev : [...prev, data]);
       } else {
+        console.error('[Chat] Erro ao enviar:', error?.message);
+        // remove optimistic — próximo poll vai mostrar o estado real
         setMessages(prev => [...prev, { ...newMsg, id: Date.now() }]);
       }
     } else {

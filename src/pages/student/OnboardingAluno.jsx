@@ -6,30 +6,12 @@ import { supabase, hasSupabase } from '../../lib/supabase';
 
 const CSS = `
   @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(28px); }
+    from { opacity: 0; transform: translateY(18px); }
     to   { opacity: 1; transform: translateY(0); }
   }
   @keyframes fadeIn {
     from { opacity: 0; }
     to   { opacity: 1; }
-  }
-  @keyframes bounceIn {
-    0%   { opacity: 0; transform: scale(0.4) rotate(-10deg); }
-    60%  { opacity: 1; transform: scale(1.1) rotate(3deg); }
-    80%  { transform: scale(0.95) rotate(-1deg); }
-    100% { transform: scale(1) rotate(0); }
-  }
-  @keyframes float {
-    0%,100% { transform: translateY(0); }
-    50%      { transform: translateY(-10px); }
-  }
-  @keyframes ripple {
-    0%   { transform: scale(0.9); opacity: 0.6; }
-    100% { transform: scale(2.2); opacity: 0; }
-  }
-  @keyframes goalPop {
-    from { opacity: 0; transform: scale(0.85) translateY(10px); }
-    to   { opacity: 1; transform: scale(1) translateY(0); }
   }
   @keyframes spin {
     from { transform: rotate(0deg); }
@@ -105,12 +87,8 @@ export default function OnboardingAluno() {
   // ── Step 0: Welcome ──────────────────────────────────────
   const StepWelcome = () => (
     <div key="welcome" style={{ animation: 'fadeInUp 0.55s cubic-bezier(0.22,1,0.36,1) both' }}>
-      <div style={{ position: 'relative', width: 160, height: 160, margin: '0 auto 32px' }}>
-        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(16,185,129,0.2)', animation: 'ripple 2.5s ease-out infinite' }} />
-        <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(16,185,129,0.12)', animation: 'ripple 2.5s ease-out infinite 0.7s' }} />
-        <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', background: 'linear-gradient(135deg, #10B981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 60px rgba(16,185,129,0.5)', animation: 'float 3s ease-in-out infinite, bounceIn 0.7s cubic-bezier(0.34,1.56,0.64,1) both' }}>
-          <Hand size={64} color="white" />
-        </div>
+      <div style={{ width: 80, height: 80, borderRadius: 24, background: 'linear-gradient(135deg, #10B981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 32px', animation: 'fadeInUp 0.45s ease both', boxShadow: '0 12px 32px rgba(16,185,129,0.4)' }}>
+        <Hand size={40} color="white" />
       </div>
 
       <h1 style={{ margin: '0 0 12px', fontSize: 30, fontWeight: 900, color: 'white', letterSpacing: '-0.8px', textAlign: 'center', animation: 'fadeInUp 0.5s ease 0.15s both' }}>
@@ -132,7 +110,7 @@ export default function OnboardingAluno() {
   const StepGoal = () => (
     <div key="goal" style={{ animation: 'fadeInUp 0.5s cubic-bezier(0.22,1,0.36,1) both' }}>
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(139,92,246,0.5)', animation: 'bounceIn 0.6s ease both' }}>
+        <div style={{ width: 60, height: 60, borderRadius: 18, background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(139,92,246,0.35)', animation: 'fadeInUp 0.4s ease both' }}>
           <Target size={28} color="white" />
         </div>
         <h2 style={{ margin: '0 0 8px', fontSize: 26, fontWeight: 900, color: 'white', letterSpacing: '-0.5px' }}>Qual é o seu objetivo?</h2>
@@ -144,7 +122,7 @@ export default function OnboardingAluno() {
           const selected = goal === g.value;
           return (
             <button key={g.value} onClick={() => setGoal(g.value)}
-              style={{ padding: '14px 12px', borderRadius: 14, border: `2px solid ${selected ? 'rgba(139,92,246,0.8)' : 'rgba(255,255,255,0.1)'}`, background: selected ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.06)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 0.2s ease', backdropFilter: 'blur(8px)', animation: `goalPop 0.4s ease ${i * 0.07}s both`, transform: selected ? 'scale(1.04)' : 'scale(1)' }}
+              style={{ padding: '14px 12px', borderRadius: 14, border: `2px solid ${selected ? 'rgba(139,92,246,0.8)' : 'rgba(255,255,255,0.1)'}`, background: selected ? 'rgba(139,92,246,0.25)' : 'rgba(255,255,255,0.06)', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, transition: 'all 0.15s ease', animation: `fadeIn 0.35s ease ${i * 0.05}s both` }}
               onMouseEnter={e => { if (!selected) e.currentTarget.style.background = 'rgba(255,255,255,0.1)'; }}
               onMouseLeave={e => { if (!selected) e.currentTarget.style.background = 'rgba(255,255,255,0.06)'; }}>
               <g.icon size={24} color={selected ? 'white' : 'rgba(255,255,255,0.65)'} />
@@ -170,7 +148,7 @@ export default function OnboardingAluno() {
   const StepData = () => (
     <div key="data" style={{ animation: 'fadeInUp 0.5s cubic-bezier(0.22,1,0.36,1) both' }}>
       <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div style={{ width: 60, height: 60, borderRadius: 18, background: 'linear-gradient(135deg, #F59E0B, #EF4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(245,158,11,0.5)', animation: 'bounceIn 0.6s ease both' }}>
+        <div style={{ width: 60, height: 60, borderRadius: 18, background: 'linear-gradient(135deg, #F59E0B, #EF4444)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', boxShadow: '0 8px 24px rgba(245,158,11,0.35)', animation: 'fadeInUp 0.4s ease both' }}>
           <Scale size={28} color="white" />
         </div>
         <h2 style={{ margin: '0 0 8px', fontSize: 26, fontWeight: 900, color: 'white', letterSpacing: '-0.5px' }}>Seus dados físicos</h2>

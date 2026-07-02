@@ -5,67 +5,11 @@ import { useAuth } from '../context/AuthContext';
 
 /* ─── Global CSS ─────────────────────────────────────────────────── */
 const CSS = `
-  /* ── shared ── */
   @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
-  @keyframes fadeInUp {
-    from { opacity:0; transform:translateY(28px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
   @keyframes fadeIn { from{opacity:0} to{opacity:1} }
-
-  /* ── desktop hero ── */
-  @keyframes blobMove {
-    0%,100% { transform:translate(0,0) scale(1); }
-    33%     { transform:translate(20px,-20px) scale(1.05); }
-    66%     { transform:translate(-15px,15px) scale(0.95); }
-  }
-  @keyframes logoFloat {
-    0%,100% { transform:translateY(0); }
-    50%      { transform:translateY(-6px); }
-  }
-  @keyframes glowPulse {
-    0%,100% { box-shadow:0 0 20px rgba(59,130,246,0.4); }
-    50%      { box-shadow:0 0 44px rgba(139,92,246,0.7),0 0 72px rgba(59,130,246,0.3); }
-  }
-
-  /* ── mobile role cards ── */
-  @keyframes cardSlideIn {
-    from { opacity:0; transform:translateY(40px) scale(0.93); }
-    to   { opacity:1; transform:translateY(0) scale(1); }
-  }
-  @keyframes cardSlideOut {
-    from { opacity:1; transform:translateY(0) scale(1); }
-    to   { opacity:0; transform:translateY(-40px) scale(0.93); }
-  }
-  @keyframes formUp {
-    from { opacity:0; transform:translateY(60px); }
-    to   { opacity:1; transform:translateY(0); }
-  }
-  @keyframes rippleReveal {
-    from { clip-path: circle(0% at var(--rx,50%) var(--ry,80%)); }
-    to   { clip-path: circle(160% at var(--rx,50%) var(--ry,80%)); }
-  }
-  @keyframes float1 {
-    0%,100% { transform:translateY(0) rotate(-2deg); }
-    50%      { transform:translateY(-14px) rotate(3deg); }
-  }
-  @keyframes float2 {
-    0%,100% { transform:translateY(0) rotate(2deg); }
-    50%      { transform:translateY(12px) rotate(-4deg); }
-  }
-  @keyframes particle {
-    0%   { transform:translateY(0) translateX(0); opacity:0.6; }
-    50%  { opacity:1; }
-    100% { transform:translateY(-80px) translateX(var(--px,10px)); opacity:0; }
-  }
-  @keyframes pulseDot {
-    0%,100% { transform:scale(1); opacity:0.7; }
-    50%     { transform:scale(1.5); opacity:1; }
-  }
-  @keyframes sweepText {
-    0%   { background-position:-200% center; }
-    100% { background-position:200% center; }
-  }
+  @keyframes cardSlideIn { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes formUp { from{opacity:0;transform:translateY(24px)} to{opacity:1;transform:translateY(0)} }
 
   /* ── mobile layout classes ── */
   .m-only  { display:none!important; }
@@ -188,7 +132,6 @@ function LoginForm({ role, onBack, accentColor, accentGrad, onSuccess }) {
 export default function Login() {
   const [role, setRole] = useState(null);
   const [formVisible, setFormVisible] = useState(false);
-  const [ripple, setRipple] = useState(null); // { x, y, color }
   const [cardsLeaving, setCardsLeaving] = useState(false);
   const navigate = useNavigate();
 
@@ -198,15 +141,11 @@ export default function Login() {
     ? 'var(--accent)'
     : 'linear-gradient(135deg, #10B981, #059669)';
 
-  /* Mobile: tap on card → ripple → form */
-  const selectRoleMobile = (r, e) => {
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((rect.left + rect.right) / 2 / window.innerWidth) * 100;
-    const y = ((rect.top + rect.bottom) / 2 / window.innerHeight) * 100;
+  /* Mobile: tap on card → form */
+  const selectRoleMobile = (r) => {
     setCardsLeaving(true);
-    setRipple({ x, y, color: r === 'personal' ? '#1E3A5F' : '#064E3B' });
     setRole(r);
-    setTimeout(() => setFormVisible(true), 380);
+    setTimeout(() => setFormVisible(true), 180);
   };
 
   /* Desktop: click → inline form */
@@ -218,45 +157,23 @@ export default function Login() {
   const goBack = () => {
     setFormVisible(false);
     setCardsLeaving(false);
-    setRipple(null);
-    setTimeout(() => setRole(null), 300);
+    setTimeout(() => setRole(null), 200);
   };
 
   /* ══ MOBILE LAYOUT ════════════════════════════════════════════════ */
   const MobileLayout = () => (
     <div className="m-only" style={{ minHeight: '100dvh', flexDirection: 'column', position: 'relative', overflow: 'hidden', background: '#0F172A' }}>
 
-      {/* Ripple overlay */}
-      {ripple && (
-        <div style={{
-          position: 'fixed', inset: 0, zIndex: 5,
-          background: ripple.color,
-          '--rx': `${ripple.x}%`, '--ry': `${ripple.y}%`,
-          animation: 'rippleReveal .55s cubic-bezier(0.4,0,0.2,1) both',
-          animationFillMode: 'forwards',
-        }} />
-      )}
-
       {/* Background blobs */}
-      <div style={{ position: 'absolute', top: -80, right: -80, width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.2) 0%, transparent 65%)', filter: 'blur(40px)', animation: 'blobMove 10s ease-in-out infinite', pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 65%)', filter: 'blur(36px)', animation: 'blobMove 13s ease-in-out infinite reverse', pointerEvents: 'none' }} />
-
-      {/* Particles */}
-      {[
-        { left: '15%', bottom: '30%', size: 5, color: '#3B82F6', delay: '0s',   px: '8px', dur: '4s' },
-        { left: '70%', bottom: '20%', size: 4, color: '#10B981', delay: '1.2s', px: '-6px', dur: '5s' },
-        { left: '40%', bottom: '15%', size: 6, color: '#8B5CF6', delay: '0.6s', px: '4px',  dur: '3.5s' },
-        { left: '85%', bottom: '40%', size: 3, color: '#F59E0B', delay: '2s',   px: '-10px', dur: '4.5s' },
-      ].map((p, i) => !role && (
-        <div key={i} style={{ position: 'absolute', left: p.left, bottom: p.bottom, width: p.size, height: p.size, borderRadius: '50%', background: p.color, '--px': p.px, animation: `particle ${p.dur} ease-in-out infinite ${p.delay}`, pointerEvents: 'none' }} />
-      ))}
+      <div style={{ position: 'absolute', top: -80, right: -80, width: 280, height: 280, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 65%)', filter: 'blur(40px)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', bottom: -60, left: -60, width: 240, height: 240, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 65%)', filter: 'blur(36px)', pointerEvents: 'none' }} />
 
       {/* SELECTION SCREEN */}
       {!role && (
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', gap: 0, position: 'relative', zIndex: 2 }}>
           {/* Logo */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, animation: 'fadeInUp .6s ease both' }}>
-            <div style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'glowPulse 3s ease-in-out infinite' }}>
+            <div style={{ width: 46, height: 46, borderRadius: 14, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 14px rgba(99,102,241,0.4)' }}>
               <Zap size={24} color="white" fill="white" />
             </div>
             <span style={{ fontSize: 30, fontWeight: 900, color: 'white', letterSpacing: '-1px' }}>WAY FIT</span>
@@ -267,9 +184,9 @@ export default function Login() {
           </p>
 
           {/* Personal card */}
-          <button className="m-role-card" onClick={e => selectRoleMobile('personal', e)}
+          <button className="m-role-card" onClick={() => selectRoleMobile('personal')}
             style={{ width: '100%', maxWidth: 360, padding: '24px 20px', borderRadius: 22, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', gap: 18, marginBottom: 14, animation: 'cardSlideIn .55s cubic-bezier(0.34,1.2,0.64,1) .1s both', textAlign: 'left' }}>
-            <div style={{ width: 60, height: 60, borderRadius: 18, background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 8px 24px rgba(59,130,246,0.45)', animation: 'float1 4s ease-in-out infinite' }}>
+            <div style={{ width: 60, height: 60, borderRadius: 18, background: 'linear-gradient(135deg, #3B82F6, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 6px 20px rgba(59,130,246,0.4)' }}>
               <Dumbbell size={28} color="white" />
             </div>
             <div>
@@ -282,9 +199,9 @@ export default function Login() {
           </button>
 
           {/* Aluno card */}
-          <button className="m-role-card" onClick={e => selectRoleMobile('student', e)}
+          <button className="m-role-card" onClick={() => selectRoleMobile('student')}
             style={{ width: '100%', maxWidth: 360, padding: '24px 20px', borderRadius: 22, background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.12)', display: 'flex', alignItems: 'center', gap: 18, animation: 'cardSlideIn .55s cubic-bezier(0.34,1.2,0.64,1) .25s both', textAlign: 'left' }}>
-            <div style={{ width: 60, height: 60, borderRadius: 18, background: 'linear-gradient(135deg, #10B981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 8px 24px rgba(16,185,129,0.45)', animation: 'float2 5s ease-in-out infinite 1s' }}>
+            <div style={{ width: 60, height: 60, borderRadius: 18, background: 'linear-gradient(135deg, #10B981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, boxShadow: '0 6px 20px rgba(16,185,129,0.4)' }}>
               <User size={28} color="white" />
             </div>
             <div>
@@ -360,13 +277,13 @@ export default function Login() {
         padding: '32px 20px', position: 'relative', overflow: 'hidden',
       }}>
         {/* Blobs */}
-        <div style={{ position: 'absolute', top: -140, right: -140, width: 440, height: 440, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 65%)', animation: 'blobMove 8s ease-in-out infinite', pointerEvents: 'none' }} />
-        <div style={{ position: 'absolute', bottom: -120, left: -120, width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 65%)', animation: 'blobMove 11s ease-in-out infinite reverse', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', top: -140, right: -140, width: 440, height: 440, borderRadius: '50%', background: 'radial-gradient(circle, rgba(59,130,246,0.14) 0%, transparent 65%)', pointerEvents: 'none' }} />
+        <div style={{ position: 'absolute', bottom: -120, left: -120, width: 380, height: 380, borderRadius: '50%', background: 'radial-gradient(circle, rgba(139,92,246,0.12) 0%, transparent 65%)', pointerEvents: 'none' }} />
 
         {/* Logo */}
         <div style={{ textAlign: 'center', marginBottom: role ? 24 : 40, position: 'relative', zIndex: 1, animation: 'fadeInUp .6s ease both', transition: 'margin .4s ease' }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, marginBottom: role ? 0 : 12 }}>
-            <div style={{ width: 50, height: 50, borderRadius: 15, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'logoFloat 3s ease-in-out infinite, glowPulse 3s ease-in-out infinite' }}>
+            <div style={{ width: 50, height: 50, borderRadius: 15, background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 16px rgba(99,102,241,0.4)' }}>
               <Zap size={27} color="white" fill="white" />
             </div>
             <span style={{ fontSize: 34, fontWeight: 900, color: 'white', letterSpacing: '-1px' }}>WAY FIT</span>
@@ -388,7 +305,7 @@ export default function Login() {
               ].map(({ r, label, sub, Icon, grad, glow, cls, delay }) => (
                 <button key={r} className={`d-role-card ${cls}`} onClick={() => selectRoleDesktop(r)}
                   style={{ background: 'rgba(255,255,255,0.06)', backdropFilter: 'blur(16px)', borderRadius: 20, padding: '28px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12, border: '1px solid rgba(255,255,255,0.1)', animation: `cardSlideIn .55s cubic-bezier(0.34,1.2,0.64,1) ${delay} both` }}>
-                  <div style={{ width: 60, height: 60, borderRadius: 18, background: grad, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 8px 24px ${glow}`, animation: r === 'personal' ? 'float1 4s ease-in-out infinite' : 'float2 5s ease-in-out infinite 1s' }}>
+                  <div style={{ width: 60, height: 60, borderRadius: 18, background: grad, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: `0 6px 20px ${glow}` }}>
                     <Icon size={28} color="white" />
                   </div>
                   <div style={{ textAlign: 'center' }}>

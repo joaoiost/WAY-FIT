@@ -1,6 +1,5 @@
 ﻿import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import confetti from 'canvas-confetti';
 import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star, TrendingUp, Loader, Trophy, Lightbulb } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -192,20 +191,6 @@ export default function ExecutarTreino() {
 
   const todayDate = new Date().toISOString().slice(0, 10);
 
-  useEffect(() => {
-    if (!finished) return;
-    const fire = (opts) => confetti({
-      particleCount: 90,
-      spread: 75,
-      startVelocity: 52,
-      origin: { y: 0.55 },
-      colors: ['#6366F1', '#8B5CF6', '#F59E0B', '#10B981', '#F87171', '#ffffff'],
-      ...opts,
-    });
-    setTimeout(() => fire({}), 350);
-    setTimeout(() => fire({ particleCount: 60, spread: 50, origin: { x: 0.2, y: 0.6 } }), 750);
-    setTimeout(() => fire({ particleCount: 60, spread: 50, origin: { x: 0.8, y: 0.6 } }), 750);
-  }, [finished]);
 
   useEffect(() => {
     if (!user || !planId) return;

@@ -3,54 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, Dumbbell, Calendar, Users, BarChart2, Zap, Rocket } from 'lucide-react';
 
 const CSS = `
-  @keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to   { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
-  }
-  @keyframes bounceIn {
-    0%   { opacity: 0; transform: scale(0.3); }
-    50%  { opacity: 1; transform: scale(1.1); }
-    70%  { transform: scale(0.9); }
-    100% { transform: scale(1); }
-  }
-  @keyframes float {
-    0%,100% { transform: translateY(0) rotate(-1deg); }
-    50%      { transform: translateY(-12px) rotate(1deg); }
-  }
-  @keyframes slideInRight {
-    from { opacity: 0; transform: translateX(40px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-  @keyframes slideInLeft {
-    from { opacity: 0; transform: translateX(-40px); }
-    to   { opacity: 1; transform: translateX(0); }
-  }
-  @keyframes progressFill {
-    from { width: 0%; }
-    to   { width: var(--target-w); }
-  }
-  @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.8); }
-    to   { opacity: 1; transform: scale(1); }
-  }
-  @keyframes checkPop {
-    0%   { transform: scale(0); }
-    60%  { transform: scale(1.3); }
-    100% { transform: scale(1); }
-  }
-  @keyframes stagger1 { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
-  @keyframes orbit {
-    from { transform: rotate(0deg) translateX(44px) rotate(0deg); }
-    to   { transform: rotate(360deg) translateX(44px) rotate(-360deg); }
-  }
-  @keyframes ripple {
-    0%   { transform: scale(0.8); opacity: 0.8; }
-    100% { transform: scale(2.4); opacity: 0; }
-  }
+  @keyframes fadeInUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
+  @keyframes fadeIn   { from{opacity:0} to{opacity:1} }
+  @keyframes slideInRight { from{opacity:0;transform:translateX(24px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes slideInLeft  { from{opacity:0;transform:translateX(-24px)} to{opacity:1;transform:translateX(0)} }
+  @keyframes scaleIn { from{opacity:0;transform:scale(0.92)} to{opacity:1;transform:scale(1)} }
 `;
 
 const STEPS = [
@@ -99,12 +56,8 @@ const STEPS = [
 // Visual for each step
 function StepVisual({ stepId, gradient }) {
   if (stepId === 'welcome') return (
-    <div style={{ position: 'relative', width: 180, height: 180, margin: '0 auto' }}>
-      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(59,130,246,0.15)', animation: 'ripple 2s ease-out infinite' }} />
-      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(59,130,246,0.1)', animation: 'ripple 2s ease-out infinite 0.5s' }} />
-      <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 60px rgba(59,130,246,0.5)', animation: 'float 3s ease-in-out infinite, bounceIn 0.7s cubic-bezier(0.34,1.56,0.64,1) both' }}>
-        <Zap size={80} color="white" fill="white" />
-      </div>
+    <div style={{ width: 120, height: 120, margin: '0 auto', borderRadius: '50%', background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 16px 48px rgba(59,130,246,0.45)', animation: 'scaleIn 0.45s ease both' }}>
+      <Zap size={56} color="white" fill="white" />
     </div>
   );
 
@@ -115,7 +68,7 @@ function StepVisual({ stepId, gradient }) {
         { name: 'Maria L.', color: '#10B981', left: 72, top: 0, delay: '0.15s' },
         { name: 'Carlos R.', color: '#8B5CF6', left: 144, top: 10, delay: '0.3s' },
       ].map(s => (
-        <div key={s.name} style={{ position: 'absolute', left: s.left, top: s.top, textAlign: 'center', animation: `bounceIn 0.6s cubic-bezier(0.34,1.56,0.64,1) ${s.delay} both` }}>
+        <div key={s.name} style={{ position: 'absolute', left: s.left, top: s.top, textAlign: 'center', animation: `fadeIn 0.4s ease ${s.delay} both` }}>
           <div style={{ width: 64, height: 64, borderRadius: '50%', background: s.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, fontWeight: 800, color: 'white', boxShadow: `0 8px 24px ${s.color}60`, border: '3px solid white' }}>
             {s.name[0]}
           </div>
@@ -172,11 +125,8 @@ function StepVisual({ stepId, gradient }) {
   );
 
   if (stepId === 'ready') return (
-    <div style={{ position: 'relative', width: 160, height: 160, margin: '0 auto' }}>
-      <div style={{ position: 'absolute', inset: 0, borderRadius: '50%', background: 'rgba(16,185,129,0.15)', animation: 'ripple 2s ease-out infinite' }} />
-      <div style={{ position: 'relative', width: '100%', height: '100%', borderRadius: '50%', background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 20px 60px rgba(16,185,129,0.5)', animation: 'bounceIn 0.7s cubic-bezier(0.34,1.56,0.64,1) both' }}>
-        <Check size={72} color="white" strokeWidth={3} />
-      </div>
+    <div style={{ width: 120, height: 120, margin: '0 auto', borderRadius: '50%', background: gradient, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 16px 48px rgba(16,185,129,0.45)', animation: 'scaleIn 0.45s ease both' }}>
+      <Check size={56} color="white" strokeWidth={3} />
     </div>
   );
 

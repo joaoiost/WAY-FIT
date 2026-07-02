@@ -851,11 +851,7 @@ label {
     color: white; border: none;
     cursor: pointer; z-index: 54;
     align-items: center; justify-content: center;
-    animation: fabPulse 3s ease-in-out infinite;
-  }
-  @keyframes fabPulse {
-    0%, 100% { box-shadow: 0 4px 16px rgba(99,102,241,0.45); }
-    50%       { box-shadow: 0 4px 28px rgba(99,102,241,0.7), 0 0 0 6px rgba(99,102,241,0.12); }
+    box-shadow: 0 4px 16px rgba(99,102,241,0.45);
   }
 
   /* Notif panel */
@@ -1411,13 +1407,7 @@ label {
   animation: setConfirmBounce 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
 
-/* ── Streak badge glow ──────────────────────────────────────── */
-@keyframes streakGlow {
-  0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.6), var(--shadow-sm); }
-  65%  { box-shadow: 0 0 0 12px rgba(245,158,11,0), var(--shadow-sm); }
-  100% { box-shadow: 0 0 0 0 rgba(245,158,11,0), var(--shadow-sm); }
-}
-.streak-hot { animation: streakGlow 2s ease-out infinite; }
+.streak-hot { box-shadow: 0 3px 12px rgba(245,158,11,0.35); }
 
 /* ── Sidebar item hover glow ────────────────────────────────── */
 .sidebar-item { transition: background 0.15s, color 0.15s, box-shadow 0.15s; }

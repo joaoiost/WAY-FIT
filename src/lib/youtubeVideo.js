@@ -1,6 +1,7 @@
-// Busca automática de vídeo do YouTube por exercício
-// Cache no localStorage por 30 dias — evita gastar quota na mesma busca
-// Quota gratuita: 10.000 units/dia | cada busca = 100 units = 100 buscas/dia grátis
+// Busca vídeo de demonstração via proxy server-side (/api/youtube-search).
+// O proxy usa YOUTUBE_API_KEY (variável de servidor) — a chave nunca fica
+// exposta no bundle do cliente e não sofre restrição de HTTP Referrer.
+// Cache de 30 dias no localStorage para não repetir a mesma busca.
 
 const CACHE_PREFIX = 'yt_vid_';
 const CACHE_TTL = 30 * 24 * 60 * 60 * 1000; // 30 dias
@@ -24,9 +25,6 @@ function setCache(key, url) {
 export async function fetchExerciseVideo(exerciseName, videoSearch) {
   if (!exerciseName || exerciseName.length < 3) return null;
 
-  const apiKey = import.meta.env.VITE_YOUTUBE_API_KEY;
-  if (!apiKey) return null;
-
   const cacheKey = exerciseName.toLowerCase().replace(/\s+/g, '_');
   const cached = getCached(cacheKey);
   if (cached !== undefined) return cached;
@@ -35,25 +33,23 @@ export async function fetchExerciseVideo(exerciseName, videoSearch) {
 
   try {
     const res = await fetch(
-      `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodeURIComponent(query)}&type=video&maxResults=1&relevanceLanguage=pt&regionCode=BR&key=${apiKey}`,
+      `/api/youtube-search?q=${encodeURIComponent(query)}`,
       { signal: AbortSignal.timeout(6000) }
     );
 
     if (!res.ok) {
       const errData = await res.json().catch(() => ({}));
-      console.error('[YouTube] erro API:', res.status, errData?.error?.message);
+      console.error('[YouTube] proxy error:', res.status, errData?.error);
       return null;
     }
 
     const data = await res.json();
-    const videoId = data.items?.[0]?.id?.videoId;
-    if (!videoId) return null;
-
-    const url = `https://www.youtube.com/watch?v=${videoId}`;
-    setCache(cacheKey, url);
+    const url = data.url || null;
+    // Cacheia apenas quando encontrou — null não é cacheado para re-tentar depois
+    if (url) setCache(cacheKey, url);
     return url;
   } catch (e) {
-    console.error('[YouTube] erro fetch:', e.message);
+    console.error('[YouTube] fetch error:', e.message);
     return null;
   }
 }

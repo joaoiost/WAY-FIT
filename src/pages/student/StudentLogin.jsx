@@ -138,9 +138,17 @@ export default function StudentLogin() {
     const result = await login(email, password);
     setLoading(false);
     if (result.success) {
-      if (result.role === 'student')        navigate('/aluno/dashboard');
-      else if (result.role === 'personal')  navigate('/dashboard');
-      else setError('Papel não reconhecido.');
+      if (result.role === 'student' && isStudent) {
+        navigate('/aluno/dashboard');
+      } else if (result.role === 'personal' && !isStudent) {
+        navigate('/dashboard');
+      } else if (result.role === 'personal' && isStudent) {
+        setError('Esse email é de um personal trainer. Use a aba "Personal" para entrar.');
+      } else if (result.role === 'student' && !isStudent) {
+        setError('Esse email é de um aluno. Use a aba "Aluno" para entrar.');
+      } else {
+        setError('Papel não reconhecido.');
+      }
     } else {
       setError(result.error || 'Email ou senha incorretos.');
     }

@@ -73,9 +73,17 @@ function LoginForm({ role, onBack, accentColor, accentGrad, onSuccess }) {
     const result = await login(email, password);
     setLoading(false);
     if (result.success) {
-      if (result.role === 'personal') navigate('/dashboard');
-      else if (result.role === 'student') navigate('/aluno/dashboard');
-      else setError('Papel não reconhecido.');
+      if (result.role === 'personal' && role === 'personal') {
+        navigate('/dashboard');
+      } else if (result.role === 'student' && role === 'student') {
+        navigate('/aluno/dashboard');
+      } else if (result.role === 'student' && role === 'personal') {
+        setError('Esse email é de um aluno. Use o botão "Aluno" para entrar.');
+      } else if (result.role === 'personal' && role === 'student') {
+        setError('Esse email é de um personal trainer. Use o botão "Personal Trainer".');
+      } else {
+        setError('Papel não reconhecido.');
+      }
     } else {
       setError(result.error || 'Email ou senha incorretos.');
     }

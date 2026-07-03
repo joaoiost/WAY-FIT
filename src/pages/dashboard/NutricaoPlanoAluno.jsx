@@ -364,21 +364,6 @@ function FoodSearch({ foods, onAdd, onClose }) {
 
   const canAdd = manualMode ? !!q.trim() : !!selected;
 
-  const MacroField = ({ label, field, color }) => (
-    <div style={{ flex: 1 }}>
-      <label style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: 4 }}>{label}/100g</label>
-      <input
-        type="number" min="0" step="0.1"
-        value={manual[field]}
-        onChange={e => setManual(m => ({ ...m, [field]: e.target.value }))}
-        placeholder="0"
-        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${color}40`, background: color + '08', color: 'var(--gray-900)', fontSize: 14, fontWeight: 700, textAlign: 'center', outline: 'none', boxSizing: 'border-box' }}
-        onFocus={e => e.target.style.borderColor = color}
-        onBlur={e => e.target.style.borderColor = color + '40'}
-      />
-    </div>
-  );
-
   return (
     <div
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.55)', zIndex: 200, display: 'flex', alignItems: 'flex-end', justifyContent: 'center', backdropFilter: 'blur(3px)' }}
@@ -464,17 +449,34 @@ function FoodSearch({ foods, onAdd, onClose }) {
           </>
         )}
 
-        {/* Modo manual — campos de macro */}
+        {/* Modo manual — campos de macro (inline para evitar remontagem de componente) */}
         {manualMode && (
           <div style={{ marginBottom: 12 }}>
-            <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--gray-400)' }}>
-              Digite os valores por 100g. A quantidade abaixo calcula o total.
+            <p style={{ margin: '0 0 10px', fontSize: 12, color: 'var(--gray-400)' }}>
+              Valores por 100g — a quantidade abaixo calcula o total automaticamente.
             </p>
             <div style={{ display: 'flex', gap: 8 }}>
-              <MacroField label="Kcal"  field="kcal" color={MACRO_COLORS.cal} />
-              <MacroField label="Prot"  field="prot" color={MACRO_COLORS.prot} />
-              <MacroField label="Carb"  field="carb" color={MACRO_COLORS.carb} />
-              <MacroField label="Gord"  field="fat"  color={MACRO_COLORS.fat} />
+              {[
+                { label: 'Kcal',  field: 'kcal', color: MACRO_COLORS.cal  },
+                { label: 'Prot',  field: 'prot', color: MACRO_COLORS.prot },
+                { label: 'Carb',  field: 'carb', color: MACRO_COLORS.carb },
+                { label: 'Gord',  field: 'fat',  color: MACRO_COLORS.fat  },
+              ].map(({ label, field, color }) => (
+                <div key={field} style={{ flex: 1 }}>
+                  <label style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: 4 }}>
+                    {label}/100g
+                  </label>
+                  <input
+                    type="number" min="0" step="0.1"
+                    value={manual[field]}
+                    onChange={e => setManual(m => ({ ...m, [field]: e.target.value }))}
+                    placeholder="0"
+                    style={{ width: '100%', padding: '8px 6px', borderRadius: 8, border: `1.5px solid ${color}50`, background: color + '10', color: 'var(--gray-900)', fontSize: 15, fontWeight: 700, textAlign: 'center', outline: 'none', boxSizing: 'border-box' }}
+                    onFocus={e => e.target.style.borderColor = color}
+                    onBlur={e => e.target.style.borderColor = color + '50'}
+                  />
+                </div>
+              ))}
             </div>
           </div>
         )}

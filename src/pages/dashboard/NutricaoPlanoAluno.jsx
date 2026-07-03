@@ -292,6 +292,8 @@ function FoodSearch({ foods, onAdd, onClose }) {
   const [q, setQ]               = useState('');
   const [qty, setQty]           = useState(100);
   const [selected, setSelected] = useState(null);
+  const [manualMode, setManualMode] = useState(false);
+  const [manual, setManual]     = useState({ kcal: '', prot: '', carb: '', fat: '' });
   const inputRef                = useRef(null);
 
   useEffect(() => { setTimeout(() => inputRef.current?.focus(), 50); }, []);
@@ -323,21 +325,59 @@ function FoodSearch({ foods, onAdd, onClose }) {
     fat:  ((selected.fat_per_100g      || 0) * qty / 100).toFixed(1),
   } : null;
 
+  const manualPreview = {
+    cal:  ((Number(manual.kcal) || 0) * qty / 100).toFixed(1),
+    prot: ((Number(manual.prot) || 0) * qty / 100).toFixed(1),
+    carb: ((Number(manual.carb) || 0) * qty / 100).toFixed(1),
+    fat:  ((Number(manual.fat)  || 0) * qty / 100).toFixed(1),
+  };
+
   const handleAdd = () => {
-    if (!selected) return;
-    const isTaco = String(selected.id).startsWith('taco_');
-    onAdd({
-      food_item_id: isTaco ? null : selected.id,
-      name:         selected.name,
-      quantity_g:   qty,
-      calories:     Number(preview.cal),
-      protein_g:    Number(preview.prot),
-      carbs_g:      Number(preview.carb),
-      fat_g:        Number(preview.fat),
-      order_index:  0,
-    });
+    if (manualMode) {
+      if (!q.trim()) return;
+      onAdd({
+        food_item_id: null,
+        name:         q.trim(),
+        quantity_g:   qty,
+        calories:     Number(manualPreview.cal),
+        protein_g:    Number(manualPreview.prot),
+        carbs_g:      Number(manualPreview.carb),
+        fat_g:        Number(manualPreview.fat),
+        order_index:  0,
+      });
+    } else {
+      if (!selected) return;
+      const isTaco = String(selected.id).startsWith('taco_');
+      onAdd({
+        food_item_id: isTaco ? null : selected.id,
+        name:         selected.name,
+        quantity_g:   qty,
+        calories:     Number(preview.cal),
+        protein_g:    Number(preview.prot),
+        carbs_g:      Number(preview.carb),
+        fat_g:        Number(preview.fat),
+        order_index:  0,
+      });
+    }
     onClose();
   };
+
+  const canAdd = manualMode ? !!q.trim() : !!selected;
+
+  const MacroField = ({ label, field, color }) => (
+    <div style={{ flex: 1 }}>
+      <label style={{ fontSize: 10, fontWeight: 700, color, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: 4 }}>{label}/100g</label>
+      <input
+        type="number" min="0" step="0.1"
+        value={manual[field]}
+        onChange={e => setManual(m => ({ ...m, [field]: e.target.value }))}
+        placeholder="0"
+        style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1.5px solid ${color}40`, background: color + '08', color: 'var(--gray-900)', fontSize: 14, fontWeight: 700, textAlign: 'center', outline: 'none', boxSizing: 'border-box' }}
+        onFocus={e => e.target.style.borderColor = color}
+        onBlur={e => e.target.style.borderColor = color + '40'}
+      />
+    </div>
+  );
 
   return (
     <div
@@ -345,26 +385,37 @@ function FoodSearch({ foods, onAdd, onClose }) {
       onClick={onClose}
     >
       <div
-        style={{ background: 'var(--bg-surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 520, padding: '20px 20px 32px', maxHeight: '88vh', overflowY: 'auto' }}
+        style={{ background: 'var(--bg-surface)', borderRadius: '20px 20px 0 0', width: '100%', maxWidth: 520, padding: '20px 20px 32px', maxHeight: '92vh', overflowY: 'auto' }}
         onClick={e => e.stopPropagation()}
       >
         {/* Handle */}
         <div style={{ width: 40, height: 4, borderRadius: 2, background: 'var(--border)', margin: '-8px auto 16px' }} />
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>Adicionar alimento</h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
-            <X size={18} />
-          </button>
+          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>
+            {manualMode ? 'Inserir manualmente' : 'Adicionar alimento'}
+          </h3>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {manualMode && (
+              <button onClick={() => { setManualMode(false); setManual({ kcal: '', prot: '', carb: '', fat: '' }); }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', fontSize: 12, fontWeight: 700, padding: '4px 8px', borderRadius: 6 }}>
+                ← Buscar
+              </button>
+            )}
+            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
+              <X size={18} />
+            </button>
+          </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-page)', border: '1.5px solid var(--border)', borderRadius: 12, padding: '10px 14px', marginBottom: 10 }}>
-          <Search size={16} color="var(--gray-400)" />
+        {/* Search bar — sempre visível */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--bg-page)', border: `1.5px solid ${manualMode ? 'var(--accent)' : 'var(--border)'}`, borderRadius: 12, padding: '10px 14px', marginBottom: 10 }}>
+          <Search size={16} color={manualMode ? 'var(--accent)' : 'var(--gray-400)'} />
           <input
             ref={inputRef}
             value={q}
-            onChange={e => { setQ(e.target.value); setSelected(null); }}
-            placeholder={`Buscar entre ${(tacoFoods.length + foods.length).toLocaleString()} alimentos...`}
+            onChange={e => { setQ(e.target.value); setSelected(null); if (manualMode) setManual({ kcal: '', prot: '', carb: '', fat: '' }); }}
+            placeholder={manualMode ? 'Nome do alimento...' : `Buscar entre ${(tacoFoods.length + foods.length).toLocaleString()} alimentos...`}
             style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 14, flex: 1, padding: 0, boxShadow: 'none', color: 'var(--gray-900)', WebkitTextFillColor: 'var(--gray-900)' }}
           />
           {q.length > 0 && (
@@ -374,88 +425,103 @@ function FoodSearch({ foods, onAdd, onClose }) {
           )}
         </div>
 
-        {q.length < 2 && (
-          <p style={{ margin: '4px 0 10px', fontSize: 12, color: 'var(--gray-400)', textAlign: 'center' }}>
-            Digite ao menos 2 letras para buscar
-          </p>
-        )}
-
-        {q.length >= 2 && results.length === 0 && (
-          <button
-            onClick={() => { onAdd({ food_item_id: null, name: q, quantity_g: qty, calories: 0, protein_g: 0, carbs_g: 0, fat_g: 0, order_index: 0 }); onClose(); }}
-            style={{ width: '100%', padding: '11px 14px', borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--bg-page)', color: 'var(--gray-500)', fontSize: 13, fontWeight: 600, cursor: 'pointer', textAlign: 'left', marginBottom: 12 }}
-          >
-            + Adicionar "{q}" manualmente (sem macros)
-          </button>
-        )}
-
-        {results.map(f => (
-          <div
-            key={f.id}
-            onClick={() => setSelected(f)}
-            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, marginBottom: 4, background: selected?.id === f.id ? 'var(--accent-bg)' : 'var(--bg-page)', border: `1.5px solid ${selected?.id === f.id ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', transition: 'all 0.1s' }}
-          >
-            <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
-              <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-900)' }}>{f.name}</p>
-              <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>
-                {f.calories_per_100g} kcal · {f.protein_per_100g}g P · {f.carbs_per_100g}g C / 100g
+        {/* Modo busca */}
+        {!manualMode && (
+          <>
+            {q.length < 2 && (
+              <p style={{ margin: '4px 0 10px', fontSize: 12, color: 'var(--gray-400)', textAlign: 'center' }}>
+                Digite ao menos 2 letras para buscar
               </p>
-            </div>
-            {selected?.id === f.id && <Check size={16} color="var(--accent)" style={{ flexShrink: 0 }} />}
-          </div>
-        ))}
+            )}
 
-        {selected && (
+            {q.length >= 2 && results.length === 0 && (
+              <div style={{ padding: '14px', borderRadius: 10, border: '1.5px dashed var(--border)', background: 'var(--bg-page)', marginBottom: 12, textAlign: 'center' }}>
+                <p style={{ margin: '0 0 10px', fontSize: 13, color: 'var(--gray-500)' }}>Nenhum resultado para "{q}"</p>
+                <button
+                  onClick={() => setManualMode(true)}
+                  style={{ padding: '8px 18px', borderRadius: 8, border: 'none', background: 'var(--accent)', color: 'white', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
+                >
+                  + Inserir com macros manualmente
+                </button>
+              </div>
+            )}
+
+            {results.map(f => (
+              <div
+                key={f.id}
+                onClick={() => setSelected(f)}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', borderRadius: 10, marginBottom: 4, background: selected?.id === f.id ? 'var(--accent-bg)' : 'var(--bg-page)', border: `1.5px solid ${selected?.id === f.id ? 'var(--accent)' : 'transparent'}`, cursor: 'pointer', transition: 'all 0.1s' }}
+              >
+                <div style={{ flex: 1, minWidth: 0, marginRight: 8 }}>
+                  <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-900)' }}>{f.name}</p>
+                  <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)' }}>
+                    {f.calories_per_100g} kcal · {f.protein_per_100g}g P · {f.carbs_per_100g}g C / 100g
+                  </p>
+                </div>
+                {selected?.id === f.id && <Check size={16} color="var(--accent)" style={{ flexShrink: 0 }} />}
+              </div>
+            ))}
+          </>
+        )}
+
+        {/* Modo manual — campos de macro */}
+        {manualMode && (
+          <div style={{ marginBottom: 12 }}>
+            <p style={{ margin: '0 0 12px', fontSize: 12, color: 'var(--gray-400)' }}>
+              Digite os valores por 100g. A quantidade abaixo calcula o total.
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <MacroField label="Kcal"  field="kcal" color={MACRO_COLORS.cal} />
+              <MacroField label="Prot"  field="prot" color={MACRO_COLORS.prot} />
+              <MacroField label="Carb"  field="carb" color={MACRO_COLORS.carb} />
+              <MacroField label="Gord"  field="fat"  color={MACRO_COLORS.fat} />
+            </div>
+          </div>
+        )}
+
+        {/* Seção de quantidade + preview — aparece quando há seleção ou modo manual */}
+        {(selected || manualMode) && (
           <div style={{ marginTop: 12, padding: 14, background: 'var(--bg-page)', borderRadius: 12, border: '1px solid var(--border)' }}>
             <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-500)', textTransform: 'uppercase', letterSpacing: '0.04em', display: 'block', marginBottom: 8 }}>
               Quantidade
             </label>
-
-            {/* Serving presets */}
             <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
               {[50, 100, 150, 200, 250, 300].map(g => (
-                <button
-                  key={g}
-                  onClick={() => setQty(g)}
-                  style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${qty === g ? 'var(--accent)' : 'var(--border)'}`, background: qty === g ? 'var(--accent-bg)' : 'var(--bg-surface)', color: qty === g ? 'var(--accent-text)' : 'var(--gray-500)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
-                >
+                <button key={g} onClick={() => setQty(g)}
+                  style={{ padding: '5px 10px', borderRadius: 8, border: `1.5px solid ${qty === g ? 'var(--accent)' : 'var(--border)'}`, background: qty === g ? 'var(--accent-bg)' : 'var(--bg-surface)', color: qty === g ? 'var(--accent-text)' : 'var(--gray-500)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                   {g}g
                 </button>
               ))}
             </div>
-
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
-              <input
-                type="number"
-                value={qty}
-                min="1"
-                onChange={e => setQty(Number(e.target.value) || 100)}
-                style={{ width: 80, textAlign: 'center', fontWeight: 700, fontSize: 16 }}
-              />
+              <input type="number" value={qty} min="1" onChange={e => setQty(Number(e.target.value) || 100)}
+                style={{ width: 80, textAlign: 'center', fontWeight: 700, fontSize: 16 }} />
               <span style={{ fontSize: 13, color: 'var(--gray-500)', fontWeight: 600 }}>gramas</span>
             </div>
-
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', gap: 6 }}>
-              {[
-                { label: 'Kcal', value: preview.cal,  color: MACRO_COLORS.cal  },
-                { label: 'Prot', value: preview.prot, color: MACRO_COLORS.prot },
-                { label: 'Carb', value: preview.carb, color: MACRO_COLORS.carb },
-                { label: 'Gord', value: preview.fat,  color: MACRO_COLORS.fat  },
-              ].map(m => (
-                <div key={m.label} style={{ textAlign: 'center', padding: '8px 4px', background: m.color + '12', borderRadius: 8 }}>
-                  <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: m.color }}>{m.value}</p>
-                  <p style={{ margin: 0, fontSize: 9, color: m.color, fontWeight: 700, textTransform: 'uppercase' }}>{m.label}</p>
-                </div>
-              ))}
+              {(() => {
+                const p = manualMode ? manualPreview : preview;
+                return [
+                  { label: 'Kcal', value: p.cal,  color: MACRO_COLORS.cal  },
+                  { label: 'Prot', value: p.prot, color: MACRO_COLORS.prot },
+                  { label: 'Carb', value: p.carb, color: MACRO_COLORS.carb },
+                  { label: 'Gord', value: p.fat,  color: MACRO_COLORS.fat  },
+                ].map(m => (
+                  <div key={m.label} style={{ textAlign: 'center', padding: '8px 4px', background: m.color + '12', borderRadius: 8 }}>
+                    <p style={{ margin: 0, fontSize: 14, fontWeight: 900, color: m.color }}>{m.value}</p>
+                    <p style={{ margin: 0, fontSize: 9, color: m.color, fontWeight: 700, textTransform: 'uppercase' }}>{m.label}</p>
+                  </div>
+                ));
+              })()}
             </div>
           </div>
         )}
 
         <button
           onClick={handleAdd}
-          disabled={!selected}
+          disabled={!canAdd}
           className="btn-primary"
-          style={{ width: '100%', justifyContent: 'center', marginTop: 14, opacity: selected ? 1 : 0.5 }}
+          style={{ width: '100%', justifyContent: 'center', marginTop: 14, opacity: canAdd ? 1 : 0.4 }}
         >
           <Plus size={16} /> Adicionar ao plano
         </button>

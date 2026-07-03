@@ -1,72 +1,1145 @@
 [
-  {"id":1,"name":"Frango peito grelhado","category":"Proteínas","kcal":165,"protein_g":31.0,"carbs_g":0,"fat_g":3.6},
-  {"id":2,"name":"Frango coxa grelhada","category":"Proteínas","kcal":209,"protein_g":26.0,"carbs_g":0,"fat_g":11.0},
-  {"id":3,"name":"Carne bovina patinho cozido","category":"Proteínas","kcal":219,"protein_g":32.0,"carbs_g":0,"fat_g":10.0},
-  {"id":4,"name":"Carne bovina alcatra grelhada","category":"Proteínas","kcal":213,"protein_g":28.0,"carbs_g":0,"fat_g":11.0},
-  {"id":5,"name":"Tilápia grelhada","category":"Proteínas","kcal":128,"protein_g":26.0,"carbs_g":0,"fat_g":3.0},
-  {"id":6,"name":"Salmão grelhado","category":"Proteínas","kcal":208,"protein_g":20.0,"carbs_g":0,"fat_g":13.0},
-  {"id":7,"name":"Atum em água escorrido","category":"Proteínas","kcal":116,"protein_g":26.0,"carbs_g":0,"fat_g":1.0},
-  {"id":8,"name":"Ovo inteiro cozido","category":"Proteínas","kcal":155,"protein_g":13.0,"carbs_g":1.1,"fat_g":11.0},
-  {"id":9,"name":"Clara de ovo","category":"Proteínas","kcal":52,"protein_g":11.0,"carbs_g":0.7,"fat_g":0.2},
-  {"id":10,"name":"Sardinha em óleo escorrida","category":"Proteínas","kcal":208,"protein_g":24.0,"carbs_g":0,"fat_g":12.0},
-  {"id":11,"name":"Whey protein (pó)","category":"Proteínas","kcal":380,"protein_g":80.0,"carbs_g":6.0,"fat_g":4.0},
-  {"id":12,"name":"Atum grelhado","category":"Proteínas","kcal":184,"protein_g":30.0,"carbs_g":0,"fat_g":6.0},
-  {"id":13,"name":"Arroz branco cozido","category":"Carboidratos","kcal":128,"protein_g":2.5,"carbs_g":28.0,"fat_g":0.2},
-  {"id":14,"name":"Arroz integral cozido","category":"Carboidratos","kcal":111,"protein_g":2.6,"carbs_g":23.0,"fat_g":0.9},
-  {"id":15,"name":"Feijão preto cozido","category":"Carboidratos","kcal":77,"protein_g":5.0,"carbs_g":14.0,"fat_g":0.5},
-  {"id":16,"name":"Feijão carioca cozido","category":"Carboidratos","kcal":76,"protein_g":4.8,"carbs_g":13.6,"fat_g":0.5},
-  {"id":17,"name":"Lentilha cozida","category":"Carboidratos","kcal":116,"protein_g":9.0,"carbs_g":20.0,"fat_g":0.4},
-  {"id":18,"name":"Grão-de-bico cozido","category":"Carboidratos","kcal":164,"protein_g":9.0,"carbs_g":27.0,"fat_g":2.6},
-  {"id":19,"name":"Batata doce cozida","category":"Carboidratos","kcal":76,"protein_g":1.4,"carbs_g":17.7,"fat_g":0.1},
-  {"id":20,"name":"Batata inglesa cozida","category":"Carboidratos","kcal":56,"protein_g":1.7,"carbs_g":13.0,"fat_g":0.1},
-  {"id":21,"name":"Mandioca cozida","category":"Carboidratos","kcal":125,"protein_g":1.0,"carbs_g":30.0,"fat_g":0.3},
-  {"id":22,"name":"Inhame cozido","category":"Carboidratos","kcal":98,"protein_g":1.5,"carbs_g":23.0,"fat_g":0.1},
-  {"id":23,"name":"Macarrão cozido","category":"Carboidratos","kcal":131,"protein_g":5.0,"carbs_g":26.0,"fat_g":0.9},
-  {"id":24,"name":"Aveia em flocos","category":"Carboidratos","kcal":394,"protein_g":14.0,"carbs_g":67.0,"fat_g":8.5},
-  {"id":25,"name":"Pão francês","category":"Carboidratos","kcal":300,"protein_g":8.0,"carbs_g":58.0,"fat_g":3.0},
-  {"id":26,"name":"Pão integral","category":"Carboidratos","kcal":253,"protein_g":8.0,"carbs_g":46.0,"fat_g":4.0},
-  {"id":27,"name":"Tapioca hidratada","category":"Carboidratos","kcal":149,"protein_g":0.5,"carbs_g":36.0,"fat_g":0.1},
-  {"id":28,"name":"Cuscuz de milho cozido","category":"Carboidratos","kcal":127,"protein_g":2.4,"carbs_g":27.0,"fat_g":0.8},
-  {"id":29,"name":"Brócolis cozido","category":"Vegetais","kcal":35,"protein_g":2.4,"carbs_g":7.0,"fat_g":0.4},
-  {"id":30,"name":"Cenoura crua","category":"Vegetais","kcal":34,"protein_g":0.8,"carbs_g":8.0,"fat_g":0.2},
-  {"id":31,"name":"Tomate","category":"Vegetais","kcal":18,"protein_g":0.9,"carbs_g":4.0,"fat_g":0.2},
-  {"id":32,"name":"Alface","category":"Vegetais","kcal":13,"protein_g":1.4,"carbs_g":2.0,"fat_g":0.2},
-  {"id":33,"name":"Espinafre cozido","category":"Vegetais","kcal":23,"protein_g":3.0,"carbs_g":4.0,"fat_g":0.3},
-  {"id":34,"name":"Abobrinha cozida","category":"Vegetais","kcal":17,"protein_g":1.0,"carbs_g":4.0,"fat_g":0.1},
-  {"id":35,"name":"Couve refogada","category":"Vegetais","kcal":36,"protein_g":3.0,"carbs_g":7.0,"fat_g":0.7},
-  {"id":36,"name":"Pepino","category":"Vegetais","kcal":15,"protein_g":0.7,"carbs_g":3.6,"fat_g":0.1},
-  {"id":37,"name":"Beterraba cozida","category":"Vegetais","kcal":43,"protein_g":1.7,"carbs_g":10.0,"fat_g":0.1},
-  {"id":38,"name":"Abóbora cozida","category":"Vegetais","kcal":26,"protein_g":1.0,"carbs_g":6.0,"fat_g":0.1},
-  {"id":39,"name":"Chuchu cozido","category":"Vegetais","kcal":19,"protein_g":0.9,"carbs_g":4.5,"fat_g":0.1},
-  {"id":40,"name":"Vagem cozida","category":"Vegetais","kcal":25,"protein_g":1.5,"carbs_g":5.0,"fat_g":0.1},
-  {"id":41,"name":"Couve-flor cozida","category":"Vegetais","kcal":23,"protein_g":1.8,"carbs_g":5.0,"fat_g":0.2},
-  {"id":42,"name":"Berinjela cozida","category":"Vegetais","kcal":24,"protein_g":0.9,"carbs_g":5.5,"fat_g":0.2},
-  {"id":43,"name":"Banana prata","category":"Frutas","kcal":92,"protein_g":1.3,"carbs_g":23.8,"fat_g":0.1},
-  {"id":44,"name":"Maçã","category":"Frutas","kcal":56,"protein_g":0.3,"carbs_g":15.2,"fat_g":0.2},
-  {"id":45,"name":"Laranja","category":"Frutas","kcal":37,"protein_g":1.0,"carbs_g":9.0,"fat_g":0.1},
-  {"id":46,"name":"Mamão papaia","category":"Frutas","kcal":45,"protein_g":0.5,"carbs_g":11.8,"fat_g":0.1},
-  {"id":47,"name":"Manga","category":"Frutas","kcal":64,"protein_g":0.4,"carbs_g":16.9,"fat_g":0.3},
-  {"id":48,"name":"Morango","category":"Frutas","kcal":30,"protein_g":0.8,"carbs_g":7.1,"fat_g":0.3},
-  {"id":49,"name":"Abacate","category":"Frutas","kcal":160,"protein_g":1.5,"carbs_g":9.0,"fat_g":15.0},
-  {"id":50,"name":"Melancia","category":"Frutas","kcal":30,"protein_g":0.5,"carbs_g":8.0,"fat_g":0.1},
-  {"id":51,"name":"Uva","category":"Frutas","kcal":69,"protein_g":0.6,"carbs_g":18.1,"fat_g":0.2},
-  {"id":52,"name":"Leite desnatado","category":"Laticínios","kcal":35,"protein_g":3.4,"carbs_g":5.0,"fat_g":0.1},
-  {"id":53,"name":"Iogurte natural integral","category":"Laticínios","kcal":66,"protein_g":3.9,"carbs_g":4.9,"fat_g":3.6},
-  {"id":54,"name":"Iogurte grego","category":"Laticínios","kcal":97,"protein_g":9.0,"carbs_g":3.6,"fat_g":5.0},
-  {"id":55,"name":"Queijo minas frescal","category":"Laticínios","kcal":264,"protein_g":17.0,"carbs_g":3.0,"fat_g":20.0},
-  {"id":56,"name":"Queijo cottage","category":"Laticínios","kcal":98,"protein_g":11.0,"carbs_g":3.0,"fat_g":4.0},
-  {"id":57,"name":"Requeijão cremoso","category":"Laticínios","kcal":235,"protein_g":7.0,"carbs_g":5.0,"fat_g":21.0},
-  {"id":58,"name":"Azeite de oliva","category":"Gorduras","kcal":884,"protein_g":0,"carbs_g":0,"fat_g":100.0},
-  {"id":59,"name":"Óleo de coco","category":"Gorduras","kcal":862,"protein_g":0,"carbs_g":0,"fat_g":100.0},
-  {"id":60,"name":"Castanha do Pará","category":"Gorduras","kcal":656,"protein_g":14.0,"carbs_g":12.0,"fat_g":66.0},
-  {"id":61,"name":"Amendoim torrado","category":"Gorduras","kcal":567,"protein_g":26.0,"carbs_g":21.0,"fat_g":45.0},
-  {"id":62,"name":"Pasta de amendoim","category":"Gorduras","kcal":588,"protein_g":25.0,"carbs_g":20.0,"fat_g":50.0},
-  {"id":63,"name":"Castanha de caju","category":"Gorduras","kcal":570,"protein_g":18.0,"carbs_g":29.0,"fat_g":46.0},
-  {"id":64,"name":"Sementes de chia","category":"Gorduras","kcal":486,"protein_g":17.0,"carbs_g":42.0,"fat_g":31.0},
-  {"id":65,"name":"Suco de laranja natural","category":"Bebidas","kcal":45,"protein_g":0.7,"carbs_g":11.0,"fat_g":0.2},
-  {"id":66,"name":"Café preto sem açúcar","category":"Bebidas","kcal":2,"protein_g":0.3,"carbs_g":0,"fat_g":0},
-  {"id":67,"name":"Leite de coco","category":"Bebidas","kcal":197,"protein_g":2.0,"carbs_g":6.0,"fat_g":19.0},
-  {"id":68,"name":"Mel","category":"Outros","kcal":304,"protein_g":0.3,"carbs_g":82.0,"fat_g":0},
-  {"id":69,"name":"Açúcar demerara","category":"Outros","kcal":387,"protein_g":0,"carbs_g":99.0,"fat_g":0},
-  {"id":70,"name":"Granola sem açúcar","category":"Outros","kcal":370,"protein_g":9.0,"carbs_g":55.0,"fat_g":12.0}
+  {
+    "id": 1,
+    "name": "Frango peito grelhado",
+    "category": "Proteínas",
+    "kcal": 165,
+    "protein_g": 31,
+    "carbs_g": 0,
+    "fat_g": 3.6
+  },
+  {
+    "id": 2,
+    "name": "Frango coxa grelhada",
+    "category": "Proteínas",
+    "kcal": 209,
+    "protein_g": 26,
+    "carbs_g": 0,
+    "fat_g": 11
+  },
+  {
+    "id": 3,
+    "name": "Carne bovina patinho cozido",
+    "category": "Proteínas",
+    "kcal": 219,
+    "protein_g": 32,
+    "carbs_g": 0,
+    "fat_g": 10
+  },
+  {
+    "id": 4,
+    "name": "Carne bovina alcatra grelhada",
+    "category": "Proteínas",
+    "kcal": 213,
+    "protein_g": 28,
+    "carbs_g": 0,
+    "fat_g": 11
+  },
+  {
+    "id": 5,
+    "name": "Tilápia grelhada",
+    "category": "Proteínas",
+    "kcal": 128,
+    "protein_g": 26,
+    "carbs_g": 0,
+    "fat_g": 3
+  },
+  {
+    "id": 6,
+    "name": "Salmão grelhado",
+    "category": "Proteínas",
+    "kcal": 208,
+    "protein_g": 20,
+    "carbs_g": 0,
+    "fat_g": 13
+  },
+  {
+    "id": 7,
+    "name": "Atum em água escorrido",
+    "category": "Proteínas",
+    "kcal": 116,
+    "protein_g": 26,
+    "carbs_g": 0,
+    "fat_g": 1
+  },
+  {
+    "id": 8,
+    "name": "Ovo inteiro cozido",
+    "category": "Proteínas",
+    "kcal": 155,
+    "protein_g": 13,
+    "carbs_g": 1.1,
+    "fat_g": 11
+  },
+  {
+    "id": 9,
+    "name": "Clara de ovo",
+    "category": "Proteínas",
+    "kcal": 52,
+    "protein_g": 11,
+    "carbs_g": 0.7,
+    "fat_g": 0.2
+  },
+  {
+    "id": 10,
+    "name": "Sardinha em óleo escorrida",
+    "category": "Proteínas",
+    "kcal": 208,
+    "protein_g": 24,
+    "carbs_g": 0,
+    "fat_g": 12
+  },
+  {
+    "id": 11,
+    "name": "Whey protein (pó)",
+    "category": "Proteínas",
+    "kcal": 380,
+    "protein_g": 80,
+    "carbs_g": 6,
+    "fat_g": 4
+  },
+  {
+    "id": 12,
+    "name": "Atum grelhado",
+    "category": "Proteínas",
+    "kcal": 184,
+    "protein_g": 30,
+    "carbs_g": 0,
+    "fat_g": 6
+  },
+  {
+    "id": 13,
+    "name": "Arroz branco cozido",
+    "category": "Carboidratos",
+    "kcal": 128,
+    "protein_g": 2.5,
+    "carbs_g": 28,
+    "fat_g": 0.2
+  },
+  {
+    "id": 14,
+    "name": "Arroz integral cozido",
+    "category": "Carboidratos",
+    "kcal": 111,
+    "protein_g": 2.6,
+    "carbs_g": 23,
+    "fat_g": 0.9
+  },
+  {
+    "id": 15,
+    "name": "Feijão preto cozido",
+    "category": "Carboidratos",
+    "kcal": 77,
+    "protein_g": 5,
+    "carbs_g": 14,
+    "fat_g": 0.5
+  },
+  {
+    "id": 16,
+    "name": "Feijão carioca cozido",
+    "category": "Carboidratos",
+    "kcal": 76,
+    "protein_g": 4.8,
+    "carbs_g": 13.6,
+    "fat_g": 0.5
+  },
+  {
+    "id": 17,
+    "name": "Lentilha cozida",
+    "category": "Carboidratos",
+    "kcal": 116,
+    "protein_g": 9,
+    "carbs_g": 20,
+    "fat_g": 0.4
+  },
+  {
+    "id": 18,
+    "name": "Grão-de-bico cozido",
+    "category": "Carboidratos",
+    "kcal": 164,
+    "protein_g": 9,
+    "carbs_g": 27,
+    "fat_g": 2.6
+  },
+  {
+    "id": 19,
+    "name": "Batata doce cozida",
+    "category": "Carboidratos",
+    "kcal": 76,
+    "protein_g": 1.4,
+    "carbs_g": 17.7,
+    "fat_g": 0.1
+  },
+  {
+    "id": 20,
+    "name": "Batata inglesa cozida",
+    "category": "Carboidratos",
+    "kcal": 56,
+    "protein_g": 1.7,
+    "carbs_g": 13,
+    "fat_g": 0.1
+  },
+  {
+    "id": 21,
+    "name": "Mandioca cozida",
+    "category": "Carboidratos",
+    "kcal": 125,
+    "protein_g": 1,
+    "carbs_g": 30,
+    "fat_g": 0.3
+  },
+  {
+    "id": 22,
+    "name": "Inhame cozido",
+    "category": "Carboidratos",
+    "kcal": 98,
+    "protein_g": 1.5,
+    "carbs_g": 23,
+    "fat_g": 0.1
+  },
+  {
+    "id": 23,
+    "name": "Macarrão cozido",
+    "category": "Carboidratos",
+    "kcal": 131,
+    "protein_g": 5,
+    "carbs_g": 26,
+    "fat_g": 0.9
+  },
+  {
+    "id": 24,
+    "name": "Aveia em flocos",
+    "category": "Carboidratos",
+    "kcal": 394,
+    "protein_g": 14,
+    "carbs_g": 67,
+    "fat_g": 8.5
+  },
+  {
+    "id": 25,
+    "name": "Pão francês",
+    "category": "Carboidratos",
+    "kcal": 300,
+    "protein_g": 8,
+    "carbs_g": 58,
+    "fat_g": 3
+  },
+  {
+    "id": 26,
+    "name": "Pão integral",
+    "category": "Carboidratos",
+    "kcal": 253,
+    "protein_g": 8,
+    "carbs_g": 46,
+    "fat_g": 4
+  },
+  {
+    "id": 27,
+    "name": "Tapioca hidratada",
+    "category": "Carboidratos",
+    "kcal": 149,
+    "protein_g": 0.5,
+    "carbs_g": 36,
+    "fat_g": 0.1
+  },
+  {
+    "id": 28,
+    "name": "Cuscuz de milho cozido",
+    "category": "Carboidratos",
+    "kcal": 127,
+    "protein_g": 2.4,
+    "carbs_g": 27,
+    "fat_g": 0.8
+  },
+  {
+    "id": 29,
+    "name": "Brócolis cozido",
+    "category": "Vegetais",
+    "kcal": 35,
+    "protein_g": 2.4,
+    "carbs_g": 7,
+    "fat_g": 0.4
+  },
+  {
+    "id": 30,
+    "name": "Cenoura crua",
+    "category": "Vegetais",
+    "kcal": 34,
+    "protein_g": 0.8,
+    "carbs_g": 8,
+    "fat_g": 0.2
+  },
+  {
+    "id": 31,
+    "name": "Tomate",
+    "category": "Vegetais",
+    "kcal": 18,
+    "protein_g": 0.9,
+    "carbs_g": 4,
+    "fat_g": 0.2
+  },
+  {
+    "id": 32,
+    "name": "Alface",
+    "category": "Vegetais",
+    "kcal": 13,
+    "protein_g": 1.4,
+    "carbs_g": 2,
+    "fat_g": 0.2
+  },
+  {
+    "id": 33,
+    "name": "Espinafre cozido",
+    "category": "Vegetais",
+    "kcal": 23,
+    "protein_g": 3,
+    "carbs_g": 4,
+    "fat_g": 0.3
+  },
+  {
+    "id": 34,
+    "name": "Abobrinha cozida",
+    "category": "Vegetais",
+    "kcal": 17,
+    "protein_g": 1,
+    "carbs_g": 4,
+    "fat_g": 0.1
+  },
+  {
+    "id": 35,
+    "name": "Couve refogada",
+    "category": "Vegetais",
+    "kcal": 36,
+    "protein_g": 3,
+    "carbs_g": 7,
+    "fat_g": 0.7
+  },
+  {
+    "id": 36,
+    "name": "Pepino",
+    "category": "Vegetais",
+    "kcal": 15,
+    "protein_g": 0.7,
+    "carbs_g": 3.6,
+    "fat_g": 0.1
+  },
+  {
+    "id": 37,
+    "name": "Beterraba cozida",
+    "category": "Vegetais",
+    "kcal": 43,
+    "protein_g": 1.7,
+    "carbs_g": 10,
+    "fat_g": 0.1
+  },
+  {
+    "id": 38,
+    "name": "Abóbora cozida",
+    "category": "Vegetais",
+    "kcal": 26,
+    "protein_g": 1,
+    "carbs_g": 6,
+    "fat_g": 0.1
+  },
+  {
+    "id": 39,
+    "name": "Chuchu cozido",
+    "category": "Vegetais",
+    "kcal": 19,
+    "protein_g": 0.9,
+    "carbs_g": 4.5,
+    "fat_g": 0.1
+  },
+  {
+    "id": 40,
+    "name": "Vagem cozida",
+    "category": "Vegetais",
+    "kcal": 25,
+    "protein_g": 1.5,
+    "carbs_g": 5,
+    "fat_g": 0.1
+  },
+  {
+    "id": 41,
+    "name": "Couve-flor cozida",
+    "category": "Vegetais",
+    "kcal": 23,
+    "protein_g": 1.8,
+    "carbs_g": 5,
+    "fat_g": 0.2
+  },
+  {
+    "id": 42,
+    "name": "Berinjela cozida",
+    "category": "Vegetais",
+    "kcal": 24,
+    "protein_g": 0.9,
+    "carbs_g": 5.5,
+    "fat_g": 0.2
+  },
+  {
+    "id": 43,
+    "name": "Banana prata",
+    "category": "Frutas",
+    "kcal": 92,
+    "protein_g": 1.3,
+    "carbs_g": 23.8,
+    "fat_g": 0.1
+  },
+  {
+    "id": 44,
+    "name": "Maçã",
+    "category": "Frutas",
+    "kcal": 56,
+    "protein_g": 0.3,
+    "carbs_g": 15.2,
+    "fat_g": 0.2
+  },
+  {
+    "id": 45,
+    "name": "Laranja",
+    "category": "Frutas",
+    "kcal": 37,
+    "protein_g": 1,
+    "carbs_g": 9,
+    "fat_g": 0.1
+  },
+  {
+    "id": 46,
+    "name": "Mamão papaia",
+    "category": "Frutas",
+    "kcal": 45,
+    "protein_g": 0.5,
+    "carbs_g": 11.8,
+    "fat_g": 0.1
+  },
+  {
+    "id": 47,
+    "name": "Manga",
+    "category": "Frutas",
+    "kcal": 64,
+    "protein_g": 0.4,
+    "carbs_g": 16.9,
+    "fat_g": 0.3
+  },
+  {
+    "id": 48,
+    "name": "Morango",
+    "category": "Frutas",
+    "kcal": 30,
+    "protein_g": 0.8,
+    "carbs_g": 7.1,
+    "fat_g": 0.3
+  },
+  {
+    "id": 49,
+    "name": "Abacate",
+    "category": "Frutas",
+    "kcal": 160,
+    "protein_g": 1.5,
+    "carbs_g": 9,
+    "fat_g": 15
+  },
+  {
+    "id": 50,
+    "name": "Melancia",
+    "category": "Frutas",
+    "kcal": 30,
+    "protein_g": 0.5,
+    "carbs_g": 8,
+    "fat_g": 0.1
+  },
+  {
+    "id": 51,
+    "name": "Uva",
+    "category": "Frutas",
+    "kcal": 69,
+    "protein_g": 0.6,
+    "carbs_g": 18.1,
+    "fat_g": 0.2
+  },
+  {
+    "id": 52,
+    "name": "Leite desnatado",
+    "category": "Laticínios",
+    "kcal": 35,
+    "protein_g": 3.4,
+    "carbs_g": 5,
+    "fat_g": 0.1
+  },
+  {
+    "id": 53,
+    "name": "Iogurte natural integral",
+    "category": "Laticínios",
+    "kcal": 66,
+    "protein_g": 3.9,
+    "carbs_g": 4.9,
+    "fat_g": 3.6
+  },
+  {
+    "id": 54,
+    "name": "Iogurte grego",
+    "category": "Laticínios",
+    "kcal": 97,
+    "protein_g": 9,
+    "carbs_g": 3.6,
+    "fat_g": 5
+  },
+  {
+    "id": 55,
+    "name": "Queijo minas frescal",
+    "category": "Laticínios",
+    "kcal": 264,
+    "protein_g": 17,
+    "carbs_g": 3,
+    "fat_g": 20
+  },
+  {
+    "id": 56,
+    "name": "Queijo cottage",
+    "category": "Laticínios",
+    "kcal": 98,
+    "protein_g": 11,
+    "carbs_g": 3,
+    "fat_g": 4
+  },
+  {
+    "id": 57,
+    "name": "Requeijão cremoso",
+    "category": "Laticínios",
+    "kcal": 235,
+    "protein_g": 7,
+    "carbs_g": 5,
+    "fat_g": 21
+  },
+  {
+    "id": 58,
+    "name": "Azeite de oliva",
+    "category": "Gorduras",
+    "kcal": 884,
+    "protein_g": 0,
+    "carbs_g": 0,
+    "fat_g": 100
+  },
+  {
+    "id": 59,
+    "name": "Óleo de coco",
+    "category": "Gorduras",
+    "kcal": 862,
+    "protein_g": 0,
+    "carbs_g": 0,
+    "fat_g": 100
+  },
+  {
+    "id": 60,
+    "name": "Castanha do Pará",
+    "category": "Gorduras",
+    "kcal": 656,
+    "protein_g": 14,
+    "carbs_g": 12,
+    "fat_g": 66
+  },
+  {
+    "id": 61,
+    "name": "Amendoim torrado",
+    "category": "Gorduras",
+    "kcal": 567,
+    "protein_g": 26,
+    "carbs_g": 21,
+    "fat_g": 45
+  },
+  {
+    "id": 62,
+    "name": "Pasta de amendoim",
+    "category": "Gorduras",
+    "kcal": 588,
+    "protein_g": 25,
+    "carbs_g": 20,
+    "fat_g": 50
+  },
+  {
+    "id": 63,
+    "name": "Castanha de caju",
+    "category": "Gorduras",
+    "kcal": 570,
+    "protein_g": 18,
+    "carbs_g": 29,
+    "fat_g": 46
+  },
+  {
+    "id": 64,
+    "name": "Sementes de chia",
+    "category": "Gorduras",
+    "kcal": 486,
+    "protein_g": 17,
+    "carbs_g": 42,
+    "fat_g": 31
+  },
+  {
+    "id": 65,
+    "name": "Suco de laranja natural",
+    "category": "Bebidas",
+    "kcal": 45,
+    "protein_g": 0.7,
+    "carbs_g": 11,
+    "fat_g": 0.2
+  },
+  {
+    "id": 66,
+    "name": "Café preto sem açúcar",
+    "category": "Bebidas",
+    "kcal": 2,
+    "protein_g": 0.3,
+    "carbs_g": 0,
+    "fat_g": 0
+  },
+  {
+    "id": 67,
+    "name": "Leite de coco",
+    "category": "Bebidas",
+    "kcal": 197,
+    "protein_g": 2,
+    "carbs_g": 6,
+    "fat_g": 19
+  },
+  {
+    "id": 68,
+    "name": "Mel",
+    "category": "Outros",
+    "kcal": 304,
+    "protein_g": 0.3,
+    "carbs_g": 82,
+    "fat_g": 0
+  },
+  {
+    "id": 69,
+    "name": "Açúcar demerara",
+    "category": "Outros",
+    "kcal": 387,
+    "protein_g": 0,
+    "carbs_g": 99,
+    "fat_g": 0
+  },
+  {
+    "id": 70,
+    "name": "Granola sem açúcar",
+    "category": "Outros",
+    "kcal": 370,
+    "protein_g": 9,
+    "carbs_g": 55,
+    "fat_g": 12
+  },
+  {
+    "id": 71,
+    "name": "Frango peito assado",
+    "category": "Proteinas",
+    "kcal": 159,
+    "protein_g": 29.5,
+    "carbs_g": 0,
+    "fat_g": 3.8
+  },
+  {
+    "id": 72,
+    "name": "Peito de peru",
+    "category": "Proteinas",
+    "kcal": 135,
+    "protein_g": 28,
+    "carbs_g": 0,
+    "fat_g": 2.5
+  },
+  {
+    "id": 73,
+    "name": "Carne moida patinho cozida",
+    "category": "Proteinas",
+    "kcal": 220,
+    "protein_g": 28,
+    "carbs_g": 0,
+    "fat_g": 12
+  },
+  {
+    "id": 74,
+    "name": "Picanha grelhada",
+    "category": "Proteinas",
+    "kcal": 280,
+    "protein_g": 26,
+    "carbs_g": 0,
+    "fat_g": 19
+  },
+  {
+    "id": 75,
+    "name": "File mignon grelhado",
+    "category": "Proteinas",
+    "kcal": 188,
+    "protein_g": 29,
+    "carbs_g": 0,
+    "fat_g": 7.5
+  },
+  {
+    "id": 76,
+    "name": "Camarao cozido",
+    "category": "Proteinas",
+    "kcal": 99,
+    "protein_g": 21,
+    "carbs_g": 0.9,
+    "fat_g": 1.1
+  },
+  {
+    "id": 77,
+    "name": "Proteina de soja PTS",
+    "category": "Proteinas",
+    "kcal": 336,
+    "protein_g": 52,
+    "carbs_g": 28,
+    "fat_g": 1
+  },
+  {
+    "id": 78,
+    "name": "Frango peito desfiado",
+    "category": "Proteinas",
+    "kcal": 165,
+    "protein_g": 31,
+    "carbs_g": 0,
+    "fat_g": 3.6
+  },
+  {
+    "id": 79,
+    "name": "Ovo mexido",
+    "category": "Proteinas",
+    "kcal": 155,
+    "protein_g": 11,
+    "carbs_g": 1,
+    "fat_g": 12
+  },
+  {
+    "id": 80,
+    "name": "Omelete de claras",
+    "category": "Proteinas",
+    "kcal": 55,
+    "protein_g": 11.5,
+    "carbs_g": 0.5,
+    "fat_g": 0.4
+  },
+  {
+    "id": 81,
+    "name": "Frango com legumes refogado",
+    "category": "Proteinas",
+    "kcal": 145,
+    "protein_g": 20,
+    "carbs_g": 7,
+    "fat_g": 4.5
+  },
+  {
+    "id": 82,
+    "name": "Macarrao integral cozido",
+    "category": "Carboidratos",
+    "kcal": 131,
+    "protein_g": 5.5,
+    "carbs_g": 26,
+    "fat_g": 0.8
+  },
+  {
+    "id": 83,
+    "name": "Batata doce assada",
+    "category": "Carboidratos",
+    "kcal": 90,
+    "protein_g": 2,
+    "carbs_g": 20.7,
+    "fat_g": 0.1
+  },
+  {
+    "id": 84,
+    "name": "Milho cozido",
+    "category": "Carboidratos",
+    "kcal": 86,
+    "protein_g": 3.2,
+    "carbs_g": 19,
+    "fat_g": 1.2
+  },
+  {
+    "id": 85,
+    "name": "Quinoa cozida",
+    "category": "Carboidratos",
+    "kcal": 120,
+    "protein_g": 4.4,
+    "carbs_g": 21,
+    "fat_g": 1.9
+  },
+  {
+    "id": 86,
+    "name": "Biscoito cream cracker",
+    "category": "Carboidratos",
+    "kcal": 433,
+    "protein_g": 8,
+    "carbs_g": 71,
+    "fat_g": 13
+  },
+  {
+    "id": 87,
+    "name": "Pao de forma integral",
+    "category": "Carboidratos",
+    "kcal": 249,
+    "protein_g": 9.5,
+    "carbs_g": 44,
+    "fat_g": 3.5
+  },
+  {
+    "id": 88,
+    "name": "Batata baroa cozida",
+    "category": "Carboidratos",
+    "kcal": 77,
+    "protein_g": 1.5,
+    "carbs_g": 17,
+    "fat_g": 0.2
+  },
+  {
+    "id": 89,
+    "name": "Tapioca com queijo",
+    "category": "Carboidratos",
+    "kcal": 180,
+    "protein_g": 8,
+    "carbs_g": 27,
+    "fat_g": 4
+  },
+  {
+    "id": 90,
+    "name": "Cuscuz marroquino",
+    "category": "Carboidratos",
+    "kcal": 112,
+    "protein_g": 3.8,
+    "carbs_g": 23,
+    "fat_g": 0.2
+  },
+  {
+    "id": 91,
+    "name": "Macarrao ao sugo",
+    "category": "Carboidratos",
+    "kcal": 148,
+    "protein_g": 5,
+    "carbs_g": 27,
+    "fat_g": 2.5
+  },
+  {
+    "id": 92,
+    "name": "Feijao tropeiro",
+    "category": "Carboidratos",
+    "kcal": 165,
+    "protein_g": 8,
+    "carbs_g": 22,
+    "fat_g": 5
+  },
+  {
+    "id": 93,
+    "name": "Arroz integral com legumes",
+    "category": "Carboidratos",
+    "kcal": 125,
+    "protein_g": 3.5,
+    "carbs_g": 25,
+    "fat_g": 1.5
+  },
+  {
+    "id": 94,
+    "name": "Cebola crua",
+    "category": "Vegetais",
+    "kcal": 40,
+    "protein_g": 1.1,
+    "carbs_g": 9.3,
+    "fat_g": 0.1
+  },
+  {
+    "id": 95,
+    "name": "Alho",
+    "category": "Vegetais",
+    "kcal": 149,
+    "protein_g": 6.4,
+    "carbs_g": 33,
+    "fat_g": 0.5
+  },
+  {
+    "id": 96,
+    "name": "Pimentao verde",
+    "category": "Vegetais",
+    "kcal": 20,
+    "protein_g": 0.9,
+    "carbs_g": 4.6,
+    "fat_g": 0.2
+  },
+  {
+    "id": 97,
+    "name": "Pimentao vermelho",
+    "category": "Vegetais",
+    "kcal": 31,
+    "protein_g": 1,
+    "carbs_g": 7,
+    "fat_g": 0.3
+  },
+  {
+    "id": 98,
+    "name": "Cenoura cozida",
+    "category": "Vegetais",
+    "kcal": 35,
+    "protein_g": 0.8,
+    "carbs_g": 8,
+    "fat_g": 0.2
+  },
+  {
+    "id": 99,
+    "name": "Espinafre cru",
+    "category": "Vegetais",
+    "kcal": 22,
+    "protein_g": 2.9,
+    "carbs_g": 3.6,
+    "fat_g": 0.4
+  },
+  {
+    "id": 100,
+    "name": "Couve crua",
+    "category": "Vegetais",
+    "kcal": 49,
+    "protein_g": 3.1,
+    "carbs_g": 9,
+    "fat_g": 0.8
+  },
+  {
+    "id": 101,
+    "name": "Rucula",
+    "category": "Vegetais",
+    "kcal": 25,
+    "protein_g": 2.6,
+    "carbs_g": 3.7,
+    "fat_g": 0.7
+  },
+  {
+    "id": 102,
+    "name": "Repolho cru",
+    "category": "Vegetais",
+    "kcal": 25,
+    "protein_g": 1.3,
+    "carbs_g": 5.8,
+    "fat_g": 0.1
+  },
+  {
+    "id": 103,
+    "name": "Brocolis cru",
+    "category": "Vegetais",
+    "kcal": 34,
+    "protein_g": 2.8,
+    "carbs_g": 6.6,
+    "fat_g": 0.4
+  },
+  {
+    "id": 104,
+    "name": "Aspargo",
+    "category": "Vegetais",
+    "kcal": 20,
+    "protein_g": 2.2,
+    "carbs_g": 3.9,
+    "fat_g": 0.1
+  },
+  {
+    "id": 105,
+    "name": "Champignon",
+    "category": "Vegetais",
+    "kcal": 22,
+    "protein_g": 3.1,
+    "carbs_g": 3.3,
+    "fat_g": 0.3
+  },
+  {
+    "id": 106,
+    "name": "Ervilha fresca",
+    "category": "Vegetais",
+    "kcal": 81,
+    "protein_g": 5.4,
+    "carbs_g": 14.5,
+    "fat_g": 0.4
+  },
+  {
+    "id": 107,
+    "name": "Quiabo cozido",
+    "category": "Vegetais",
+    "kcal": 40,
+    "protein_g": 1.9,
+    "carbs_g": 8.8,
+    "fat_g": 0.1
+  },
+  {
+    "id": 108,
+    "name": "Salada verde mista",
+    "category": "Vegetais",
+    "kcal": 15,
+    "protein_g": 1.2,
+    "carbs_g": 2.5,
+    "fat_g": 0.2
+  },
+  {
+    "id": 109,
+    "name": "Abacaxi",
+    "category": "Frutas",
+    "kcal": 50,
+    "protein_g": 0.5,
+    "carbs_g": 13.1,
+    "fat_g": 0.1
+  },
+  {
+    "id": 110,
+    "name": "Kiwi",
+    "category": "Frutas",
+    "kcal": 61,
+    "protein_g": 1.1,
+    "carbs_g": 15,
+    "fat_g": 0.5
+  },
+  {
+    "id": 111,
+    "name": "Limao",
+    "category": "Frutas",
+    "kcal": 22,
+    "protein_g": 1,
+    "carbs_g": 7.3,
+    "fat_g": 0.3
+  },
+  {
+    "id": 112,
+    "name": "Maracuja",
+    "category": "Frutas",
+    "kcal": 68,
+    "protein_g": 2.4,
+    "carbs_g": 13.7,
+    "fat_g": 0.7
+  },
+  {
+    "id": 113,
+    "name": "Pera",
+    "category": "Frutas",
+    "kcal": 56,
+    "protein_g": 0.4,
+    "carbs_g": 15,
+    "fat_g": 0.1
+  },
+  {
+    "id": 114,
+    "name": "Blueberry",
+    "category": "Frutas",
+    "kcal": 57,
+    "protein_g": 0.7,
+    "carbs_g": 14.5,
+    "fat_g": 0.3
+  },
+  {
+    "id": 115,
+    "name": "Coco rallado",
+    "category": "Frutas",
+    "kcal": 354,
+    "protein_g": 3.3,
+    "carbs_g": 15.2,
+    "fat_g": 34
+  },
+  {
+    "id": 116,
+    "name": "Leite integral",
+    "category": "Laticinios",
+    "kcal": 61,
+    "protein_g": 3.2,
+    "carbs_g": 4.8,
+    "fat_g": 3.3
+  },
+  {
+    "id": 117,
+    "name": "Queijo mucarela",
+    "category": "Laticinios",
+    "kcal": 280,
+    "protein_g": 22,
+    "carbs_g": 2.2,
+    "fat_g": 20
+  },
+  {
+    "id": 118,
+    "name": "Queijo parmesao",
+    "category": "Laticinios",
+    "kcal": 392,
+    "protein_g": 36,
+    "carbs_g": 3.2,
+    "fat_g": 26
+  },
+  {
+    "id": 119,
+    "name": "Ricota",
+    "category": "Laticinios",
+    "kcal": 174,
+    "protein_g": 11,
+    "carbs_g": 3,
+    "fat_g": 13
+  },
+  {
+    "id": 120,
+    "name": "Iogurte natural desnatado",
+    "category": "Laticinios",
+    "kcal": 55,
+    "protein_g": 5.7,
+    "carbs_g": 7.5,
+    "fat_g": 0.3
+  },
+  {
+    "id": 121,
+    "name": "Iogurte com granola",
+    "category": "Laticinios",
+    "kcal": 155,
+    "protein_g": 6,
+    "carbs_g": 22,
+    "fat_g": 5
+  },
+  {
+    "id": 122,
+    "name": "Manteiga",
+    "category": "Gorduras",
+    "kcal": 717,
+    "protein_g": 0.9,
+    "carbs_g": 0.1,
+    "fat_g": 81
+  },
+  {
+    "id": 123,
+    "name": "Nozes",
+    "category": "Gorduras",
+    "kcal": 654,
+    "protein_g": 15.2,
+    "carbs_g": 13.7,
+    "fat_g": 65.2
+  },
+  {
+    "id": 124,
+    "name": "Sementes de girassol",
+    "category": "Gorduras",
+    "kcal": 584,
+    "protein_g": 20.8,
+    "carbs_g": 20,
+    "fat_g": 51.5
+  },
+  {
+    "id": 125,
+    "name": "Sementes de linhaca",
+    "category": "Gorduras",
+    "kcal": 534,
+    "protein_g": 18.3,
+    "carbs_g": 28.9,
+    "fat_g": 42.2
+  },
+  {
+    "id": 126,
+    "name": "Agua de coco",
+    "category": "Bebidas",
+    "kcal": 19,
+    "protein_g": 0.7,
+    "carbs_g": 3.9,
+    "fat_g": 0.2
+  },
+  {
+    "id": 127,
+    "name": "Cha verde sem acucar",
+    "category": "Bebidas",
+    "kcal": 2,
+    "protein_g": 0,
+    "carbs_g": 0.5,
+    "fat_g": 0
+  }
 ]

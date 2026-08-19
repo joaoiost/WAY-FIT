@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS profiles (
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS slug TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pix_key TEXT;
 
 -- Índice único em slug (ignorar se já existir)
 DO $$ BEGIN
@@ -132,6 +133,8 @@ CREATE TABLE IF NOT EXISTS messages (
 );
 
 ALTER TABLE messages ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ GENERATED ALWAYS AS (sent_at) STORED;
+-- Realtime (chat) precisa dos valores antigos da linha em UPDATE/DELETE
+ALTER TABLE messages REPLICA IDENTITY FULL;
 
 -- Fotos de progresso
 CREATE TABLE IF NOT EXISTS progress_photos (
@@ -145,8 +148,8 @@ CREATE TABLE IF NOT EXISTS progress_photos (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- Anamnese
-CREATE TABLE IF NOT EXISTS anamnese (
+-- Anamnese (treino) — nome real usado pelo código é plural: "anamneses"
+CREATE TABLE IF NOT EXISTS anamneses (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL UNIQUE,
   data JSONB DEFAULT '{}',
@@ -178,7 +181,7 @@ ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE measurements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE progress_photos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE anamnese ENABLE ROW LEVEL SECURITY;
+ALTER TABLE anamneses ENABLE ROW LEVEL SECURITY;
 ALTER TABLE invites ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
@@ -190,12 +193,14 @@ DROP POLICY IF EXISTS "User vê próprio perfil" ON profiles;
 DROP POLICY IF EXISTS "User atualiza próprio perfil" ON profiles;
 DROP POLICY IF EXISTS "Insert próprio perfil" ON profiles;
 DROP POLICY IF EXISTS "Personal vê perfis dos alunos" ON profiles;
+DROP POLICY IF EXISTS "Perfil público por slug" ON profiles;
 CREATE POLICY "User vê próprio perfil" ON profiles FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "User atualiza próprio perfil" ON profiles FOR UPDATE USING (auth.uid() = id);
 CREATE POLICY "Insert próprio perfil" ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 CREATE POLICY "Personal vê perfis dos alunos" ON profiles FOR SELECT USING (
   EXISTS (SELECT 1 FROM students WHERE students.user_id = profiles.id AND students.personal_id = auth.uid())
 );
+CREATE POLICY "Perfil público por slug" ON profiles FOR SELECT USING (slug IS NOT NULL);
 
 -- Students
 DROP POLICY IF EXISTS "Personal gerencia próprios alunos" ON students;
@@ -270,14 +275,16 @@ CREATE POLICY "Personal vê fotos dos alunos" ON progress_photos FOR SELECT USIN
   EXISTS (SELECT 1 FROM students s WHERE s.id = progress_photos.student_id AND s.personal_id = auth.uid())
 );
 
--- Anamnese
-DROP POLICY IF EXISTS "Aluno gerencia própria anamnese" ON anamnese;
-DROP POLICY IF EXISTS "Personal vê anamnese dos alunos" ON anamnese;
-CREATE POLICY "Aluno gerencia própria anamnese" ON anamnese FOR ALL USING (
-  EXISTS (SELECT 1 FROM students s WHERE s.id = anamnese.student_id AND s.user_id = auth.uid())
+-- Anamnese (treino)
+DROP POLICY IF EXISTS "Aluno gerencia própria anamnese" ON anamneses;
+DROP POLICY IF EXISTS "Personal vê anamnese dos alunos" ON anamneses;
+DROP POLICY IF EXISTS "Aluno gerencia própria anamnese de treino" ON anamneses;
+DROP POLICY IF EXISTS "Personal vê anamnese de treino dos alunos" ON anamneses;
+CREATE POLICY "Aluno gerencia própria anamnese" ON anamneses FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = anamneses.student_id AND s.user_id = auth.uid())
 );
-CREATE POLICY "Personal vê anamnese dos alunos" ON anamnese FOR SELECT USING (
-  EXISTS (SELECT 1 FROM students s WHERE s.id = anamnese.student_id AND s.personal_id = auth.uid())
+CREATE POLICY "Personal vê anamnese dos alunos" ON anamneses FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = anamneses.student_id AND s.personal_id = auth.uid())
 );
 
 -- Invites
@@ -322,6 +329,8 @@ ALTER TABLE training_plans ADD COLUMN IF NOT EXISTS days TEXT[] DEFAULT '{}';
 -- Templates de cartilha não têm aluno associado (student_id nullable)
 ALTER TABLE training_plans ALTER COLUMN student_id DROP NOT NULL;
 ALTER TABLE exercises      ADD COLUMN IF NOT EXISTS load TEXT DEFAULT '';
+ALTER TABLE exercises      ADD COLUMN IF NOT EXISTS superset_group TEXT;
+ALTER TABLE students       ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMPTZ;
 
 -- ============================================================
 -- Aulas em grupo (Turmas)
@@ -492,12 +501,16 @@ CREATE TABLE IF NOT EXISTS session_ratings (
 CREATE TABLE IF NOT EXISTS attendances (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
-  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  appointment_id UUID REFERENCES appointments(id) ON DELETE SET NULL,
   date DATE NOT NULL DEFAULT CURRENT_DATE,
-  status TEXT DEFAULT 'present',
+  status TEXT DEFAULT 'present' CHECK (status IN ('present', 'absent', 'late')),
+  notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   UNIQUE(student_id, date)
 );
+ALTER TABLE attendances ADD COLUMN IF NOT EXISTS appointment_id UUID REFERENCES appointments(id) ON DELETE SET NULL;
+ALTER TABLE attendances ADD COLUMN IF NOT EXISTS notes TEXT;
 
 -- ============================================================
 -- Conquistas e Desafios (Gamificação)
@@ -716,3 +729,208 @@ CREATE POLICY "Aluno gerencia log de água" ON water_logs FOR ALL USING (
 CREATE POLICY "Personal vê log de água" ON water_logs FOR SELECT USING (
   EXISTS (SELECT 1 FROM students s WHERE s.id = water_logs.student_id AND s.personal_id = auth.uid())
 );
+
+-- ============================================================
+-- Check-ins diários do aluno (humor, energia, sono, dores)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS daily_checkins (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  date DATE NOT NULL DEFAULT CURRENT_DATE,
+  mood INTEGER CHECK (mood BETWEEN 1 AND 5),
+  energy INTEGER CHECK (energy BETWEEN 1 AND 5),
+  sleep_quality INTEGER CHECK (sleep_quality BETWEEN 1 AND 5),
+  soreness INTEGER CHECK (soreness BETWEEN 1 AND 5),
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(student_id, date)
+);
+ALTER TABLE daily_checkins ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Aluno gerencia check-ins" ON daily_checkins;
+CREATE POLICY "Aluno gerencia check-ins" ON daily_checkins FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = daily_checkins.student_id AND s.user_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Personal vê check-ins dos alunos" ON daily_checkins;
+CREATE POLICY "Personal vê check-ins dos alunos" ON daily_checkins FOR SELECT USING (personal_id = auth.uid());
+
+-- ============================================================
+-- Agendamentos recorrentes
+-- ============================================================
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS recurring_weekly BOOLEAN DEFAULT false;
+ALTER TABLE appointments ADD COLUMN IF NOT EXISTS recurring_until DATE;
+
+-- ============================================================
+-- Consentimento LGPD (registro de aceite dos termos)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS lgpd_consents (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE NOT NULL,
+  terms_version TEXT NOT NULL DEFAULT '1.0',
+  accepted_at TIMESTAMPTZ DEFAULT NOW(),
+  ip_address TEXT,
+  user_agent TEXT,
+  UNIQUE(user_id, terms_version)
+);
+ALTER TABLE lgpd_consents ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "User gerencia próprio consentimento" ON lgpd_consents;
+CREATE POLICY "User gerencia próprio consentimento" ON lgpd_consents FOR ALL USING (user_id = auth.uid());
+
+-- ============================================================
+-- Biblioteca de exercícios compartilhada
+-- ============================================================
+CREATE TABLE IF NOT EXISTS exercise_library (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  muscle_group TEXT NOT NULL,
+  equipment TEXT DEFAULT 'Livre',
+  difficulty TEXT DEFAULT 'Intermediário' CHECK (difficulty IN ('Iniciante', 'Intermediário', 'Avançado')),
+  instructions TEXT DEFAULT '',
+  video_url TEXT DEFAULT '',
+  is_global BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE exercise_library ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Lê exercícios globais e próprios" ON exercise_library;
+CREATE POLICY "Lê exercícios globais e próprios" ON exercise_library FOR SELECT USING (
+  is_global = true OR personal_id = auth.uid()
+  OR EXISTS (SELECT 1 FROM students s WHERE s.personal_id = exercise_library.personal_id AND s.user_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Personal gerencia própria biblioteca" ON exercise_library;
+CREATE POLICY "Personal gerencia própria biblioteca" ON exercise_library FOR ALL USING (personal_id = auth.uid());
+
+-- ============================================================
+-- Função: última sessão de treino por aluno (alertas de inatividade)
+-- ============================================================
+CREATE OR REPLACE FUNCTION get_last_workout_per_student(p_personal_id UUID)
+RETURNS TABLE(student_id UUID, last_workout DATE) AS $$
+  SELECT ws.student_id, MAX(ws.date)::DATE as last_workout
+  FROM workout_sessions ws
+  JOIN students s ON s.id = ws.student_id
+  WHERE s.personal_id = p_personal_id
+  GROUP BY ws.student_id;
+$$ LANGUAGE sql SECURITY DEFINER;
+
+-- ============================================================
+-- Índices de performance
+-- ============================================================
+CREATE INDEX IF NOT EXISTS idx_workout_sessions_student_date ON workout_sessions(student_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_workout_sessions_personal_date ON workout_sessions(personal_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_daily_checkins_student_date ON daily_checkins(student_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_food_logs_student_date ON food_logs(student_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_appointments_personal_date ON appointments(personal_id, date DESC);
+CREATE INDEX IF NOT EXISTS idx_measurements_student_date ON measurements(student_id, date ASC);
+
+-- ============================================================
+-- Storage: bucket "avatars" para fotos de perfil (público)
+-- ============================================================
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('avatars', 'avatars', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+DROP POLICY IF EXISTS "Avatar upload" ON storage.objects;
+DROP POLICY IF EXISTS "Avatar public read" ON storage.objects;
+DROP POLICY IF EXISTS "Avatar delete" ON storage.objects;
+
+CREATE POLICY "Avatar upload" ON storage.objects
+FOR INSERT WITH CHECK (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+CREATE POLICY "Avatar public read" ON storage.objects
+FOR SELECT USING (bucket_id = 'avatars');
+CREATE POLICY "Avatar delete" ON storage.objects
+FOR DELETE USING (bucket_id = 'avatars' AND auth.uid()::text = (storage.foldername(name))[1]);
+
+-- ============================================================
+-- Notificações push (PWA) e notificações in-app do aluno
+-- ============================================================
+CREATE TABLE IF NOT EXISTS push_subscriptions (
+  id SERIAL PRIMARY KEY,
+  student_id UUID UNIQUE REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  subscription JSONB NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Student manages own push sub" ON push_subscriptions;
+CREATE POLICY "Student manages own push sub" ON push_subscriptions FOR ALL USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = push_subscriptions.student_id AND s.user_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Personal reads push subs" ON push_subscriptions;
+CREATE POLICY "Personal reads push subs" ON push_subscriptions FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = push_subscriptions.student_id AND s.personal_id = auth.uid())
+);
+
+CREATE TABLE IF NOT EXISTS student_notifications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT DEFAULT 'custom' CHECK (type IN ('message', 'workout', 'payment', 'appointment', 'custom', 'scheduled')),
+  read BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE student_notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE student_notifications REPLICA IDENTITY FULL;
+DROP POLICY IF EXISTS "Student reads own notifications" ON student_notifications;
+CREATE POLICY "Student reads own notifications" ON student_notifications FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = student_notifications.student_id AND s.user_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Student updates own notifications" ON student_notifications;
+CREATE POLICY "Student updates own notifications" ON student_notifications FOR UPDATE USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = student_notifications.student_id AND s.user_id = auth.uid())
+);
+DROP POLICY IF EXISTS "Personal sends notifications" ON student_notifications;
+CREATE POLICY "Personal sends notifications" ON student_notifications FOR INSERT WITH CHECK (personal_id = auth.uid());
+DROP POLICY IF EXISTS "Personal reads sent notifications" ON student_notifications;
+CREATE POLICY "Personal reads sent notifications" ON student_notifications FOR SELECT USING (personal_id = auth.uid());
+
+CREATE TABLE IF NOT EXISTS scheduled_notifications (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  student_ids TEXT[] DEFAULT '{}',
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  days_of_week INTEGER[] NOT NULL DEFAULT '{1,2,3,4,5}',
+  send_hour INTEGER NOT NULL DEFAULT 8,
+  send_minute INTEGER NOT NULL DEFAULT 0,
+  is_active BOOLEAN DEFAULT true,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  last_sent_date DATE
+);
+ALTER TABLE scheduled_notifications ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Personal manages own schedules" ON scheduled_notifications;
+CREATE POLICY "Personal manages own schedules" ON scheduled_notifications FOR ALL USING (personal_id = auth.uid());
+
+-- ============================================================
+-- Avaliação física (AvaliacaoFisica.jsx)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS physical_assessments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  student_id UUID REFERENCES students(id) ON DELETE CASCADE NOT NULL,
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE NOT NULL,
+  date DATE NOT NULL,
+  data JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE physical_assessments ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Personal gerencia avaliacoes" ON physical_assessments;
+CREATE POLICY "Personal gerencia avaliacoes" ON physical_assessments FOR ALL USING (personal_id = auth.uid());
+DROP POLICY IF EXISTS "Aluno ve proprias avaliacoes" ON physical_assessments;
+CREATE POLICY "Aluno ve proprias avaliacoes" ON physical_assessments FOR SELECT USING (
+  EXISTS (SELECT 1 FROM students s WHERE s.id = physical_assessments.student_id AND s.user_id = auth.uid())
+);
+
+-- ============================================================
+-- Configurações do personal (white-label)
+-- ============================================================
+CREATE TABLE IF NOT EXISTS personal_settings (
+  personal_id UUID REFERENCES profiles(id) ON DELETE CASCADE PRIMARY KEY,
+  brand_name TEXT,
+  tagline TEXT,
+  logo_url TEXT,
+  accent_color TEXT DEFAULT '#818CF8',
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+ALTER TABLE personal_settings ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Personal gerencia proprias configuracoes" ON personal_settings;
+CREATE POLICY "Personal gerencia proprias configuracoes" ON personal_settings FOR ALL USING (personal_id = auth.uid());

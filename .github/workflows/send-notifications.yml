@@ -12,7 +12,7 @@ jobs:
       - name: Trigger process-scheduled Edge Function
         run: |
           curl -f -s -X POST \
-            "https://mpgfigjvsuddqvfxcmmp.supabase.co/functions/v1/process-scheduled" \
+            "${{ secrets.SUPABASE_URL }}/functions/v1/process-scheduled" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_SERVICE_KEY }}" \
             -H "Content-Type: application/json" \
             -d '{}' \

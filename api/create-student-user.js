@@ -1,11 +1,9 @@
 // Cria usuário no Supabase SEM exigir confirmação de email.
-// Requer SUPABASE_SERVICE_ROLE_KEY nas variáveis de ambiente do Vercel.
-// Obtenha em: Supabase dashboard → Settings → API → service_role key
+// Requer SUPABASE_URL e SUPABASE_SERVICE_ROLE_KEY nas variáveis de ambiente do Vercel.
+// Obtenha em: Supabase dashboard → Settings → API → Project URL / service_role key
 //
 // Suporta troca de personal: se aluno já tem conta, vincula o novo personal
 // sem criar usuário duplicado.
-
-const SUPABASE_URL = 'https://mpgfigjvsuddqvfxcmmp.supabase.co';
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -19,11 +17,12 @@ export default async function handler(req, res) {
       return res.status(400).json({ ok: false, error: 'email, password e name são obrigatórios' });
     }
 
+    const SUPABASE_URL = process.env.SUPABASE_URL;
     const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    if (!serviceKey) {
+    if (!SUPABASE_URL || !serviceKey) {
       return res.status(500).json({
         ok: false,
-        error: 'SUPABASE_SERVICE_ROLE_KEY não configurada. Adicione nas variáveis de ambiente do Vercel.',
+        error: 'SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY não configuradas. Adicione nas variáveis de ambiente do Vercel.',
       });
     }
 

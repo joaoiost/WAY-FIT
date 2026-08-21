@@ -3,6 +3,7 @@ import { Users, CheckCircle, XCircle, Clock, Loader, ChevronLeft, ChevronRight, 
 import Avatar from '../../components/UI/Avatar';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { toast } from '../../lib/toast';
 // mockData removed
 
 const STATUS_CONFIG = {
@@ -57,7 +58,8 @@ export default function Frequencia() {
   useEffect(() => {
     if (!user) return;
     if (hasSupabase) {
-      supabase.from('students').select('id, name, initials, color, status').eq('personal_id', user.id).then(({ data }) => {
+      supabase.from('students').select('id, name, initials, color, status').eq('personal_id', user.id).then(({ data, error }) => {
+        if (error) { console.error(error); toast.error('Não foi possível carregar seus alunos.'); }
         setStudents(data || []);
         setLoading(false);
       });
@@ -90,7 +92,11 @@ export default function Frequencia() {
           .eq('student_id', selectedId)
           .gte('date', monthStart)
           .lte('date', monthEnd),
-      ]).then(([{ data: appts }, { data: atts }]) => {
+      ]).then(([{ data: appts, error: apptsErr }, { data: atts, error: attsErr }]) => {
+        if (apptsErr || attsErr) {
+          console.error(apptsErr || attsErr);
+          toast.error('Não foi possível carregar a frequência deste aluno.');
+        }
         setAppointments(appts || []);
         const map = {};
         (atts || []).forEach(a => { map[a.date] = { status: a.status, id: a.id }; });

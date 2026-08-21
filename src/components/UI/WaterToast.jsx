@@ -29,7 +29,7 @@ export default function WaterToast() {
           Mantenha-se hidratado. Beba pelo menos um copo agora!
         </p>
       </div>
-      <button onClick={dismissWater} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', flexShrink: 0 }}>
+      <button onClick={dismissWater} aria-label="Dispensar aviso" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', flexShrink: 0 }}>
         <X size={18} />
       </button>
       <style>{`

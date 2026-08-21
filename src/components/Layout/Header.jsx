@@ -24,7 +24,7 @@ const PAGE_NAMES = {
   '/dashboard/alunos':     'Alunos',
   '/dashboard/treinos':    'Treinos',
   '/dashboard/financeiro': 'Financeiro',
-  '/dashboard/whatsapp':   'Notificações',
+  '/dashboard/notificacoes': 'Notificações',
   '/dashboard/chat':       'Chat',
   '/dashboard/perfil':     'Meu Perfil',
   '/dashboard/frequencia': 'Frequência',
@@ -75,7 +75,10 @@ export default function Header() {
       if (hasSupabase) {
         supabase.from('students').select('id, name, goal, plan, status')
           .eq('personal_id', user.id).ilike('name', `%${searchQuery}%`).limit(6)
-          .then(({ data }) => setSearchResults(data || []));
+          .then(({ data, error }) => {
+            if (error) console.error(error);
+            setSearchResults(data || []);
+          });
       }
     }, 200);
     return () => clearTimeout(t);
@@ -123,7 +126,7 @@ export default function Header() {
                   onChange={e => setSearchQuery(e.target.value)}
                   placeholder="Buscar aluno..."
                 />
-                <button onClick={closeSearch} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--gray-400)', lineHeight: 0 }}>
+                <button onClick={closeSearch} aria-label="Fechar busca" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--gray-400)', lineHeight: 0 }}>
                   <X size={14} />
                 </button>
               </div>

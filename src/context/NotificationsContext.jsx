@@ -157,7 +157,34 @@ export function NotificationsProvider({ children }) {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [waterToast, setWaterToast] = useState(false);
+  const [unreadMessages, setUnreadMessages] = useState(0);
   const channelRef = useRef(null);
+
+  // Contador de mensagens de chat não lidas (badge do Chat na sidebar/bottom nav)
+  useEffect(() => {
+    if (!user || user.role !== 'personal' || !hasSupabase) return;
+
+    const loadUnread = () => {
+      supabase.from('messages')
+        .select('id', { count: 'exact', head: true })
+        .eq('personal_id', user.id)
+        .eq('from_role', 'student')
+        .eq('read', false)
+        .then(({ count }) => setUnreadMessages(count || 0));
+    };
+
+    loadUnread();
+
+    const channel = supabase
+      .channel(`personal_messages_badge_${user.id}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'messages',
+        filter: `personal_id=eq.${user.id}`,
+      }, loadUnread)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user?.id]);
 
   useEffect(() => {
     if (!user) return;
@@ -187,7 +214,8 @@ export function NotificationsProvider({ children }) {
         .eq('student_id', studentId)
         .gte('created_at', since)
         .order('created_at', { ascending: false })
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) console.error(error);
           if (!data?.length) return;
           const realNotifs = data.map(n => ({
             id: `sn-${n.id}`,
@@ -253,7 +281,7 @@ export function NotificationsProvider({ children }) {
   const unread = notifications.filter(n => !n.read).length;
 
   return (
-    <NotificationsContext.Provider value={{ notifications, unread, markRead, markAllRead, addNotification, waterToast, dismissWater }}>
+    <NotificationsContext.Provider value={{ notifications, unread, unreadMessages, markRead, markAllRead, addNotification, waterToast, dismissWater }}>
       {children}
     </NotificationsContext.Provider>
   );

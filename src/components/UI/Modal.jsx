@@ -10,6 +10,7 @@ export default function Modal({ isOpen, onClose, title, children, maxWidth = '52
           <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 700, color: 'var(--gray-900)' }}>{title}</h3>
           <button
             onClick={onClose}
+            aria-label="Fechar"
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-500)', display: 'flex', padding: 4, borderRadius: 6 }}
           >
             <X size={20} />

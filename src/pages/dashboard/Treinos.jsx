@@ -123,7 +123,7 @@ function Toasts({ toasts, dismiss }) {
               : <Check size={15} color={t.type === 'info' ? '#3B82F6' : '#10B981'} strokeWidth={3} />}
           </div>
           <span style={{ fontSize: 13, fontWeight: 600, color: t.type === 'error' ? '#DC2626' : t.type === 'info' ? '#1D4ED8' : '#065F46', flex: 1 }}>{t.msg}</span>
-          <button onClick={() => dismiss(t.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex', padding: 2 }}><X size={13} /></button>
+          <button onClick={() => dismiss(t.id)} aria-label="Fechar aviso" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex', padding: 2 }}><X size={13} /></button>
         </div>
       ))}
     </div>
@@ -306,7 +306,7 @@ function AIModal({ onApply, onClose, zIndex = 400 }) {
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>Sugestão com IA</h3>
             <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>Gera exercícios pelo objetivo</p>
           </div>
-          <button onClick={onClose} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={18} /></button>
+          <button onClick={onClose} aria-label="Fechar" style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={18} /></button>
         </div>
         <label style={{ fontSize: 12, fontWeight: 700, color: 'var(--gray-700)', display: 'block', marginBottom: 8 }}>Grupos musculares</label>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 18 }}>
@@ -422,6 +422,7 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
         {/* Header */}
         <div style={{ padding: '14px 24px', borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, background: 'var(--bg-surface)' }}>
           <button onClick={onClose}
+            aria-label="Fechar"
             style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-500)', display: 'flex', padding: 7, borderRadius: 8, flexShrink: 0 }}
             onMouseEnter={e => e.currentTarget.style.background = 'var(--bg-page)'}
             onMouseLeave={e => e.currentTarget.style.background = 'none'}>
@@ -839,7 +840,7 @@ function AssignModal({ tpl, students, onAssign, onClose }) {
                 <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>Atribuir para alunos</h3>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-500)' }}>{tpl.name}</p>
               </div>
-              <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={18} /></button>
+              <button onClick={onClose} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={18} /></button>
             </div>
             <label style={{ fontSize: 11, fontWeight: 700, color: 'var(--gray-400)', display: 'block', marginBottom: 7, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Frequência</label>
             <div style={{ marginBottom: 12 }}>
@@ -944,7 +945,7 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose, o
 
       {/* Header */}
       <div style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0, background: 'var(--bg-surface)' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-500)', display: 'flex', padding: 6, borderRadius: 8, flexShrink: 0 }}>
+        <button onClick={onClose} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-500)', display: 'flex', padding: 6, borderRadius: 8, flexShrink: 0 }}>
           <X size={20} />
         </button>
         <div style={{ flex: 1 }}>
@@ -968,7 +969,7 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose, o
               <span style={{ fontSize: 13, fontWeight: 700, color: selColor, flex: 1 }}>
                 {selected === 'rest' ? 'Clique nos dias para marcar como folga' : `"${selected.name}" — clique nos dias ou use um preset`}
               </span>
-              <button onClick={() => setSelected(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex' }}>
+              <button onClick={() => setSelected(null)} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex' }}>
                 <X size={15} />
               </button>
             </div>
@@ -1003,7 +1004,7 @@ function WeekBuilderModal({ student, currentPlans, templates, onSave, onClose, o
                 <div style={{ padding: '5px 8px', background: isToday ? '#EFF6FF' : 'var(--bg-page)', borderBottom: '1px solid var(--border-light)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', minHeight: 28 }}>
                   <span style={{ fontSize: 11, fontWeight: 800, color: isToday ? '#3B82F6' : 'var(--gray-400)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{d.s}</span>
                   {dayData.type !== 'empty' && (
-                    <button onClick={e => clearDay(d.v, e)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', padding: 1, display: 'flex', lineHeight: 1 }}
+                    <button onClick={e => clearDay(d.v, e)} aria-label="Remover treino do dia" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', padding: 1, display: 'flex', lineHeight: 1 }}
                       onMouseEnter={e => e.currentTarget.style.color = '#EF4444'}
                       onMouseLeave={e => e.currentTarget.style.color = 'var(--gray-400)'}>
                       <X size={11} />
@@ -1150,7 +1151,7 @@ function StarterTemplatesModal({ onUse, onClose }) {
             <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>Modelos prontos</h3>
             <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-500)' }}>Clique pra adicionar na sua biblioteca — depois é só editar</p>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={18} /></button>
+          <button onClick={onClose} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={18} /></button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 10 }}>

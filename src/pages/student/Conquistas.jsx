@@ -106,7 +106,8 @@ export default function Conquistas() {
       unlocked_at: new Date().toISOString(),
     }));
     if (toSave.length > 0) {
-      await supabase.from('student_achievements').upsert(toSave, { onConflict: 'student_id,achievement_key', ignoreDuplicates: true }).catch(() => {});
+      const { error } = await supabase.from('student_achievements').upsert(toSave, { onConflict: 'student_id,achievement_key', ignoreDuplicates: true });
+      if (error) console.error(error);
     }
 
     setLoading(false);

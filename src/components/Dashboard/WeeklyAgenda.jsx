@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Plus, Check, X, MessageCircle, RefreshCw, Za
 import Modal from '../UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { toast } from '../../lib/toast';
 
 const DAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const TYPES = ['Musculação', 'Funcional', 'Hipertrofia', 'Cardio', 'Yoga', 'Pilates', 'Força', 'Avaliação Física', 'Consulta Nutricional'];
@@ -104,7 +105,7 @@ function ActionPanelContent({ appt, hasPhone, actionLoading, onClose, onMarkDone
           </p>
           <p style={{ margin: '2px 0 0', fontSize: 13, color: 'rgba(255,255,255,0.8)' }}>{appt.type}</p>
         </div>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', padding: 2 }}>
+        <button onClick={onClose} aria-label="Fechar" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.8)', cursor: 'pointer', display: 'flex', padding: 2 }}>
           <X size={18} />
         </button>
       </div>
@@ -224,11 +225,20 @@ export default function WeeklyAgenda() {
     if (!user) return;
     if (hasSupabase) {
       supabase.from('appointments').select('*').eq('personal_id', user.id)
-        .then(({ data }) => setAppts(data || []));
+        .then(({ data, error }) => {
+          if (error) { console.error(error); toast.error('Não foi possível carregar a agenda.'); return; }
+          setAppts(data || []);
+        });
       supabase.from('students').select('id, name, phone').eq('personal_id', user.id)
-        .then(({ data }) => setStudents(data || []));
+        .then(({ data, error }) => {
+          if (error) console.error(error);
+          setStudents(data || []);
+        });
       supabase.from('training_plans').select('name, type, days, student_id').eq('personal_id', user.id)
-        .then(({ data }) => setTrainingPlans(data || []));
+        .then(({ data, error }) => {
+          if (error) console.error(error);
+          setTrainingPlans(data || []);
+        });
     } else {
       setAppts([]);
       setStudents([]);

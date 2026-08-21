@@ -201,7 +201,7 @@ function QuickCalcPanel({ anamnese, onApply, onClose }) {
           <Calculator size={14} color="var(--accent)" />
           <span style={{ fontSize: 12, fontWeight: 800, color: 'var(--gray-900)' }}>Calcular metas automaticamente</span>
         </div>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
+        <button onClick={onClose} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
           <X size={15} />
         </button>
       </div>
@@ -387,7 +387,7 @@ function FoodSearch({ foods, onAdd, onClose }) {
                 ← Buscar
               </button>
             )}
-            <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
+            <button onClick={onClose} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
               <X size={18} />
             </button>
           </div>
@@ -404,7 +404,7 @@ function FoodSearch({ foods, onAdd, onClose }) {
             style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: 14, flex: 1, padding: 0, boxShadow: 'none', color: 'var(--gray-900)', WebkitTextFillColor: 'var(--gray-900)' }}
           />
           {q.length > 0 && (
-            <button onClick={() => { setQ(''); setSelected(null); }} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
+            <button onClick={() => { setQ(''); setSelected(null); }} aria-label="Limpar busca" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', lineHeight: 0 }}>
               <X size={14} />
             </button>
           )}
@@ -650,6 +650,7 @@ function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal
                 </span>
                 <button
                   onClick={() => onRemoveFood(food._tempId || food.id)}
+                  aria-label="Remover alimento"
                   style={{ width: 26, height: 26, borderRadius: 7, background: '#FEE2E2', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}
                 >
                   <X size={12} color="var(--red)" />
@@ -969,7 +970,7 @@ export default function NutricaoPlanoAluno() {
             <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: '#DC2626' }}>Erro ao salvar</p>
             <p style={{ margin: '2px 0 0', fontSize: 12, color: '#EF4444' }}>{saveError}</p>
           </div>
-          <button onClick={() => setSaveError('')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', marginLeft: 'auto', display: 'flex', padding: 0 }}>
+          <button onClick={() => setSaveError('')} aria-label="Fechar aviso" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', marginLeft: 'auto', display: 'flex', padding: 0 }}>
             <X size={14} />
           </button>
         </div>

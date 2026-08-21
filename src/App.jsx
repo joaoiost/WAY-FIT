@@ -9,9 +9,9 @@ import ErrorBoundary from './components/ErrorBoundary';
 import Login from './pages/Login';
 import StudentLogin from './pages/student/StudentLogin';
 import Landing from './pages/Landing';
-import InviteAccept from './pages/InviteAccept';
 
 // Lazy — carregam sob demanda, reduz bundle inicial
+const InviteAccept     = lazy(() => import('./pages/InviteAccept'));
 const Register         = lazy(() => import('./pages/Register'));
 const ForgotPassword   = lazy(() => import('./pages/ForgotPassword'));
 const ResetPassword    = lazy(() => import('./pages/ResetPassword'));
@@ -25,7 +25,7 @@ const Alunos             = lazy(() => import('./pages/dashboard/Alunos'));
 const AlunoDetalhe       = lazy(() => import('./pages/dashboard/AlunoDetalhe'));
 const Treinos            = lazy(() => import('./pages/dashboard/Treinos'));
 const Financeiro         = lazy(() => import('./pages/dashboard/Financeiro'));
-const WhatsApp           = lazy(() => import('./pages/dashboard/WhatsApp'));
+const Notificacoes       = lazy(() => import('./pages/dashboard/Notificacoes'));
 const Perfil             = lazy(() => import('./pages/dashboard/Perfil'));
 const Frequencia         = lazy(() => import('./pages/dashboard/Frequencia'));
 const Chat               = lazy(() => import('./pages/dashboard/Chat'));
@@ -60,6 +60,7 @@ import StudentSidebar from './components/Layout/StudentSidebar';
 import StudentBottomNav from './components/Layout/StudentBottomNav';
 import PersonalBottomNav from './components/Layout/PersonalBottomNav';
 import WaterToast from './components/UI/WaterToast';
+import ToastContainer from './components/UI/ToastContainer';
 
 function PageLoader() {
   return (
@@ -134,6 +135,7 @@ export default function App() {
     <BrowserRouter>
       <ErrorBoundary>
         <AuthProvider>
+          <ToastContainer />
           <Suspense fallback={<PageLoader />}>
             <Routes>
               <Route path="/" element={<Landing />} />
@@ -153,7 +155,8 @@ export default function App() {
                 <Route path="/dashboard/alunos" element={<Alunos />} />
                 <Route path="/dashboard/treinos" element={<Treinos />} />
                 <Route path="/dashboard/financeiro" element={<Financeiro />} />
-                <Route path="/dashboard/whatsapp" element={<WhatsApp />} />
+                <Route path="/dashboard/notificacoes" element={<Notificacoes />} />
+                <Route path="/dashboard/whatsapp" element={<Navigate to="/dashboard/notificacoes" replace />} />
                 <Route path="/dashboard/perfil" element={<Perfil />} />
                 <Route path="/dashboard/frequencia" element={<Frequencia />} />
                 <Route path="/dashboard/chat" element={<Chat />} />

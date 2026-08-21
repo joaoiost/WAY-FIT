@@ -235,7 +235,7 @@ export default function NutricaoAlimentos() {
               <h3 style={{ margin: 0, fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>
                 {editingFood ? 'Editar alimento' : 'Novo alimento'}
               </h3>
-              <button onClick={() => setModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', padding: 4, lineHeight: 0 }}>
+              <button onClick={() => setModal(false)} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', padding: 4, lineHeight: 0 }}>
                 <X size={18} />
               </button>
             </div>

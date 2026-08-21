@@ -6,6 +6,7 @@ import Badge from '../../components/UI/Badge';
 import WeeklyAgenda from '../../components/Dashboard/WeeklyAgenda';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { toast } from '../../lib/toast';
 // mockData removed
 
 const TODAY         = new Date().toISOString().slice(0, 10);
@@ -111,7 +112,10 @@ export default function Dashboard() {
         body: { student_ids:[student.id], title:'Sentimos sua falta', message:'Seu personal está esperando você. Que tal retomar os treinos hoje?', personal_id:user.id, url:'/aluno/dashboard' },
       });
       setNotifiedIds(prev => new Set([...prev, student.id]));
-    } catch {}
+    } catch (e) {
+      console.error(e);
+      toast.error('Não foi possível enviar a notificação.');
+    }
     setNotifyingId(null);
   };
 

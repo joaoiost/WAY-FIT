@@ -8,6 +8,7 @@ import Modal from '../../components/UI/Modal';
 // Export utilities loaded dynamically to avoid including jsPDF/xlsx in the main bundle
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { toast } from '../../lib/toast';
 
 const TYPE_COLORS = {
   Musculação: '#3B82F6', Funcional: '#10B981', Hipertrofia: '#8B5CF6',
@@ -266,7 +267,10 @@ export default function Alunos() {
     if (!user) return;
     if (hasSupabase) {
       supabase.from('students').select('*').eq('personal_id', user.id).order('name').limit(200)
-        .then(({ data }) => setStudents(data || []));
+        .then(({ data, error }) => {
+          if (error) { console.error(error); toast.error('Não foi possível carregar seus alunos.'); return; }
+          setStudents(data || []);
+        });
 
       const today = new Date();
       const todayStr = today.toISOString().slice(0, 10);
@@ -279,7 +283,8 @@ export default function Alunos() {
         .select('student_id, date')
         .eq('personal_id', user.id)
         .gte('date', weekStartStr)
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) { console.error(error); return; }
           const map = {};
           (data || []).forEach(s => {
             const sid = String(s.student_id);
@@ -296,7 +301,8 @@ export default function Alunos() {
         .eq('personal_id', user.id)
         .gte('date', thirtyDaysAgo.toISOString().slice(0, 10))
         .order('date', { ascending: false })
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) { console.error(error); return; }
           const map = {};
           (data || []).forEach(s => {
             const sid = String(s.student_id);

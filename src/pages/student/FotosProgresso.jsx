@@ -39,6 +39,7 @@ function PhotoCard({ photo, onView, onDelete }) {
         )}
         <button
           onClick={e => { e.stopPropagation(); onDelete(photo.id); }}
+          aria-label="Excluir foto"
           style={{ position: 'absolute', top: 8, right: 8, background: 'rgba(0,0,0,0.5)', border: 'none', borderRadius: '50%', width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: 'white' }}
         >
           <X size={13} />
@@ -381,7 +382,7 @@ export default function FotosProgresso() {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-light)' }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Adicionar Foto de Progresso</h3>
-              <button onClick={() => setModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-500)', display: 'flex' }}><X size={20} /></button>
+              <button onClick={() => setModal(false)} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-500)', display: 'flex' }}><X size={20} /></button>
             </div>
             <form onSubmit={save} style={{ padding: 24, display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div
@@ -434,7 +435,7 @@ export default function FotosProgresso() {
           <div onClick={e => e.stopPropagation()} style={{ maxWidth: 500, width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#111', borderRadius: '12px 12px 0 0' }}>
               <span style={{ color: 'white', fontWeight: 700 }}>{viewPhoto.label}</span>
-              <button onClick={() => setViewPhoto(null)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><X size={20} /></button>
+              <button onClick={() => setViewPhoto(null)} aria-label="Fechar" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><X size={20} /></button>
             </div>
             <img src={viewPhoto.url} alt={viewPhoto.label} style={{ width: '100%', display: 'block', borderRadius: '0 0 12px 12px' }} />
           </div>

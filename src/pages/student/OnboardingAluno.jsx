@@ -45,7 +45,8 @@ export default function OnboardingAluno() {
   useEffect(() => {
     if (!user || !hasSupabase) return;
     supabase.from('students').select('id, goal, weight, height').eq('user_id', user.id).maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) console.error(error);
         if (data) {
           setStudentRecord(data);
           if (data.goal) setGoal(data.goal);

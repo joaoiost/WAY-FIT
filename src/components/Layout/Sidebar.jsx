@@ -26,14 +26,19 @@ const NAV = [
     ],
   },
   {
-    label: 'Gestão',
+    label: 'Rotina',
     items: [
       { to: '/dashboard/chat',       icon: MessageCircle, label: 'Chat',         notif: true },
-      { to: '/dashboard/financeiro', icon: DollarSign,    label: 'Financeiro'    },
       { to: '/dashboard/frequencia', icon: ClipboardList, label: 'Frequência'    },
-      { to: '/dashboard/whatsapp',   icon: Bell,          label: 'Notificações'  },
-      { to: '/dashboard/perfil',          icon: Settings,            label: 'Meu Perfil'    },
-      { to: '/dashboard/configuracoes',   icon: SlidersHorizontal,   label: 'Configurações' },
+      { to: '/dashboard/financeiro', icon: DollarSign,    label: 'Financeiro'    },
+    ],
+  },
+  {
+    label: 'Conta',
+    items: [
+      { to: '/dashboard/notificacoes',  icon: Bell,                label: 'Notificações'  },
+      { to: '/dashboard/perfil',        icon: Settings,            label: 'Meu Perfil'    },
+      { to: '/dashboard/configuracoes', icon: SlidersHorizontal,   label: 'Configurações' },
     ],
   },
 ];
@@ -42,7 +47,7 @@ export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { open, setOpen } = useSidebar();
-  const { unreadCount } = useNotifications?.() || {};
+  const { unreadMessages } = useNotifications?.() || {};
 
   const close = () => setOpen(false);
   const handleLogout = () => { logout(); navigate('/login'); };
@@ -57,14 +62,14 @@ export default function Sidebar() {
     >
       <Icon size={17} />
       <span style={{ flex: 1 }}>{label}</span>
-      {notif && unreadCount > 0 && (
+      {notif && unreadMessages > 0 && (
         <span style={{
           background: 'var(--red)', color: 'white',
           fontSize: 10, fontWeight: 800,
           minWidth: 17, height: 17, borderRadius: 99,
           display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 4px',
         }}>
-          {unreadCount > 9 ? '9+' : unreadCount}
+          {unreadMessages > 9 ? '9+' : unreadMessages}
         </span>
       )}
     </NavLink>

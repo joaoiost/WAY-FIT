@@ -201,7 +201,7 @@ function AIModal({ onApply, onClose }) {
             <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Sugestão com IA</h3>
             <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-500)' }}>Gera exercícios baseados no objetivo</p>
           </div>
-          <button onClick={onClose} style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
+          <button onClick={onClose} aria-label="Fechar" style={{ marginLeft: 'auto', background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
         </div>
 
         <div style={{ marginBottom: 18 }}>
@@ -288,7 +288,7 @@ function AssignModal({ template, students, onAssign, onClose }) {
                 <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800 }}>Atribuir treino</h3>
                 <p style={{ margin: '2px 0 0', fontSize: 12, color: 'var(--gray-500)' }}>{template.name} · {exs.length} exercícios</p>
               </div>
-              <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
+              <button onClick={onClose} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF' }}><X size={18} /></button>
             </div>
 
             {/* Day selector */}
@@ -461,7 +461,7 @@ function TemplateEditor({ template, onSave, onClose }) {
 
         {/* Header */}
         <div style={{ padding: '20px 24px', borderBottom: '1px solid #F1F5F9', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', padding: 4 }}><X size={20} /></button>
+          <button onClick={onClose} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#9CA3AF', display: 'flex', padding: 4 }}><X size={20} /></button>
           <h2 style={{ margin: 0, fontSize: 18, fontWeight: 800, flex: 1 }}>{isNew ? 'Nova cartilha' : 'Editar cartilha'}</h2>
           <button onClick={() => setShowAI(true)}
             style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 14px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #8B5CF6, #3B82F6)', color: 'white', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>

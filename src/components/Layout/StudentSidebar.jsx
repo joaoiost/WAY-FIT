@@ -5,17 +5,36 @@ import { useAuth } from '../../context/AuthContext';
 import { useSidebar } from '../../context/SidebarContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 
-const navItems = [
-  { to: '/aluno/dashboard',    icon: LayoutDashboard, label: 'Início', end: true },
-  { to: '/aluno/treinos',      icon: Dumbbell,         label: 'Meus Treinos' },
-  { to: '/aluno/alimentacao',  icon: Utensils,         label: 'Alimentação' },
-  { to: '/aluno/agenda',       icon: Calendar,         label: 'Agenda' },
-  { to: '/aluno/progresso',    icon: TrendingUp,       label: 'Progresso' },
-  { to: '/aluno/avaliacao',    icon: Activity,         label: 'Avaliação' },
-  { to: '/aluno/historico',    icon: History,          label: 'Histórico' },
-  { to: '/aluno/chat',         icon: MessageCircle,    label: 'Chat' },
-  { to: '/aluno/fotos',        icon: Camera,           label: 'Fotos' },
-  { to: '/aluno/saude',        icon: Heart,            label: 'Saúde' },
+const NAV = [
+  {
+    items: [
+      { to: '/aluno/dashboard', icon: LayoutDashboard, label: 'Início', end: true },
+      { to: '/aluno/treinos',   icon: Dumbbell,         label: 'Meus Treinos' },
+      { to: '/aluno/agenda',    icon: Calendar,         label: 'Agenda' },
+    ],
+  },
+  {
+    label: 'Nutrição',
+    items: [
+      { to: '/aluno/alimentacao', icon: Utensils, label: 'Alimentação' },
+    ],
+  },
+  {
+    label: 'Evolução',
+    items: [
+      { to: '/aluno/progresso', icon: TrendingUp, label: 'Progresso' },
+      { to: '/aluno/avaliacao', icon: Activity,   label: 'Avaliação' },
+      { to: '/aluno/historico', icon: History,    label: 'Histórico' },
+      { to: '/aluno/fotos',     icon: Camera,     label: 'Fotos' },
+    ],
+  },
+  {
+    label: 'Mais',
+    items: [
+      { to: '/aluno/chat',  icon: MessageCircle, label: 'Chat' },
+      { to: '/aluno/saude', icon: Heart,         label: 'Saúde' },
+    ],
+  },
 ];
 
 export default function StudentSidebar() {
@@ -27,7 +46,10 @@ export default function StudentSidebar() {
   useEffect(() => {
     if (!user || !hasSupabase) return;
     supabase.from('students').select('plan, goal').eq('user_id', user.id).maybeSingle()
-      .then(({ data }) => { if (data) setStudentInfo(data); });
+      .then(({ data, error }) => {
+        if (error) console.error(error);
+        if (data) setStudentInfo(data);
+      });
   }, [user?.id]);
 
   const handleLogout = () => { logout(); navigate('/aluno/login'); };
@@ -47,7 +69,7 @@ export default function StudentSidebar() {
             <Zap size={16} color="white" fill="white" />
           </div>
           <span className="sidebar-logo-name">WAY FIT</span>
-          <button onClick={close} className="sidebar-close-btn">
+          <button onClick={close} className="sidebar-close-btn" aria-label="Fechar menu">
             <X size={18} />
           </button>
         </div>
@@ -63,17 +85,27 @@ export default function StudentSidebar() {
         </div>
 
         <nav className="sidebar-nav">
-          {navItems.map(({ to, icon: Icon, label, end }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={end}
-              className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
-              onClick={close}
-            >
-              <Icon size={16} />
-              {label}
-            </NavLink>
+          {NAV.map((section, si) => (
+            <div key={si}>
+              {section.label && (
+                <>
+                  <div className="sidebar-divider" />
+                  <p className="sidebar-section-label">{section.label}</p>
+                </>
+              )}
+              {section.items.map(({ to, icon: Icon, label, end }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={end}
+                  className={({ isActive }) => `sidebar-item${isActive ? ' active' : ''}`}
+                  onClick={close}
+                >
+                  <Icon size={16} />
+                  {label}
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
 

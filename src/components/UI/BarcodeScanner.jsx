@@ -127,7 +127,7 @@ export default function BarcodeScanner({ onResult, onClose }) {
           <Camera size={18} color="white" />
           <span style={{ color: 'white', fontSize: 15, fontWeight: 700 }}>Código de barras</span>
         </div>
-        <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.12)', border: 'none', color: 'white', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', lineHeight: 1 }}>
+        <button onClick={onClose} aria-label="Fechar leitor de código de barras" style={{ background: 'rgba(255,255,255,0.12)', border: 'none', color: 'white', cursor: 'pointer', padding: 8, borderRadius: 8, display: 'flex', lineHeight: 1 }}>
           <X size={18} />
         </button>
       </div>

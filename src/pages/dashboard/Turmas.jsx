@@ -186,7 +186,7 @@ export default function Turmas() {
           <div className="modal-box" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>Nova Aula</h3>
-              <button onClick={() => setCreateModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="var(--gray-400)" /></button>
+              <button onClick={() => setCreateModal(false)} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="var(--gray-400)" /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[['Nome da aula', 'name', 'text'], ['Local', 'location', 'text']].map(([l, k, t]) => (
@@ -231,7 +231,7 @@ export default function Turmas() {
           <div className="modal-box" onClick={e => e.stopPropagation()}>
             <div className="modal-header">
               <h3>{detailClass.name}</h3>
-              <button onClick={() => setDetailClass(null)} style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="var(--gray-400)" /></button>
+              <button onClick={() => setDetailClass(null)} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer' }}><X size={20} color="var(--gray-400)" /></button>
             </div>
             <p style={{ margin: '0 0 4px', fontSize: 13, color: 'var(--gray-400)' }}>
               {new Date(detailClass.date + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: '2-digit', month: 'long' })} · {detailClass.time?.slice(0,5)} · {detailClass.duration_minutes}min

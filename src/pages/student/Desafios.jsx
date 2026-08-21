@@ -79,7 +79,7 @@ export default function Desafios() {
         challenge_id: ch.id,
         progress: pm[ch.id],
         completed_at: new Date().toISOString(),
-      }, { onConflict: 'student_id,challenge_id' }).catch(() => {});
+      }, { onConflict: 'student_id,challenge_id' }).then(({ error }) => { if (error) console.error(error); });
     }
 
     if (toComplete.length) {

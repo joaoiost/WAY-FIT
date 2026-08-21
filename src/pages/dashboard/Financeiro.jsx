@@ -6,6 +6,7 @@ import Badge from '../../components/UI/Badge';
 // mockData removed
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { toast } from '../../lib/toast';
 
 function StatBox({ icon: Icon, title, value, sub, color, bg }) {
   return (
@@ -66,7 +67,8 @@ export default function Financeiro() {
     if (!user) return;
     if (hasSupabase) {
       supabase.from('payments').select('*').eq('personal_id', user.id)
-        .then(({ data }) => {
+        .then(({ data, error }) => {
+          if (error) { console.error(error); toast.error('Não foi possível carregar os pagamentos.'); return; }
           const list = data || [];
           setPayments(list);
           const byMonth = list.reduce((acc, p) => {
@@ -87,9 +89,15 @@ export default function Financeiro() {
     loadPayments();
     if (user && hasSupabase) {
       supabase.from('students').select('id, name, plan, plan_price, phone').eq('personal_id', user.id).eq('status', 'ativo')
-        .then(({ data }) => setStudents(data || []));
+        .then(({ data, error }) => {
+          if (error) { console.error(error); toast.error('Não foi possível carregar os alunos.'); return; }
+          setStudents(data || []);
+        });
       supabase.from('profiles').select('pix_key').eq('id', user.id).maybeSingle()
-        .then(({ data }) => { if (data?.pix_key) setPixKey(data.pix_key); });
+        .then(({ data, error }) => {
+          if (error) { console.error(error); return; }
+          if (data?.pix_key) setPixKey(data.pix_key);
+        });
     }
   }, [user?.id]);
 
@@ -288,7 +296,7 @@ export default function Financeiro() {
                 ? 'Todos os alunos já têm cobrança este mês.'
                 : `${genResult.count} cobrança${genResult.count !== 1 ? 's' : ''} gerada${genResult.count !== 1 ? 's' : ''}!`}
           </span>
-          <button onClick={() => setGenResult(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 'auto', color: 'var(--gray-500)', display: 'flex' }}>
+          <button onClick={() => setGenResult(null)} aria-label="Fechar aviso" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, marginLeft: 'auto', color: 'var(--gray-500)', display: 'flex' }}>
             <X size={16} />
           </button>
         </div>
@@ -300,7 +308,7 @@ export default function Financeiro() {
           <div className="modal-content" style={{ maxWidth: 460, padding: 28 }} onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
               <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--gray-900)' }}>Novo Pagamento</h3>
-              <button onClick={() => setNewPayModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex', padding: 4 }}><X size={18} /></button>
+              <button onClick={() => setNewPayModal(false)} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex', padding: 4 }}><X size={18} /></button>
             </div>
             <form onSubmit={handleNewPayment}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

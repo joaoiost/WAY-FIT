@@ -2,6 +2,7 @@
 import { Send, MessageCircle, Search, ArrowLeft, Loader } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { toast } from '../../lib/toast';
 
 function getInitials(name = '') {
   return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || '??';
@@ -78,7 +79,8 @@ export default function Chat() {
     }
 
     supabase.from('students').select('id, name, color').eq('personal_id', user.id).order('name')
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) { console.error(error); toast.error('Não foi possível carregar as conversas.'); }
         setStudents(data || []);
         setLoading(false);
         if (data?.length) loadLastMessages(data.map(s => s.id));
@@ -87,12 +89,13 @@ export default function Chat() {
 
   const loadLastMessages = async (studentIds) => {
     if (!studentIds.length) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('messages')
       .select('*')
       .in('student_id', studentIds)
       .order('created_at', { ascending: false });
 
+    if (error) { console.error(error); toast.error('Não foi possível carregar as mensagens.'); return; }
     if (!data) return;
 
     const grouped = {};

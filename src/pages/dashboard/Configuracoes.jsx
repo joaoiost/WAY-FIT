@@ -2,6 +2,7 @@
 import { Settings, Palette, Bell, User, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { toast } from '../../lib/toast';
 
 const PRESET_COLORS = [
   { label: 'Índigo', value: '#818CF8' },
@@ -24,7 +25,12 @@ export default function Configuracoes() {
 
   useEffect(() => {
     if (!user || !hasSupabase) { setLoading(false); return; }
-    supabase.from('personal_settings').select('*').eq('personal_id', user.id).single().then(({ data }) => {
+    supabase.from('personal_settings').select('*').eq('personal_id', user.id).single().then(({ data, error }) => {
+      // PGRST116 = nenhuma linha ainda (personal nunca configurou) — não é erro de verdade
+      if (error && error.code !== 'PGRST116') {
+        console.error(error);
+        toast.error('Não foi possível carregar suas configurações.');
+      }
       if (data) {
         setForm({ brandName: data.brand_name || '', tagline: data.tagline || '', logoUrl: data.logo_url || '', accentColor: data.accent_color || '#818CF8' });
         if (data.accent_color) document.documentElement.style.setProperty('--accent', data.accent_color);

@@ -237,7 +237,7 @@ export default function AgendaAluno() {
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ padding: 24, maxWidth: 380 }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 800 }}>Solicitar aula</h3>
-              <button onClick={() => setRequestModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={20} /></button>
+              <button onClick={() => setRequestModal(false)} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)' }}><X size={20} /></button>
             </div>
             <p style={{ margin: '0 0 16px', fontSize: 13, color: 'var(--gray-400)' }}>Informe a data e horário desejados. Seu personal receberá a solicitação.</p>
 

@@ -52,7 +52,7 @@ function VideoModal({ videoUrl, title, onClose }) {
             <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-500)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em' }}>Demonstração</p>
             <span style={{ color: 'white', fontWeight: 800, fontSize: 15 }}>{title}</span>
           </div>
-          <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', padding: 8, borderRadius: 8 }}>
+          <button onClick={onClose} aria-label="Fechar" style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', padding: 8, borderRadius: 8 }}>
             <X size={18} />
           </button>
         </div>
@@ -305,7 +305,9 @@ export default function ExecutarTreino() {
         exercises_done: 0,
       }, { onConflict: 'student_id,plan_id,date' }).select('id').single();
       if (session) { sessionIdRef.current = session.id; return session.id; }
-    } catch {}
+    } catch (e) {
+      console.error(e);
+    }
     return null;
   };
 
@@ -541,7 +543,7 @@ export default function ExecutarTreino() {
             </p>
             <p style={{ margin: 0, fontSize: 11, color: 'var(--gray-400)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{plan?.name}</p>
           </div>
-          <button onClick={handleQuit} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', color: 'var(--gray-400)', flexShrink: 0 }}>
+          <button onClick={handleQuit} aria-label="Sair do treino" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 6, display: 'flex', color: 'var(--gray-400)', flexShrink: 0 }}>
             <X size={18} />
           </button>
         </div>

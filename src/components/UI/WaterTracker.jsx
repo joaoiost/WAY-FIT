@@ -51,7 +51,10 @@ export default function WaterTracker({ goalMl = 2000, studentId }) {
     if (hasSupabase && studentId && studentId !== 'guest') {
       const today = new Date().toISOString().slice(0, 10);
       supabase.from('water_logs').select('intake_ml').eq('student_id', studentId).eq('date', today).maybeSingle()
-        .then(({ data }) => apply(Math.max(saved, data?.intake_ml || 0)));
+        .then(({ data, error }) => {
+          if (error) console.error(error);
+          apply(Math.max(saved, data?.intake_ml || 0));
+        });
     } else {
       apply(saved);
     }

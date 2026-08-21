@@ -337,7 +337,7 @@ export default function Progresso() {
           <div className="modal-content" onClick={e => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px', borderBottom: '1px solid var(--border-light)' }}>
               <h3 style={{ margin: 0, fontSize: 18, fontWeight: 700 }}>Registrar Medidas</h3>
-              <button onClick={() => setModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-500)', display: 'flex' }}><X size={20} /></button>
+              <button onClick={() => setModal(false)} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-500)', display: 'flex' }}><X size={20} /></button>
             </div>
             <form onSubmit={save} style={{ padding: 24 }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

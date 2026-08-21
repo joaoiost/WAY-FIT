@@ -2,6 +2,7 @@
 import { Bell, BellRing, Plus, Trash2, X, Loader, CheckCheck, Clock, Pencil, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { toast } from '../../lib/toast';
 
 const DAYS = [
   { value: 1, label: 'Seg' },
@@ -65,7 +66,7 @@ function ScheduleModal({ schedule, students, onSave, onClose }) {
           <h3 style={{ margin: 0, fontSize: 17, fontWeight: 800, color: 'var(--gray-900)' }}>
             {editing ? 'Editar lembrete' : 'Novo lembrete automático'}
           </h3>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex', padding: 4 }}>
+          <button onClick={onClose} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex', padding: 4 }}>
             <X size={20} />
           </button>
         </div>
@@ -216,10 +217,17 @@ export default function Notificacoes() {
     if (!user) return;
     if (hasSupabase) {
       supabase.from('students').select('id, name').eq('personal_id', user.id).eq('status', 'ativo')
-        .then(({ data }) => setStudents(data || []));
+        .then(({ data, error }) => {
+          if (error) { console.error(error); toast.error('Não foi possível carregar os alunos.'); return; }
+          setStudents(data || []);
+        });
       supabase.from('scheduled_notifications').select('*').eq('personal_id', user.id)
         .order('created_at', { ascending: false })
-        .then(({ data }) => { setSchedules(data || []); setLoadingSchedules(false); });
+        .then(({ data, error }) => {
+          if (error) { console.error(error); toast.error('Não foi possível carregar os lembretes agendados.'); }
+          setSchedules(data || []);
+          setLoadingSchedules(false);
+        });
     } else {
       setStudents([]);
       setSchedules([]);

@@ -535,7 +535,7 @@ export default function LogAlimentar() {
                 <p style={{ margin: 0, fontSize: 15, fontWeight: 800, color: 'var(--gray-900)' }}>
                   {MEALS.find(m => m.key === addingMeal)?.label}
                 </p>
-                <button onClick={() => setAddingMeal(null)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                <button onClick={() => setAddingMeal(null)} aria-label="Fechar" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
                   <X size={20} color="var(--gray-400)" />
                 </button>
               </div>

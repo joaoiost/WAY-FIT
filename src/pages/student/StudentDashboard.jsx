@@ -320,7 +320,7 @@ export default function StudentDashboard() {
           <Bell size={18} color="var(--accent)" style={{ flexShrink: 0 }} />
           <p style={{ margin: 0, fontSize: 13, fontWeight: 600, color: 'var(--gray-900)', flex: 1 }}>Ative notificações do seu personal</p>
           <button onClick={handleEnableNotifications} style={{ background: 'var(--accent)', color: 'white', border: 'none', borderRadius: 8, padding: '6px 14px', fontSize: 13, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>Ativar</button>
-          <button onClick={() => { setPushDismissed(true); localStorage.setItem('push_banner_dismissed', '1'); }} style={{ background: 'none', border: 'none', color: 'var(--gray-400)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}><X size={16} /></button>
+          <button onClick={() => { setPushDismissed(true); localStorage.setItem('push_banner_dismissed', '1'); }} aria-label="Dispensar aviso" style={{ background: 'none', border: 'none', color: 'var(--gray-400)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}><X size={16} /></button>
         </div>
       )}
       {installPrompt && !installDismissed && (
@@ -335,7 +335,7 @@ export default function StudentDashboard() {
             Instalar
           </button>
           <button onClick={() => { setInstallPrompt(null); setInstallDismissed(true); localStorage.setItem('pwa_install_dismissed', '1'); }}
-            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}><X size={16} /></button>
+            aria-label="Dispensar aviso" style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: 4, display: 'flex', flexShrink: 0 }}><X size={16} /></button>
         </div>
       )}
 

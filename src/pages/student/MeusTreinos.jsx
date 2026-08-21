@@ -37,7 +37,7 @@ function VideoModal({ videoUrl, title, onClose }) {
       <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 720, background: '#000', borderRadius: 12, overflow: 'hidden' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: '#111' }}>
           <span style={{ color: 'white', fontWeight: 700, fontSize: 14 }}>{title}</span>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><X size={20} /></button>
+          <button onClick={onClose} aria-label="Fechar" style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', display: 'flex' }}><X size={20} /></button>
         </div>
         {id ? (
           <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>

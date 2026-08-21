@@ -94,7 +94,8 @@ export default function Chat() {
       .from('messages')
       .select('*')
       .in('student_id', studentIds)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .limit(1000);
 
     if (error) { console.error(error); toast.error('Não foi possível carregar as mensagens.'); return; }
     if (!data) return;

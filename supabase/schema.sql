@@ -202,6 +202,23 @@ CREATE POLICY "Personal vê perfis dos alunos" ON profiles FOR SELECT USING (
 );
 CREATE POLICY "Perfil público por slug" ON profiles FOR SELECT USING (slug IS NOT NULL);
 
+-- Sem isso, o próprio usuário poderia trocar seu role de 'student' pra
+-- 'personal' via UPDATE direto (RLS só controla a linha, não a coluna).
+CREATE OR REPLACE FUNCTION public.protect_profile_role()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF auth.uid() = OLD.id THEN
+    NEW.role := OLD.role;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS protect_profile_role_trigger ON profiles;
+CREATE TRIGGER protect_profile_role_trigger
+  BEFORE UPDATE ON profiles
+  FOR EACH ROW EXECUTE FUNCTION protect_profile_role();
+
 -- Students
 DROP POLICY IF EXISTS "Personal gerencia próprios alunos" ON students;
 DROP POLICY IF EXISTS "Aluno vê próprio cadastro" ON students;
@@ -209,6 +226,30 @@ DROP POLICY IF EXISTS "Aluno atualiza próprio cadastro" ON students;
 CREATE POLICY "Personal gerencia próprios alunos" ON students FOR ALL USING (personal_id = auth.uid());
 CREATE POLICY "Aluno vê próprio cadastro" ON students FOR SELECT USING (user_id = auth.uid());
 CREATE POLICY "Aluno atualiza próprio cadastro" ON students FOR UPDATE USING (user_id = auth.uid());
+
+-- RLS por si só não impede o aluno de alterar colunas que não deveria
+-- (plano/preço/status/personal_id) numa linha que ele tem permissão de
+-- UPDATE — só controla QUAIS linhas, não QUAIS colunas. Trigger trava
+-- essas colunas de volta ao valor antigo quando quem edita é o próprio
+-- aluno (não afeta o vínculo inicial de cadastro, onde OLD.user_id
+-- ainda é NULL, nem edições feitas pelo personal).
+CREATE OR REPLACE FUNCTION public.protect_student_billing_fields()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF auth.uid() = OLD.user_id THEN
+    NEW.plan := OLD.plan;
+    NEW.plan_price := OLD.plan_price;
+    NEW.status := OLD.status;
+    NEW.personal_id := OLD.personal_id;
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
+
+DROP TRIGGER IF EXISTS protect_student_billing_fields_trigger ON students;
+CREATE TRIGGER protect_student_billing_fields_trigger
+  BEFORE UPDATE ON students
+  FOR EACH ROW EXECUTE FUNCTION protect_student_billing_fields();
 
 -- Appointments
 DROP POLICY IF EXISTS "Personal gerencia agendamentos" ON appointments;
@@ -260,9 +301,17 @@ CREATE POLICY "Personal vê medições dos alunos" ON measurements FOR SELECT US
 -- Messages
 DROP POLICY IF EXISTS "Personal gerencia mensagens" ON messages;
 DROP POLICY IF EXISTS "Aluno gerencia próprias mensagens" ON messages;
+DROP POLICY IF EXISTS "Aluno vê próprias mensagens" ON messages;
+DROP POLICY IF EXISTS "Aluno envia mensagem" ON messages;
 CREATE POLICY "Personal gerencia mensagens" ON messages FOR ALL USING (personal_id = auth.uid());
-CREATE POLICY "Aluno gerencia próprias mensagens" ON messages FOR ALL USING (
+-- Aluno só lê e envia (from_role='student') — sem UPDATE/DELETE, pra não poder
+-- apagar/editar as mensagens que o personal mandou na mesma conversa.
+CREATE POLICY "Aluno vê próprias mensagens" ON messages FOR SELECT USING (
   EXISTS (SELECT 1 FROM students s WHERE s.id = messages.student_id AND s.user_id = auth.uid())
+);
+CREATE POLICY "Aluno envia mensagem" ON messages FOR INSERT WITH CHECK (
+  from_role = 'student'
+  AND EXISTS (SELECT 1 FROM students s WHERE s.id = messages.student_id AND s.user_id = auth.uid())
 );
 
 -- Progress photos
@@ -291,7 +340,17 @@ CREATE POLICY "Personal vê anamnese dos alunos" ON anamneses FOR SELECT USING (
 DROP POLICY IF EXISTS "Personal gerencia convites" ON invites;
 DROP POLICY IF EXISTS "Leitura pública de convites" ON invites;
 CREATE POLICY "Personal gerencia convites" ON invites FOR ALL USING (personal_id = auth.uid());
-CREATE POLICY "Leitura pública de convites" ON invites FOR SELECT USING (true);
+-- Sem policy de SELECT pública: expor invites via USING(true) vazava email/nome/token
+-- de TODO convite de TODO personal pra qualquer chamada anônima com a anon key.
+-- A validação de convite por token (fluxo público, antes do login) usa a função
+-- get_invite_by_token() abaixo em vez de SELECT direto na tabela.
+
+-- Função: valida convite por token exato, sem expor a tabela inteira
+CREATE OR REPLACE FUNCTION public.get_invite_by_token(p_token TEXT)
+RETURNS TABLE(id UUID, personal_id UUID, personal_name TEXT, email TEXT, student_name TEXT, used BOOLEAN) AS $$
+  SELECT id, personal_id, personal_name, email, student_name, used
+  FROM invites WHERE token = p_token;
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
 
 -- ============================================================
 -- Trigger: criar perfil automaticamente no cadastro

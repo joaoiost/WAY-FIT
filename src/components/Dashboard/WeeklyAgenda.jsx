@@ -225,7 +225,10 @@ export default function WeeklyAgenda() {
   useEffect(() => {
     if (!user) return;
     if (hasSupabase) {
+      const rangeStart = toLocalDateStr(new Date(Date.now() - 90 * 86400000));
+      const rangeEnd = toLocalDateStr(new Date(Date.now() + 90 * 86400000));
       supabase.from('appointments').select('*').eq('personal_id', user.id)
+        .gte('date', rangeStart).lte('date', rangeEnd)
         .then(({ data, error }) => {
           if (error) { console.error(error); toast.error('Não foi possível carregar a agenda.'); return; }
           setAppts(data || []);

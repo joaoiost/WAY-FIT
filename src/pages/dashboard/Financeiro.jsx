@@ -7,7 +7,7 @@ import Badge from '../../components/UI/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { toast } from '../../lib/toast';
-import { todayLocal } from '../../lib/date';
+import { todayLocal, toLocalDateStr } from '../../lib/date';
 
 function StatBox({ icon: Icon, title, value, sub, color, bg }) {
   return (
@@ -24,12 +24,12 @@ function StatBox({ icon: Icon, title, value, sub, color, bg }) {
   );
 }
 
-function monthLabel(date) {
+export function monthLabel(date) {
   const s = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
-function formatBRL(value) {
+export function formatBRL(value) {
   return Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -71,7 +71,8 @@ export default function Financeiro() {
   const loadPayments = () => {
     if (!user) return;
     if (hasSupabase) {
-      supabase.from('payments').select('*').eq('personal_id', user.id).order('due_date')
+      const twelveMonthsAgo = toLocalDateStr(new Date(now.getFullYear(), now.getMonth() - 11, 1));
+      supabase.from('payments').select('*').eq('personal_id', user.id).gte('due_date', twelveMonthsAgo).order('due_date')
         .then(({ data, error }) => {
           if (error) { console.error(error); toast.error('Não foi possível carregar os pagamentos.'); return; }
           const list = data || [];
@@ -202,6 +203,10 @@ export default function Financeiro() {
   };
   const handleNewPayment = async (e) => {
     e.preventDefault();
+    if (!(Number(newPayForm.amount) > 0)) {
+      toast.error('Informe um valor maior que zero.');
+      return;
+    }
     setNewPaySaving(true);
     const student = students.find(s => String(s.id) === String(newPayForm.student_id));
     const record = {
@@ -215,7 +220,8 @@ export default function Financeiro() {
       status: newPayForm.status,
     };
     if (hasSupabase) {
-      const { data } = await supabase.from('payments').insert(record).select().single();
+      const { data, error } = await supabase.from('payments').insert(record).select().single();
+      if (error) { console.error(error); toast.error('Não foi possível criar o pagamento.'); setNewPaySaving(false); return; }
       if (data) setPayments(prev => [data, ...prev]);
     } else {
       setPayments(prev => [{ ...record, id: Date.now() }, ...prev]);

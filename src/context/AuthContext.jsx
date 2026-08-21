@@ -208,8 +208,9 @@ export function AuthProvider({ children }) {
 
   const validateInvite = async (token) => {
     if (hasSupabase) {
-      const { data } = await supabase.from('invites').select('*').eq('token', token).eq('used', false).single();
-      return data || null;
+      const { data } = await supabase.rpc('get_invite_by_token', { p_token: token });
+      const invite = data?.[0];
+      return (invite && !invite.used) ? invite : null;
     }
     const invites = JSON.parse(localStorage.getItem('wayfit_invites') || '[]');
     return invites.find(i => i.token === token && !i.used) || null;

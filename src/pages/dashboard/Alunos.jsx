@@ -339,6 +339,15 @@ export default function Alunos() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    const phoneDigits = (form.phone || '').replace(/\D/g, '');
+    if (phoneDigits.length < 10 || phoneDigits.length > 11) {
+      toast.error('Telefone inválido — informe DDD + número (10 ou 11 dígitos).');
+      return;
+    }
+    if (form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) {
+      toast.error('E-mail inválido.');
+      return;
+    }
     if (modal === 'add') {
       const newStudent = {
         ...form,
@@ -350,7 +359,8 @@ export default function Alunos() {
         status: 'ativo',
       };
       if (hasSupabase) {
-        const { data } = await supabase.from('students').insert(newStudent).select().single();
+        const { data, error } = await supabase.from('students').insert(newStudent).select().single();
+        if (error) { console.error(error); toast.error('Não foi possível criar o aluno.'); return; }
         if (data) {
           setStudents(prev => [...prev, data]);
           setModal(null);
@@ -371,7 +381,8 @@ export default function Alunos() {
         initials: getInitials(form.name),
       };
       if (hasSupabase) {
-        await supabase.from('students').update(updates).eq('id', modal.edit.id);
+        const { error } = await supabase.from('students').update(updates).eq('id', modal.edit.id);
+        if (error) { console.error(error); toast.error('Não foi possível salvar as alterações.'); return; }
       }
       setStudents(prev => prev.map(s => s.id === modal.edit.id ? { ...s, ...updates } : s));
     }

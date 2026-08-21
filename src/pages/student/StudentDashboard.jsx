@@ -165,7 +165,7 @@ export default function StudentDashboard() {
       (async () => {
         try {
           const { data: student } = await supabase
-            .from('students').select('id, personal_id, plan, goal, onboarded_at').eq('user_id', user.id).maybeSingle();
+            .from('students').select('id, personal_id, plan, goal, onboarded_at, goal_weight').eq('user_id', user.id).maybeSingle();
 
           if (student) {
             setStudentId(student.id);
@@ -195,8 +195,8 @@ export default function StudentDashboard() {
               setCurrentWeight(latestWeight);
               setStartWeight(weights[0]);
             }
-            const savedGoal = localStorage.getItem(`goal_weight_${student.id}`);
-            if (savedGoal) { setGoalWeight(parseFloat(savedGoal)); setGoalInput(savedGoal); }
+            const savedGoal = student.goal_weight ?? parseFloat(localStorage.getItem(`goal_weight_${student.id}`) || '');
+            if (savedGoal) { setGoalWeight(parseFloat(savedGoal)); setGoalInput(String(savedGoal)); }
 
             /* Water goal: nutritionist-set > weight-based (35ml/kg) > default 2L */
             const nutriWater = nutritionAnam?.data?.water_goal_ml;
@@ -556,6 +556,10 @@ export default function StudentDashboard() {
                           setGoalWeight(v);
                           const key = studentId ? `goal_weight_${studentId}` : `goal_weight_${user?.id}`;
                           localStorage.setItem(key, String(v));
+                          if (hasSupabase && studentId) {
+                            supabase.from('students').update({ goal_weight: v }).eq('id', studentId)
+                              .then(({ error }) => { if (error) console.error(error); });
+                          }
                         }
                         setEditingGoal(false);
                       }} style={{ background: 'var(--accent)', border: 'none', borderRadius: 8, padding: '5px 10px', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center' }}>

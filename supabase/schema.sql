@@ -390,6 +390,9 @@ ALTER TABLE training_plans ALTER COLUMN student_id DROP NOT NULL;
 ALTER TABLE exercises      ADD COLUMN IF NOT EXISTS load TEXT DEFAULT '';
 ALTER TABLE exercises      ADD COLUMN IF NOT EXISTS superset_group TEXT;
 ALTER TABLE students       ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMPTZ;
+-- Meta de peso só existia no localStorage do navegador do aluno — sumia
+-- ao trocar de aparelho ou limpar dados. Agora fica no banco também.
+ALTER TABLE students       ADD COLUMN IF NOT EXISTS goal_weight NUMERIC(5,2);
 
 -- ============================================================
 -- Aulas em grupo (Turmas)

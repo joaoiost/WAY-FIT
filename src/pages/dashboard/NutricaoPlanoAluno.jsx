@@ -69,6 +69,21 @@ function getMealTheme(name) {
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
+function normalizeText(s) {
+  return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+// Checa se o nome do alimento bate com alguma palavra do texto livre de
+// alergias/restrições da anamnese. É um aviso, não um bloqueio — texto livre
+// não dá pra casar com 100% de certeza, mas alertar na hora de montar o
+// prato é bem melhor que só mostrar a alergia numa aba separada.
+function matchesAllergyText(foodName, allergyText) {
+  const name = normalizeText(foodName);
+  if (!name) return null;
+  const words = normalizeText(allergyText).split(/[,;\s]+e\s+|[,;()]+|\s+ou\s+/).map(w => w.trim()).filter(w => w.length >= 4);
+  return words.find(w => name.includes(w)) || null;
+}
+
 function calcMacros(foods) {
   return foods.reduce(
     (acc, f) => ({
@@ -289,7 +304,7 @@ function QuickCalcPanel({ anamnese, onApply, onClose }) {
 
 // ─── FoodSearch ───────────────────────────────────────────────────────────────
 
-function FoodSearch({ foods, onAdd, onClose }) {
+function FoodSearch({ foods, onAdd, onClose, allergies }) {
   const [q, setQ]               = useState('');
   const [qty, setQty]           = useState(100);
   const [selected, setSelected] = useState(null);
@@ -364,6 +379,7 @@ function FoodSearch({ foods, onAdd, onClose }) {
   };
 
   const canAdd = manualMode ? !!q.trim() : !!selected;
+  const allergyHit = matchesAllergyText(selected?.name || (manualMode ? q : ''), allergies);
 
   return (
     <div
@@ -520,6 +536,15 @@ function FoodSearch({ foods, onAdd, onClose }) {
           </div>
         )}
 
+        {allergyHit && (
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: 8, background: 'rgba(248,113,113,0.12)', border: '1px solid rgba(248,113,113,0.35)', borderRadius: 10, padding: '10px 12px', marginTop: 10 }}>
+            <AlertCircle size={16} color="#EF4444" style={{ flexShrink: 0, marginTop: 1 }} />
+            <p style={{ margin: 0, fontSize: 12, color: 'var(--gray-700)', lineHeight: 1.4 }}>
+              A anamnese deste aluno menciona <b>"{allergyHit}"</b> como alergia/restrição — confira antes de adicionar.
+            </p>
+          </div>
+        )}
+
         <button
           onClick={handleAdd}
           disabled={!canAdd}
@@ -535,7 +560,7 @@ function FoodSearch({ foods, onAdd, onClose }) {
 
 // ─── MealCard (MyFitnessPal style) ────────────────────────────────────────────
 
-function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal, onDelete }) {
+function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal, onDelete, allergies }) {
   const [open, setOpen]             = useState(true);
   const [showSearch, setShowSearch] = useState(false);
   const [editingName, setEditingName] = useState(false);
@@ -680,6 +705,7 @@ function MealCard({ meal, foods, allFoods, onAddFood, onRemoveFood, onUpdateMeal
       {showSearch && (
         <FoodSearch
           foods={allFoods}
+          allergies={allergies}
           onAdd={food => onAddFood(meal._tempId || meal.id, food)}
           onClose={() => setShowSearch(false)}
         />
@@ -1103,6 +1129,7 @@ export default function NutricaoPlanoAluno() {
                 onRemoveFood={foodId => removeFood(meal._tempId, foodId)}
                 onUpdateMeal={updateMeal}
                 onDelete={() => removeMeal(meal._tempId)}
+                allergies={anamnese.allergies}
               />
             ))}
             <button

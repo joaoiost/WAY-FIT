@@ -381,6 +381,19 @@ export default function WeeklyAgenda() {
       });
     }
 
+    // Aviso (não bloqueia) se algum horário bater com outro aluno já agendado
+    // no mesmo dia/hora — cochilo comum ao remarcar rápido pelo calendário.
+    const conflicts = newAppts.filter(na =>
+      appts.some(a => a.date === na.date && a.time === na.time && String(a.student_id) !== String(na.student_id))
+    );
+    if (conflicts.length) {
+      const names = [...new Set(conflicts.map(c => {
+        const existing = appts.find(a => a.date === c.date && a.time === c.time);
+        return existing?.student_name;
+      }))].filter(Boolean).join(', ');
+      toast.error(`Atenção: já existe aula marcada no mesmo horário (${names}). Aula criada mesmo assim — confira a agenda.`);
+    }
+
     if (hasSupabase) {
       const { data } = await supabase.from('appointments').insert(newAppts).select();
       if (data) setAppts(prev => [...prev, ...data]);

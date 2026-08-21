@@ -183,10 +183,14 @@ export default function AvaliacaoFisica() {
 
   useEffect(() => {
     if (!studentId) return;
+    // Evita que a resposta de um aluno anterior (ainda em voo) sobrescreva
+    // os dados do aluno atual se o personal trocar de aluno rápido.
+    let cancelled = false;
     const load = async () => {
       if (hasSupabase) {
         const { data: s } = await supabase
           .from('students').select('id, name, email, phone').eq('id', studentId).maybeSingle();
+        if (cancelled) return;
         if (s) setStudent(s);
 
         const { data: assessments } = await supabase
@@ -195,6 +199,7 @@ export default function AvaliacaoFisica() {
           .eq('student_id', studentId)
           .order('created_at', { ascending: false });
 
+        if (cancelled) return;
         if (assessments?.length) {
           setHistory(assessments);
           // Load most recent
@@ -205,6 +210,7 @@ export default function AvaliacaoFisica() {
       setLoading(false);
     };
     load();
+    return () => { cancelled = true; };
   }, [studentId]);
 
   const save = async () => {

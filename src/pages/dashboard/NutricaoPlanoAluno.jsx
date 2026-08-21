@@ -722,18 +722,25 @@ export default function NutricaoPlanoAluno() {
   const [planName,   setPlanName]   = useState('Plano Alimentar');
   const [showCalc,   setShowCalc]   = useState(false);
 
+  // Evita que a resposta de um aluno anterior (ainda em voo) sobrescreva
+  // os dados do aluno atual se o personal trocar de aluno rápido.
+  const loadedForRef = useRef(id);
+
   useEffect(() => {
     if (!user || !id) return;
+    loadedForRef.current = id;
     load();
   }, [user?.id, id]);
 
   const load = async () => {
     if (!hasSupabase) { setLoading(false); return; }
+    const requestedId = id;
     const [{ data: s }, { data: fi }, { data: mp }] = await Promise.all([
       supabase.from('students').select('id, name, color, initials, goal').eq('id', id).maybeSingle(),
       supabase.from('food_items').select('*').eq('personal_id', user.id).order('name'),
       supabase.from('meal_plans').select('*').eq('student_id', id).eq('is_active', true).order('updated_at', { ascending: false }).limit(1).maybeSingle(),
     ]);
+    if (loadedForRef.current !== requestedId) return;
     setStudent(s);
     setAllFoods(fi || []);
 
@@ -753,6 +760,7 @@ export default function NutricaoPlanoAluno() {
         .eq('meal_plan_id', mp.id)
         .order('order_index');
 
+      if (loadedForRef.current !== requestedId) return;
       const mealsData = mm || [];
       const tempMeals = mealsData.map(m => ({ ...m, _tempId: m.id }));
       setMeals(tempMeals);
@@ -768,6 +776,7 @@ export default function NutricaoPlanoAluno() {
     }
 
     const { data: ana } = await supabase.from('nutrition_anamnesis').select('*').eq('student_id', id).maybeSingle();
+    if (loadedForRef.current !== requestedId) return;
     if (ana) setAnamnese({ ...ANAMNESE_INIT, ...ana });
 
     setLoading(false);

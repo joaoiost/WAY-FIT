@@ -96,6 +96,9 @@ export default function AlunoDetalhe() {
   useEffect(() => {
     if (!user || !id) return;
     if (!hasSupabase) { setLoading(false); return; }
+    // Evita que a resposta de um aluno anterior (ainda em voo) sobrescreva
+    // os dados do aluno atual se o personal trocar de aluno rápido.
+    let cancelled = false;
 
     const load = async () => {
       const [
@@ -126,6 +129,7 @@ export default function AlunoDetalhe() {
         supabase.from('daily_checkins').select('*').eq('student_id', id).order('date', { ascending: false }).limit(7),
       ]);
 
+      if (cancelled) return;
       setStudent(s);
       setPlans(p || []);
       setAppointments(appts || []);
@@ -141,6 +145,7 @@ export default function AlunoDetalhe() {
       setLoading(false);
     };
     load();
+    return () => { cancelled = true; };
   }, [user?.id, id]);
 
   const openEdit = () => {

@@ -110,19 +110,19 @@ function Toasts({ toasts, dismiss }) {
         <div key={t.id} style={{
           display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px',
           borderRadius: 12, minWidth: 260, maxWidth: 360, pointerEvents: 'auto',
-          background: t.type === 'error' ? '#FEF2F2' : t.type === 'info' ? '#EFF6FF' : '#F0FDF4',
-          border: `1.5px solid ${t.type === 'error' ? '#FECACA' : t.type === 'info' ? '#BFDBFE' : '#BBF7D0'}`,
-          boxShadow: '0 8px 24px rgba(0,0,0,0.14)',
+          background: 'var(--bg-surface)',
+          border: `1.5px solid ${t.type === 'error' ? 'rgba(248,113,113,0.35)' : t.type === 'info' ? 'rgba(96,165,250,0.35)' : 'rgba(52,211,153,0.35)'}`,
+          boxShadow: 'var(--shadow-md)',
         }}>
           <div style={{
             width: 28, height: 28, borderRadius: 8, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: t.type === 'error' ? '#FEE2E2' : t.type === 'info' ? '#DBEAFE' : '#DCFCE7',
+            background: t.type === 'error' ? 'rgba(248,113,113,0.16)' : t.type === 'info' ? 'rgba(96,165,250,0.16)' : 'rgba(52,211,153,0.16)',
           }}>
             {t.type === 'error'
               ? <AlertCircle size={15} color="#EF4444" />
               : <Check size={15} color={t.type === 'info' ? '#3B82F6' : '#10B981'} strokeWidth={3} />}
           </div>
-          <span style={{ fontSize: 13, fontWeight: 600, color: t.type === 'error' ? '#DC2626' : t.type === 'info' ? '#1D4ED8' : '#065F46', flex: 1 }}>{t.msg}</span>
+          <span style={{ fontSize: 13, fontWeight: 600, color: t.type === 'error' ? '#F87171' : t.type === 'info' ? '#60A5FA' : '#34D399', flex: 1 }}>{t.msg}</span>
           <button onClick={() => dismiss(t.id)} aria-label="Fechar aviso" style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gray-400)', display: 'flex', padding: 2 }}><X size={13} /></button>
         </div>
       ))}
@@ -522,7 +522,7 @@ function TemplateEditor({ item, mode = 'template', studentId, studentName, defau
             {mode === 'template' && students.length > 0 && (
               <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: 20, border: '1.5px solid var(--border)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                  <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, #EFF6FF, #E0E7FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div style={{ width: 32, height: 32, borderRadius: 10, background: 'linear-gradient(135deg, rgba(96,165,250,0.16), rgba(96,165,250,0.26))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Users size={15} color="#3B82F6" />
                   </div>
                   <div style={{ flex: 1 }}>
@@ -1447,7 +1447,7 @@ export default function Treinos() {
       {/* ── Grade semanal ───────────────────────────────────────────────── */}
       {students.length === 0 ? (
         <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '60px 24px', textAlign: 'center', border: '2px dashed var(--border)', marginBottom: 32 }}>
-          <div style={{ width: 56, height: 56, borderRadius: 14, background: '#F0FFF4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(52,211,153,0.16)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
             <Users size={26} color="#10B981" />
           </div>
           <h3 style={{ margin: '0 0 6px', fontSize: 17, fontWeight: 800, color: 'var(--gray-900)' }}>Sem alunos ativos</h3>
@@ -1610,7 +1610,7 @@ export default function Treinos() {
         {/* Grid de cartilhas */}
         {templates.length === 0 ? (
           <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '48px 24px', textAlign: 'center', border: '2px dashed var(--border)' }}>
-            <div style={{ width: 54, height: 54, borderRadius: 14, background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
+            <div style={{ width: 54, height: 54, borderRadius: 14, background: 'linear-gradient(135deg, rgba(96,165,250,0.14), rgba(167,139,250,0.14))', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 14px' }}>
               <BookOpen size={24} color="#8B5CF6" />
             </div>
             <h3 style={{ margin: '0 0 6px', fontSize: 16, fontWeight: 800, color: 'var(--gray-900)' }}>Nenhuma cartilha ainda</h3>

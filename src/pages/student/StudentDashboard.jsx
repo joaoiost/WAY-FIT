@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 // mockData removed — app requires Supabase
 import { isPushSupported, isPushSubscribed, subscribeToPush, unsubscribeFromPush } from '../../lib/pushNotifications';
+import { toLocalDateStr } from '../../lib/date';
 
 const TYPE_COLORS = {
   Hipertrofia: '#8B5CF6', Funcional: '#10B981', Força: '#EF4444',
@@ -154,9 +155,9 @@ export default function StudentDashboard() {
 
   const now = new Date();
   const todayDay = now.getDay();
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = toLocalDateStr(now);
   const monthStart = `${todayStr.slice(0, 7)}-01`;
-  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+  const weekAgo = toLocalDateStr(new Date(Date.now() - 7 * 86400000));
 
   useEffect(() => {
     if (!user) return;
@@ -207,7 +208,7 @@ export default function StudentDashboard() {
 
             // Streak calculation
             const uniqueDates = [...new Set(sessions.map(s => s.date))].sort().reverse();
-            const yesterday = new Date(Date.now() - 86400000).toISOString().slice(0, 10);
+            const yesterday = toLocalDateStr(new Date(Date.now() - 86400000));
             if (uniqueDates.length && (uniqueDates[0] === todayStr || uniqueDates[0] === yesterday)) {
               let s = 0, check = uniqueDates[0];
               for (const d of uniqueDates) {

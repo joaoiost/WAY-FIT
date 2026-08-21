@@ -2,6 +2,7 @@
 import { Camera, Plus, X, ZoomIn, Calendar, GitCompare } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { todayLocal } from '../../lib/date';
 
 const MOCK_PHOTOS = [
   { id: 1, url: null, label: 'Início do Programa', date: '2026-03-01', weight: '82kg', tag: 'antes' },
@@ -20,7 +21,7 @@ function PhotoCard({ photo, onView, onDelete }) {
     <div style={{ background: 'var(--bg-surface)', borderRadius: 12, overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
       <div
         onClick={() => photo.url && onView(photo)}
-        style={{ height: 180, background: photo.url ? `url(${photo.url}) center/cover` : 'linear-gradient(135deg, #F3F4F6, #E5E7EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: photo.url ? 'pointer' : 'default', position: 'relative' }}
+        style={{ height: 180, background: photo.url ? `url(${photo.url}) center/cover` : 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: photo.url ? 'pointer' : 'default', position: 'relative' }}
       >
         {!photo.url && (
           <div style={{ textAlign: 'center', color: 'var(--gray-400)' }}>
@@ -124,7 +125,7 @@ function ComparePhoto({ photo }) {
       {photo.url ? (
         <img src={photo.url} alt={photo.label} style={{ width: '100%', objectFit: 'cover', maxHeight: 400, display: 'block' }} />
       ) : (
-        <div style={{ height: 280, background: 'linear-gradient(135deg, #F3F4F6, #E5E7EB)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)' }}>
+        <div style={{ height: 280, background: 'var(--gray-100)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--gray-400)' }}>
           <div style={{ textAlign: 'center' }}>
             <Camera size={40} style={{ marginBottom: 8 }} />
             <p style={{ margin: 0, fontSize: 13 }}>Sem foto</p>
@@ -155,7 +156,7 @@ export default function FotosProgresso() {
   const [viewPhoto, setViewPhoto] = useState(null);
   const [compareA, setCompareA] = useState('');
   const [compareB, setCompareB] = useState('');
-  const [form, setForm] = useState({ label: '', date: new Date().toISOString().slice(0, 10), weight: '', tag: 'durante', file: null, previewUrl: '' });
+  const [form, setForm] = useState({ label: '', date: todayLocal(), weight: '', tag: 'durante', file: null, previewUrl: '' });
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef();
 
@@ -203,7 +204,7 @@ export default function FotosProgresso() {
           setPhotos(p => [...p, newPhoto]);
           setUploading(false);
           setModal(false);
-          setForm({ label: '', date: new Date().toISOString().slice(0, 10), weight: '', tag: 'durante', file: null, previewUrl: '' });
+          setForm({ label: '', date: todayLocal(), weight: '', tag: 'durante', file: null, previewUrl: '' });
           return;
         }
       }
@@ -212,7 +213,7 @@ export default function FotosProgresso() {
     setPhotos(p => [...p, { id: Date.now(), url: finalUrl, label: form.label, date: form.date, weight: form.weight ? `${form.weight}kg` : '', tag: form.tag }]);
     setUploading(false);
     setModal(false);
-    setForm({ label: '', date: new Date().toISOString().slice(0, 10), weight: '', tag: 'durante', file: null, previewUrl: '' });
+    setForm({ label: '', date: todayLocal(), weight: '', tag: 'durante', file: null, previewUrl: '' });
   };
 
   const deletePhoto = async (id) => {
@@ -258,7 +259,7 @@ export default function FotosProgresso() {
 
       {tab === 'galeria' && (
         <>
-          <div style={{ background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', border: '1px solid #DBEAFE', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(96,165,250,0.14), rgba(167,139,250,0.14))', border: '1px solid rgba(96,165,250,0.3)', borderRadius: 12, padding: '14px 18px', marginBottom: 20, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
             <Camera size={20} color="#1E40AF" />
             <div>
               <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: '#1E40AF' }}>Registre sua evolução</p>
@@ -346,7 +347,7 @@ export default function FotosProgresso() {
           </div>
 
           {photoA && photoB && photoA.weight && photoB.weight && (
-            <div style={{ marginTop: 16, background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', borderRadius: 12, padding: 16, display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div style={{ marginTop: 16, background: 'linear-gradient(135deg, rgba(96,165,250,0.14), rgba(167,139,250,0.14))', borderRadius: 12, padding: 16, display: 'flex', gap: 20, justifyContent: 'center', flexWrap: 'wrap' }}>
               {[
                 { label: 'Peso inicial', value: photoA.weight, color: 'var(--gray-500)' },
                 { label: 'Peso atual', value: photoB.weight, color: '#3B82F6' },

@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Save, FileText, Plus, ChevronDown, Check, Loader, TrendingUp, Activity, Dumbbell, Scale, Ruler } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { todayLocal } from '../../lib/date';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 
@@ -111,7 +112,7 @@ function ClassBadge({ label, color }) {
 
 // ─── Componente principal ──────────────────────────────────────
 const EMPTY_FORM = {
-  date: new Date().toISOString().slice(0, 10),
+  date: todayLocal(),
   gender: 'M',
   weight: '',
   height: '',
@@ -433,7 +434,7 @@ export default function AvaliacaoFisica() {
         }).filter(Boolean);
         if (!deltas.length) return null;
         return (
-          <div style={{ background: 'linear-gradient(135deg,#EFF6FF,#F5F3FF)', borderRadius: 16, padding: '16px 20px', marginBottom: 16, border: '1px solid #DBEAFE' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(96,165,250,0.14), rgba(167,139,250,0.14))', borderRadius: 16, padding: '16px 20px', marginBottom: 16, border: '1px solid rgba(96,165,250,0.3)' }}>
             <p style={{ margin: '0 0 12px', fontSize: 12, fontWeight: 700, color: '#3B82F6', textTransform: 'uppercase', letterSpacing: '0.07em' }}>
               Evolução: {history[1].date} → {history[0].date}
             </p>

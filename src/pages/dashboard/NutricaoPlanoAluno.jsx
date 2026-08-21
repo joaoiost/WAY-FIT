@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { todayLocal, toLocalDateStr } from '../../lib/date';
 import tacoFoods from '../../data/taco_foods.json';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -899,8 +900,8 @@ export default function NutricaoPlanoAluno() {
   const loadAdherence = async () => {
     if (!hasSupabase || !id) return;
     setAdhLoading(true);
-    const today = new Date().toISOString().slice(0, 10);
-    const start = new Date(Date.now() - 13 * 86400000).toISOString().slice(0, 10);
+    const today = todayLocal();
+    const start = toLocalDateStr(new Date(Date.now() - 13 * 86400000));
     const { data: logs } = await supabase
       .from('food_logs').select('date,kcal,protein_g,carbs_g,fat_g')
       .eq('student_id', id).gte('date', start).lte('date', today);
@@ -916,7 +917,7 @@ export default function NutricaoPlanoAluno() {
 
     const days = [];
     for (let i = 13; i >= 0; i--) {
-      const d = new Date(Date.now() - i * 86400000).toISOString().slice(0, 10);
+      const d = toLocalDateStr(new Date(Date.now() - i * 86400000));
       const wd = new Date(d + 'T12:00:00');
       days.push({
         date: d,
@@ -1143,7 +1144,7 @@ export default function NutricaoPlanoAluno() {
                     {adherence.map(d => {
                       const pct = macroGoals.calories ? Math.min(100, Math.round((d.kcal / Number(macroGoals.calories)) * 100)) : 0;
                       const over = d.kcal > Number(macroGoals.calories);
-                      const isToday = d.date === new Date().toISOString().slice(0, 10);
+                      const isToday = d.date === todayLocal();
                       return (
                         <div key={d.date} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, height: '100%', justifyContent: 'flex-end' }} title={`${d.label}: ${Math.round(d.kcal)} kcal`}>
                           <div style={{ width: '100%', height: `${Math.max(2, pct)}%`, background: !d.logged ? 'var(--border)' : over ? 'var(--red)' : 'var(--accent)', borderRadius: '3px 3px 0 0', opacity: isToday ? 1 : 0.7 }} />
@@ -1153,7 +1154,7 @@ export default function NutricaoPlanoAluno() {
                   </div>
                   <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
                     {adherence.map(d => {
-                      const isToday = d.date === new Date().toISOString().slice(0, 10);
+                      const isToday = d.date === todayLocal();
                       return (
                         <div key={d.date} style={{ flex: 1, textAlign: 'center', fontSize: 8, color: isToday ? 'var(--accent)' : 'var(--gray-400)', fontWeight: isToday ? 800 : 500, overflow: 'hidden' }}>
                           {d.label.split(',')[0]}
@@ -1166,7 +1167,7 @@ export default function NutricaoPlanoAluno() {
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {[...adherence].reverse().map(d => {
-                  const isToday = d.date === new Date().toISOString().slice(0, 10);
+                  const isToday = d.date === todayLocal();
                   const kcalGoal = macroGoals.calories ? Number(macroGoals.calories) : null;
                   const pct = kcalGoal && d.logged ? Math.min(100, Math.round((d.kcal / kcalGoal) * 100)) : null;
                   const over = kcalGoal && d.kcal > kcalGoal;

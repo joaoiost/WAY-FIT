@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { todayLocal } from '../lib/date';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -215,7 +216,7 @@ export function exportStudentReport({ student, measurements, plans, attendances,
         p.month || '—',
         `R$ ${Number(p.amount).toLocaleString('pt-BR')}`,
         new Date((p.due_date)+'T12:00:00').toLocaleDateString('pt-BR'),
-        p.status === 'pago' ? 'Pago' : p.due_date < new Date().toISOString().slice(0,10) ? 'Atrasado' : 'Pendente',
+        p.status === 'pago' ? 'Pago' : p.due_date < todayLocal() ? 'Atrasado' : 'Pendente',
       ]),
       headStyles: { fillColor: [16, 185, 129], fontSize: 8 },
       bodyStyles: { fontSize: 8 },

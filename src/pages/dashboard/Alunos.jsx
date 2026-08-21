@@ -9,6 +9,7 @@ import Modal from '../../components/UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { toast } from '../../lib/toast';
+import { todayLocal, toLocalDateStr } from '../../lib/date';
 
 const TYPE_COLORS = {
   Musculação: '#3B82F6', Funcional: '#10B981', Hipertrofia: '#8B5CF6',
@@ -171,7 +172,7 @@ const DAY_LABELS = ['S','T','Q','Q','S','S','D'];
 
 function WeekDots({ sessionDates }) {
   const today = new Date();
-  const todayStr = today.toISOString().slice(0, 10);
+  const todayStr = toLocalDateStr(today);
   const dayOfWeek = (today.getDay() + 6) % 7;
   const count = sessionDates.size;
 
@@ -181,7 +182,7 @@ function WeekDots({ sessionDates }) {
         {Array.from({ length: 7 }, (_, i) => {
           const d = new Date(today);
           d.setDate(today.getDate() - dayOfWeek + i);
-          const dateStr = d.toISOString().slice(0, 10);
+          const dateStr = toLocalDateStr(d);
           const trained = sessionDates.has(dateStr);
           const isFuture = dateStr > todayStr;
           const isToday = dateStr === todayStr;
@@ -233,7 +234,7 @@ function InactivityBadge({ studentId, lastWorkoutMap }) {
 function AppBadge({ student, setInviteSheet }) {
   if (student.user_id) {
     return (
-      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 20, background: '#DCFCE7', color: '#15803D', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 20, background: 'rgba(52,211,153,0.14)', color: 'var(--green)', fontSize: 10, fontWeight: 700, flexShrink: 0 }}>
         <Smartphone size={9} /> App
       </span>
     );
@@ -273,11 +274,11 @@ export default function Alunos() {
         });
 
       const today = new Date();
-      const todayStr = today.toISOString().slice(0, 10);
+      const todayStr = toLocalDateStr(today);
       const dayOfWeek = (today.getDay() + 6) % 7;
       const weekStart = new Date(today);
       weekStart.setDate(today.getDate() - dayOfWeek);
-      const weekStartStr = weekStart.toISOString().slice(0, 10);
+      const weekStartStr = toLocalDateStr(weekStart);
       // Busca sessões da semana atual (para os dots)
       supabase.from('workout_sessions')
         .select('student_id, date')
@@ -299,7 +300,7 @@ export default function Alunos() {
       supabase.from('workout_sessions')
         .select('student_id, date')
         .eq('personal_id', user.id)
-        .gte('date', thirtyDaysAgo.toISOString().slice(0, 10))
+        .gte('date', toLocalDateStr(thirtyDaysAgo))
         .order('date', { ascending: false })
         .then(({ data, error }) => {
           if (error) { console.error(error); return; }
@@ -344,7 +345,7 @@ export default function Alunos() {
         plan_price: form.plan_price ? Number(form.plan_price) : null,
         initials: getInitials(form.name),
         color: COLORS[students.length % COLORS.length],
-        join_date: new Date().toISOString().slice(0, 10),
+        join_date: todayLocal(),
         personal_id: user.id,
         status: 'ativo',
       };
@@ -477,7 +478,7 @@ export default function Alunos() {
                   <td style={{ padding: '13px 16px' }} onClick={e => e.stopPropagation()}><AppBadge student={s} setInviteSheet={setInviteSheet} /></td>
                   <td style={{ padding: '13px 16px' }} onClick={e => e.stopPropagation()}>
                     <div style={{ display: 'flex', gap: 6 }}>
-                      <button onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time: '08:00', type: 'Musculação' }); }}
+                      <button onClick={() => { setQuickSchedule(s); setQuickForm({ date: todayLocal(), time: '08:00', type: 'Musculação' }); }}
                         className="icon-box icon-box-sm icon-box-green" style={{ border:'none', cursor:'pointer' }} title="Agendar aula">
                         <Calendar size={14} />
                       </button>
@@ -525,7 +526,7 @@ export default function Alunos() {
             </div>
             <div style={{ display:'flex', gap:6, flexShrink:0 }}>
               <AppBadge student={s} setInviteSheet={setInviteSheet} />
-              <button onClick={() => { setQuickSchedule(s); setQuickForm({ date: new Date().toISOString().slice(0,10), time:'08:00', type:'Musculação' }); }}
+              <button onClick={() => { setQuickSchedule(s); setQuickForm({ date: todayLocal(), time:'08:00', type:'Musculação' }); }}
                 className="icon-box icon-box-md icon-box-green" style={{ border:'none', cursor:'pointer', width:34, height:34 }}>
                 <Calendar size={15} />
               </button>

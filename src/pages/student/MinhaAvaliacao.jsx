@@ -124,7 +124,7 @@ export default function MinhaAvaliacao() {
         }).filter(Boolean);
         if (!deltas.length) return null;
         return (
-          <div style={{ background: 'linear-gradient(135deg,#EFF6FF,#F5F3FF)', borderRadius: 16, padding: '14px 18px', marginBottom: 16, border: '1px solid #DBEAFE' }}>
+          <div style={{ background: 'linear-gradient(135deg, rgba(96,165,250,0.14), rgba(167,139,250,0.14))', borderRadius: 16, padding: '14px 18px', marginBottom: 16, border: '1px solid rgba(96,165,250,0.3)' }}>
             <p style={{ margin: '0 0 12px', fontSize: 11, fontWeight: 700, color: '#3B82F6', textTransform: 'uppercase', letterSpacing: '0.07em' }}>Evolução vs avaliação anterior</p>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill,minmax(120px,1fr))', gap: 8 }}>
               {deltas.map(d => (
@@ -183,9 +183,9 @@ export default function MinhaAvaliacao() {
 
       {/* Observações */}
       {curr.recommendation && (
-        <div style={{ background: 'linear-gradient(135deg,#EFF6FF,#F5F3FF)', borderRadius: 14, padding: '14px 18px', marginBottom: 20, border: '1px solid #DBEAFE' }}>
+        <div style={{ background: 'linear-gradient(135deg, rgba(96,165,250,0.14), rgba(167,139,250,0.14))', borderRadius: 14, padding: '14px 18px', marginBottom: 20, border: '1px solid rgba(96,165,250,0.3)' }}>
           <p style={{ margin: '0 0 6px', fontSize: 11, fontWeight: 700, color: '#3B82F6', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Recomendações do personal</p>
-          <p style={{ margin: 0, fontSize: 14, color: '#1E3A5F', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{curr.recommendation}</p>
+          <p style={{ margin: 0, fontSize: 14, color: 'var(--gray-700)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>{curr.recommendation}</p>
         </div>
       )}
       {curr.obs && (

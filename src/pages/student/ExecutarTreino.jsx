@@ -4,6 +4,7 @@ import { ChevronLeft, Check, Clock, Dumbbell, X, Play, Star, TrendingUp, Loader,
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { fetchExerciseVideo } from '../../lib/youtubeVideo';
+import { todayLocal } from '../../lib/date';
 
 const TYPE_COLORS = {
   Hipertrofia: '#8B5CF6', Funcional: '#10B981', Força: '#EF4444',
@@ -84,7 +85,7 @@ function RatingModal({ plan, studentId, personalId, onClose, onSaved }) {
   const handleSave = async () => {
     if (!stars) return;
     setSaving(true);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocal();
     if (hasSupabase && studentId && personalId) {
       await supabase.from('session_ratings').upsert({
         student_id: studentId, personal_id: personalId,
@@ -189,7 +190,7 @@ export default function ExecutarTreino() {
   const [saveStatus, setSaveStatus] = useState('idle');
   const saveTimerRef = useRef(null);
 
-  const todayDate = new Date().toISOString().slice(0, 10);
+  const todayDate = todayLocal();
 
 
   useEffect(() => {
@@ -695,9 +696,9 @@ export default function ExecutarTreino() {
             };
 
             const bg = shouldIncrease
-              ? 'linear-gradient(135deg,#ECFDF5,#D1FAE5)'
-              : lastWasDone ? 'linear-gradient(135deg,#EFF6FF,#F5F3FF)' : '#FFFBEB';
-            const borderColor = shouldIncrease ? '#86EFAC' : lastWasDone ? '#BFDBFE' : '#FDE68A';
+              ? 'linear-gradient(135deg, rgba(52,211,153,0.16), rgba(52,211,153,0.26))'
+              : lastWasDone ? 'linear-gradient(135deg, rgba(96,165,250,0.14), rgba(167,139,250,0.14))' : 'rgba(251,191,36,0.14)';
+            const borderColor = shouldIncrease ? 'rgba(52,211,153,0.35)' : lastWasDone ? 'rgba(96,165,250,0.35)' : 'rgba(251,191,36,0.35)';
             const iconColor = shouldIncrease ? '#10B981' : lastWasDone ? '#3B82F6' : '#D97706';
 
             const message = shouldIncrease

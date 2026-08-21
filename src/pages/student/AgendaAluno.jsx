@@ -2,6 +2,7 @@
 import { Calendar, Clock, CheckCircle, XCircle, AlertCircle, Loader, Plus, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { toLocalDateStr } from '../../lib/date';
 // mockData removed
 
 const STATUS_MAP = {
@@ -26,7 +27,7 @@ export default function AgendaAluno() {
   const [studentData, setStudentData] = useState(null);
 
   const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = toLocalDateStr(now);
 
   useEffect(() => {
     if (!user) return;
@@ -57,7 +58,7 @@ export default function AgendaAluno() {
   const past = appointments.filter(a => a.date < todayStr);
 
   const formatDate = (d) => {
-    const tomorrow = new Date(now.getTime() + 86400000).toISOString().slice(0, 10);
+    const tomorrow = toLocalDateStr(new Date(now.getTime() + 86400000));
     if (d === todayStr) return 'Hoje';
     if (d === tomorrow) return 'Amanhã';
     return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'long', day: 'numeric', month: 'long' });

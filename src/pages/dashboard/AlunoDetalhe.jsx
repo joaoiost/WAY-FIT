@@ -5,6 +5,7 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, LineChart, L
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import Modal from '../../components/UI/Modal';
+import { todayLocal, toLocalDateStr } from '../../lib/date';
 
 const TYPE_COLORS = {
   Musculação: '#3B82F6', Funcional: '#10B981', Hipertrofia: '#8B5CF6',
@@ -81,7 +82,7 @@ export default function AlunoDetalhe() {
   const [loading, setLoading] = useState(true);
 
   const [scheduleModal, setScheduleModal] = useState(false);
-  const [schedForm, setSchedForm] = useState({ date: new Date().toISOString().slice(0, 10), time: '08:00', type: 'Musculação' });
+  const [schedForm, setSchedForm] = useState({ date: todayLocal(), time: '08:00', type: 'Musculação' });
 
   const [chartMetric, setChartMetric] = useState('weight');
 
@@ -89,7 +90,7 @@ export default function AlunoDetalhe() {
   const [editForm, setEditForm] = useState({});
   const [editSaving, setEditSaving] = useState(false);
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocal();
   const monthStart = `${today.slice(0, 7)}-01`;
 
   useEffect(() => {
@@ -261,17 +262,17 @@ export default function AlunoDetalhe() {
           <button onClick={openEdit} className="btn-secondary"><Edit2 size={14} /> Editar</button>
           {student.phone && (
             <a href={`https://wa.me/55${student.phone.replace(/\D/g,'')}`} target="_blank" rel="noreferrer"
-              className="btn-secondary" style={{ color: '#15803D', borderColor: '#BBF7D0', background: '#F0FDF4', textDecoration: 'none' }}>
+              className="btn-secondary" style={{ color: 'var(--green)', borderColor: 'rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.10)', textDecoration: 'none' }}>
               <MessageCircle size={14} /> WhatsApp
             </a>
           )}
-          <button onClick={() => navigate(`/dashboard/chat`)} className="btn-secondary" style={{ color: 'var(--blue)', borderColor: '#BFDBFE', background: '#EFF6FF' }}>
+          <button onClick={() => navigate(`/dashboard/chat`)} className="btn-secondary" style={{ color: 'var(--blue)', borderColor: 'rgba(96,165,250,0.3)', background: 'rgba(96,165,250,0.12)' }}>
             <MessageCircle size={14} /> Chat
           </button>
           <button onClick={() => navigate(`/dashboard/alunos/${id}/avaliacao`)} className="btn-secondary">
             <Activity size={14} /> Avaliação
           </button>
-          <button onClick={() => navigate(`/dashboard/alunos/${id}/nutricao`)} className="btn-secondary" style={{ color: '#059669', borderColor: '#BBF7D0', background: '#F0FDF4' }}>
+          <button onClick={() => navigate(`/dashboard/alunos/${id}/nutricao`)} className="btn-secondary" style={{ color: 'var(--green)', borderColor: 'rgba(52,211,153,0.3)', background: 'rgba(52,211,153,0.10)' }}>
             <Utensils size={14} /> Nutrição
           </button>
           <button onClick={() => window.open(`/dashboard/alunos/${id}/relatorio`, '_blank')} className="btn-secondary">
@@ -337,7 +338,7 @@ export default function AlunoDetalhe() {
       )}
 
       {tab === 'Treinos' && (() => {
-        const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
+        const sevenDaysAgo = toLocalDateStr(new Date(Date.now() - 7 * 86400000));
         const thisWeekSessions = workoutSessions.filter(s => s.date >= sevenDaysAgo);
         const totalSessionsAll = workoutSessions.length;
         const completedSessions = workoutSessions.filter(s => s.exercises_total > 0 && s.exercises_done >= s.exercises_total).length;
@@ -519,13 +520,13 @@ export default function AlunoDetalhe() {
       {tab === 'Visão Geral' && (() => {
         // ── Semana atual ────────────────────────────────
         const todayDt = new Date();
-        const todayStr = todayDt.toISOString().slice(0, 10);
+        const todayStr = toLocalDateStr(todayDt);
         const dayOfWeek = (todayDt.getDay() + 6) % 7; // 0 = Seg
         const DAY_LABELS = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
         const weekDays = Array.from({ length: 7 }, (_, i) => {
           const d = new Date(todayDt);
           d.setDate(todayDt.getDate() - dayOfWeek + i);
-          const dateStr = d.toISOString().slice(0, 10);
+          const dateStr = toLocalDateStr(d);
           const jsDay = d.getDay();
           const matchedPlan = plans.find(p => (p.days || []).includes(jsDay));
           const session = workoutSessions.find(ws => ws.date === dateStr);
@@ -802,7 +803,7 @@ export default function AlunoDetalhe() {
 
             {/* ── Nutrição — full width ── */}
             <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '18px 24px', border: '1px solid rgba(16,185,129,0.3)', display: 'flex', alignItems: 'center', gap: 16 }}>
-              <div style={{ width: 50, height: 50, borderRadius: 14, background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: 50, height: 50, borderRadius: 14, background: 'linear-gradient(135deg, rgba(52,211,153,0.18), rgba(52,211,153,0.28))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <Utensils size={22} color="#059669" />
               </div>
               <div style={{ flex: 1 }}>

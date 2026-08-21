@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Trophy, Zap, Dumbbell, Repeat, Flame, Award, Calendar, Droplet, Waves, Ruler, BarChart2, TrendingDown, Sunrise, Star, Salad, Apple, Target, Crown, Camera, CheckCircle2, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { toLocalDateStr } from '../../lib/date';
 import XPBar, { LEVELS, getLevel, calcXP } from '../../components/UI/XPBar';
 
 const ACHIEVEMENTS = [
@@ -46,7 +47,7 @@ function calcMaxWeekWorkouts(sessions) {
   sessions.forEach(s => {
     const d = new Date(s.started_at);
     const ws = new Date(d); ws.setDate(d.getDate() - d.getDay());
-    const k = ws.toISOString().slice(0, 10);
+    const k = toLocalDateStr(ws);
     wc[k] = (wc[k] || 0) + 1;
   });
   return Math.max(0, ...Object.values(wc));

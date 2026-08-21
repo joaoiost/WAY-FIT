@@ -27,6 +27,7 @@ import { Search, Plus, Trash2, ChevronDown, ChevronUp, X, ChevronLeft, ChevronRi
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { todayLocal, toLocalDateStr } from '../../lib/date';
 import tacoFoods from '../../data/taco_foods.json';
 import BarcodeScanner from '../../components/UI/BarcodeScanner';
 
@@ -46,14 +47,14 @@ const MACRO_LABELS = { kcal: 'Kcal', protein_g: 'Prot', carbs_g: 'Carb', fat_g: 
 const MACRO_UNITS  = { kcal: 'kcal', protein_g: 'g', carbs_g: 'g', fat_g: 'g' };
 const GLASS_ML = 250;
 
-function todayStr() { return new Date().toISOString().slice(0, 10); }
+function todayStr() { return todayLocal(); }
 function fmtDate(d) {
   if (!d) return '';
   return new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { weekday: 'short', day: '2-digit', month: 'short' });
 }
 function prevDay(d) { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() - 1); return dt.toISOString().slice(0, 10); }
 function nextDay(d) { const dt = new Date(d + 'T12:00:00'); dt.setDate(dt.getDate() + 1); return dt.toISOString().slice(0, 10); }
-function daysAgo(n) { const dt = new Date(); dt.setDate(dt.getDate() - n); return dt.toISOString().slice(0, 10); }
+function daysAgo(n) { const dt = new Date(); dt.setDate(dt.getDate() - n); return toLocalDateStr(dt); }
 
 const QUICK_PORTIONS = [50, 100, 150, 200];
 

@@ -4,6 +4,7 @@ import Modal from '../UI/Modal';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { toast } from '../../lib/toast';
+import { todayLocal, toLocalDateStr } from '../../lib/date';
 
 const DAYS_PT = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 const TYPES = ['Musculação', 'Funcional', 'Hipertrofia', 'Cardio', 'Yoga', 'Pilates', 'Força', 'Avaliação Física', 'Consulta Nutricional'];
@@ -18,9 +19,9 @@ const GROUP_TO_TYPE = {
   'Full Body': 'Funcional', Cardio: 'Cardio', Descanso: 'Musculação',
 };
 
-const TODAY = new Date().toISOString().slice(0, 10);
+const TODAY = todayLocal();
 
-function formatDate(d) { return d.toISOString().slice(0, 10); }
+function formatDate(d) { return toLocalDateStr(d); }
 
 function getWeekDates(baseDate) {
   const d = new Date(baseDate);

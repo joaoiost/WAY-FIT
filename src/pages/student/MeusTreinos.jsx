@@ -7,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 // mockData removed
 import { fetchExerciseVideo } from '../../lib/youtubeVideo';
+import { todayLocal } from '../../lib/date';
 
 const TYPE_COLORS = {
   Hipertrofia: '#8B5CF6', Funcional: '#10B981', Força: '#EF4444',
@@ -67,7 +68,7 @@ function RatingModal({ plan, studentId, personalId, onClose, onSaved }) {
   const handleSave = async () => {
     if (!stars) return;
     setSaving(true);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = todayLocal();
     if (hasSupabase && studentId && personalId) {
       await supabase.from('session_ratings').upsert({
         student_id: studentId, personal_id: personalId,
@@ -156,7 +157,7 @@ export default function MeusTreinos() {
 
   const today = new Date().getDay();
   const todayLabel = DAYS_FULL[today];
-  const todayDate = new Date().toISOString().slice(0, 10);
+  const todayDate = todayLocal();
 
   useEffect(() => {
     if (!user) return;

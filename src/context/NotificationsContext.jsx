@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { supabase, hasSupabase } from '../lib/supabase';
+import { todayLocal, toLocalDateStr } from '../lib/date';
 
 const NotificationsContext = createContext();
 
@@ -23,8 +24,8 @@ const STUDENT_NOTIFS_STATIC = [
 
 async function loadPersonalNotifications(userId) {
   const notifs = [];
-  const today = new Date().toISOString().slice(0, 10);
-  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const today = todayLocal();
+  const sevenDaysAgo = toLocalDateStr(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
 
   // 1. Upcoming appointments in next 60 min
   const now = new Date();
@@ -107,7 +108,7 @@ async function loadPersonalNotifications(userId) {
   }
 
   // 4. Payments due in next 7 days (renewal alerts)
-  const in7Days = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const in7Days = toLocalDateStr(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000));
   const { data: dueSoon } = await supabase
     .from('payments')
     .select('student_name, due_date, amount')

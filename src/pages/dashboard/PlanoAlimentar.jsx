@@ -64,7 +64,7 @@ function MealSection({ meal, onChange, onDelete, defaultOpen = true }) {
   return (
     <div style={{ background: 'var(--bg-surface)', borderRadius: 14, overflow: 'hidden', border: '1px solid var(--border)', marginBottom: 12 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: open ? '1px solid #F3F4F6' : 'none' }}>
-        <div onClick={() => setOpen(o => !o)} style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg,#F0FDF4,#DCFCE7)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
+        <div onClick={() => setOpen(o => !o)} style={{ width: 32, height: 32, borderRadius: 9, background: 'linear-gradient(135deg, rgba(52,211,153,0.16), rgba(52,211,153,0.26))', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, cursor: 'pointer' }}>
           <Utensils size={15} color="#16A34A" />
         </div>
         <div onClick={() => setOpen(o => !o)} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>

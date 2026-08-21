@@ -2,6 +2,7 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { Zap, Star, Users, CheckCircle, Loader, Eye, EyeOff, ChevronRight, ArrowRight, Flame, Dumbbell, Activity, HeartPulse, Search, Mail } from 'lucide-react';
 import { supabase, hasSupabase } from '../lib/supabase';
+import { todayLocal } from '../lib/date';
 
 const GOALS = [
   { value: 'Emagrecer',       icon: Flame,      label: 'Emagrecer' },
@@ -74,7 +75,7 @@ export default function PublicProfile() {
           name: form.name, email: form.email, phone: form.phone,
           goal: form.goal, plan: 'Mensal', plan_price: null,
           status: 'ativo', initials, color,
-          join_date: new Date().toISOString().slice(0, 10),
+          join_date: todayLocal(),
         });
       }
 

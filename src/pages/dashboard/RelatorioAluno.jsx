@@ -2,6 +2,7 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { todayLocal, toLocalDateStr } from '../../lib/date';
 
 const CSS = `
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -87,8 +88,8 @@ export default function RelatorioAluno() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const ninetyDaysAgo = new Date(Date.now() - 90 * 86400000).toISOString().slice(0, 10);
-  const today = new Date().toISOString().slice(0, 10);
+  const ninetyDaysAgo = toLocalDateStr(new Date(Date.now() - 90 * 86400000));
+  const today = todayLocal();
   const thisMonth = today.slice(0, 7);
 
   useEffect(() => {
@@ -176,7 +177,7 @@ export default function RelatorioAluno() {
   const last4Weeks = Array.from({ length: 28 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() - (27 - i));
-    return d.toISOString().slice(0, 10);
+    return toLocalDateStr(d);
   });
   const sessionDates = new Set(sessions.map(s => s.date));
 

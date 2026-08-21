@@ -683,7 +683,7 @@ export default function Cartilhas() {
       {/* Empty state */}
       {templates.length === 0 && (
         <div style={{ background: 'var(--bg-surface)', borderRadius: 16, padding: '60px 24px', textAlign: 'center', border: '2px dashed var(--border)' }}>
-          <div style={{ width: 64, height: 64, borderRadius: 18, background: 'linear-gradient(135deg, #EFF6FF, #F5F3FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+          <div style={{ width: 64, height: 64, borderRadius: 18, background: 'linear-gradient(135deg, rgba(96,165,250,0.14), rgba(167,139,250,0.14))', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
             <Dumbbell size={28} color="#8B5CF6" />
           </div>
           <h3 style={{ margin: '0 0 8px', fontSize: 18, fontWeight: 800, color: 'var(--gray-900)' }}>Nenhuma cartilha ainda</h3>

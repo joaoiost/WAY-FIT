@@ -3,9 +3,9 @@ import { TrendingDown, TrendingUp, Plus, Ruler, Scale, X, Loader, Zap, BarChart2
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { todayLocal, toLocalDateStr } from '../../lib/date';
 
-
-const EMPTY_FORM = { date: new Date().toISOString().slice(0, 10), weight: '', waist: '', chest: '', arm: '', hip: '', body_fat: '' };
+const EMPTY_FORM = { date: todayLocal(), weight: '', waist: '', chest: '', arm: '', hip: '', body_fat: '' };
 
 export default function Progresso() {
   const { user } = useAuth();
@@ -292,7 +292,7 @@ export default function Progresso() {
 
       {/* Weekly Volume Chart */}
       {exerciseLogs.length >= 3 && (() => {
-        function getWeekKey(d) { const dt = new Date(d); dt.setDate(dt.getDate() - dt.getDay()); return dt.toISOString().slice(0, 10); }
+        function getWeekKey(d) { const dt = new Date(d); dt.setDate(dt.getDate() - dt.getDay()); return toLocalDateStr(dt); }
         const wv = {};
         exerciseLogs.forEach(log => {
           const w = getWeekKey(log.created_at);

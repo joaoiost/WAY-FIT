@@ -1,16 +1,15 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { Droplets, Plus, Minus, Trophy } from 'lucide-react';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { todayLocal } from '../../lib/date';
 
 const GLASS_ML = 250;
 
 function storageKey(studentId) {
-  const today = new Date().toISOString().slice(0, 10);
-  return `water_${today}_${studentId || 'guest'}`;
+  return `water_${todayLocal()}_${studentId || 'guest'}`;
 }
 function celebratedKey(studentId) {
-  const today = new Date().toISOString().slice(0, 10);
-  return `water_celebrated_${today}_${studentId || 'guest'}`;
+  return `water_celebrated_${todayLocal()}_${studentId || 'guest'}`;
 }
 
 /* SVG sine wave — two layers for depth */
@@ -49,7 +48,7 @@ export default function WaterTracker({ goalMl = 2000, studentId }) {
       if (val >= goalMl && localStorage.getItem(celebratedKey(studentId))) setGoalReachedAnim(true);
     };
     if (hasSupabase && studentId && studentId !== 'guest') {
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayLocal();
       supabase.from('water_logs').select('intake_ml').eq('student_id', studentId).eq('date', today).maybeSingle()
         .then(({ data, error }) => {
           if (error) console.error(error);
@@ -65,7 +64,7 @@ export default function WaterTracker({ goalMl = 2000, studentId }) {
     if (hasSupabase && studentId && studentId !== 'guest') {
       clearTimeout(syncTimer.current);
       syncTimer.current = setTimeout(() => {
-        const today = new Date().toISOString().slice(0, 10);
+        const today = todayLocal();
         supabase.from('water_logs').upsert(
           { student_id: studentId, date: today, intake_ml: intake, goal_ml: goalMl },
           { onConflict: 'student_id,date' }

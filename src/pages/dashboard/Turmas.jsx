@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Users, Plus, ChevronRight, Clock, MapPin, Trash2, X, Check, Minus } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { todayLocal } from '../../lib/date';
 
 const TYPES = ['Musculação','Funcional','Hipertrofia','Cardio','Yoga','Pilates','Força','HIIT','Mobilidade'];
 const TYPE_COLORS = { Musculação:'#3B82F6', Funcional:'#10B981', Hipertrofia:'#8B5CF6', Cardio:'#F59E0B', Yoga:'#EC4899', Pilates:'#06B6D4', Força:'#EF4444', HIIT:'#F97316', Mobilidade:'#A78BFA' };
@@ -13,7 +14,7 @@ const AVATAR_COLORS = ['#6366F1','#10B981','#8B5CF6','#F59E0B','#EF4444','#EC489
 function avatarColor(id) { return AVATAR_COLORS[String(id).charCodeAt(0) % AVATAR_COLORS.length]; }
 function initials(name = '') { return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?'; }
 
-const emptyForm = { name: '', type: 'Musculação', date: new Date().toISOString().slice(0, 10), time: '07:00', duration_minutes: 60, max_students: 15, location: '', notes: '' };
+const emptyForm = { name: '', type: 'Musculação', date: todayLocal(), time: '07:00', duration_minutes: 60, max_students: 15, location: '', notes: '' };
 
 export default function Turmas() {
   const { user } = useAuth();
@@ -89,7 +90,7 @@ export default function Turmas() {
     loadData();
   }
 
-  const today = new Date().toISOString().slice(0, 10);
+  const today = todayLocal();
   const filtered = classes.filter(c => filter === 'upcoming' ? c.date >= today : c.date < today);
   const totalStudentsTaught = new Set(classes.flatMap(c => (c.group_class_attendance || []).filter(a => a.status === 'presente').map(a => a.student_id))).size;
   const nextClass = classes.find(c => c.date >= today);

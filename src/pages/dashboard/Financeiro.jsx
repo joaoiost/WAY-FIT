@@ -7,6 +7,7 @@ import Badge from '../../components/UI/Badge';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { toast } from '../../lib/toast';
+import { todayLocal } from '../../lib/date';
 
 function StatBox({ icon: Icon, title, value, sub, color, bg }) {
   return (
@@ -23,13 +24,22 @@ function StatBox({ icon: Icon, title, value, sub, color, bg }) {
   );
 }
 
+function monthLabel(date) {
+  const s = date.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function formatBRL(value) {
+  return Number(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
       <div style={{ background: 'var(--bg-surface)', border: '1px solid var(--border)', borderRadius: 10, padding: '10px 14px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
         <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: 'var(--gray-900)' }}>{label}</p>
         <p style={{ margin: '4px 0 0', fontSize: 14, color: '#3B82F6', fontWeight: 600 }}>
-          R$ {payload[0].value.toLocaleString('pt-BR')}
+          R$ {formatBRL(payload[0].value)}
         </p>
       </div>
     );
@@ -46,7 +56,7 @@ export default function Financeiro() {
   const [genResult, setGenResult] = useState(null);
   const [students, setStudents] = useState([]);
   const [newPayModal, setNewPayModal] = useState(false);
-  const [newPayForm, setNewPayForm] = useState({ student_id: '', amount: '', due_date: new Date().toISOString().slice(0, 10), plan: 'Mensal', status: 'pendente' });
+  const [newPayForm, setNewPayForm] = useState({ student_id: '', amount: '', due_date: todayLocal(), plan: 'Mensal', status: 'pendente' });
   const [newPaySaving, setNewPaySaving] = useState(false);
   const [pixKey, setPixKey] = useState('');
   const [pixModal, setPixModal] = useState(false);
@@ -55,18 +65,13 @@ export default function Financeiro() {
 
   const now = new Date();
   const currentMonthISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-  const currentMonth = now.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-  const currentMonthLabel = currentMonth.charAt(0).toUpperCase() + currentMonth.slice(1);
-  const last3Months = [2, 1, 0].map(offset => {
-    const d = new Date(now.getFullYear(), now.getMonth() - offset, 1);
-    const s = d.toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
-    return s.charAt(0).toUpperCase() + s.slice(1);
-  });
+  const currentMonthLabel = monthLabel(now);
+  const last3Months = [2, 1, 0].map(offset => monthLabel(new Date(now.getFullYear(), now.getMonth() - offset, 1)));
 
   const loadPayments = () => {
     if (!user) return;
     if (hasSupabase) {
-      supabase.from('payments').select('*').eq('personal_id', user.id)
+      supabase.from('payments').select('*').eq('personal_id', user.id).order('due_date')
         .then(({ data, error }) => {
           if (error) { console.error(error); toast.error('Não foi possível carregar os pagamentos.'); return; }
           const list = data || [];
@@ -108,7 +113,7 @@ export default function Financeiro() {
     const full = phone.startsWith('55') ? phone : `55${phone}`;
     const name = (payment.student_name || student?.name || '').split(' ')[0];
     const due = new Date((payment.due_date) + 'T12:00:00').toLocaleDateString('pt-BR');
-    const msg = `Olá ${name}!\n\nVencimento da sua mensalidade:\n• Plano: ${payment.plan}\n• Valor: R$ ${Number(payment.amount).toLocaleString('pt-BR')}\n• Vencimento: ${due}\n\nChave PIX: *${pixKey}*\n\nApós o pagamento, me confirme aqui.`;
+    const msg = `Olá ${name}!\n\nVencimento da sua mensalidade:\n• Plano: ${payment.plan}\n• Valor: R$ ${formatBRL(payment.amount)}\n• Vencimento: ${due}\n\nChave PIX: *${pixKey}*\n\nApós o pagamento, me confirme aqui.`;
     window.open(`https://wa.me/${full}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -133,7 +138,7 @@ export default function Financeiro() {
   };
 
   const markPaid = async (id) => {
-    const paidDate = new Date().toISOString().slice(0, 10);
+    const paidDate = todayLocal();
     if (hasSupabase) {
       await supabase.from('payments').update({ status: 'pago', paid_date: paidDate }).eq('id', id);
     }
@@ -206,7 +211,7 @@ export default function Financeiro() {
       plan: newPayForm.plan,
       amount: Number(newPayForm.amount),
       due_date: newPayForm.due_date,
-      month: new Date(newPayForm.due_date + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' }),
+      month: monthLabel(new Date(newPayForm.due_date + 'T12:00:00')),
       status: newPayForm.status,
     };
     if (hasSupabase) {
@@ -217,7 +222,7 @@ export default function Financeiro() {
     }
     setNewPaySaving(false);
     setNewPayModal(false);
-    setNewPayForm({ student_id: '', amount: '', due_date: new Date().toISOString().slice(0, 10), plan: 'Mensal', status: 'pendente' });
+    setNewPayForm({ student_id: '', amount: '', due_date: todayLocal(), plan: 'Mensal', status: 'pendente' });
   };
 
   const currentPayments = payments.filter(p => p.month === currentMonthLabel);
@@ -403,7 +408,7 @@ export default function Financeiro() {
         <StatBox
           icon={DollarSign}
           title="Total do Mês"
-          value={`R$ ${totalCurrent.toLocaleString('pt-BR')}`}
+          value={`R$ ${formatBRL(totalCurrent)}`}
           sub={currentMonthLabel}
           color="#3B82F6"
           bg="#EFF6FF"
@@ -411,7 +416,7 @@ export default function Financeiro() {
         <StatBox
           icon={CheckCircle}
           title="Recebido"
-          value={`R$ ${received.toLocaleString('pt-BR')}`}
+          value={`R$ ${formatBRL(received)}`}
           sub={`${currentPayments.filter(p => p.status === 'pago').length} pagamentos`}
           color="#10B981"
           bg="#D1FAE5"
@@ -419,7 +424,7 @@ export default function Financeiro() {
         <StatBox
           icon={Clock}
           title="Pendente / Atrasado"
-          value={`R$ ${pending.toLocaleString('pt-BR')}`}
+          value={`R$ ${formatBRL(pending)}`}
           sub={`${currentPayments.filter(p => p.status !== 'pago').length} pagamentos`}
           color="#F59E0B"
           bg="#FEF3C7"
@@ -492,7 +497,7 @@ export default function Financeiro() {
                   <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 600, color: 'var(--gray-900)' }}>{p.student_name || p.studentName}</td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: 'var(--gray-500)' }}>{p.plan}</td>
                   <td style={{ padding: '12px 16px', fontSize: 14, fontWeight: 700, color: 'var(--gray-900)' }}>
-                    R$ {Number(p.amount).toLocaleString('pt-BR')}
+                    R$ {formatBRL(p.amount)}
                   </td>
                   <td style={{ padding: '12px 16px', fontSize: 13, color: 'var(--gray-500)' }}>
                     {new Date((p.due_date || p.dueDate) + 'T12:00:00').toLocaleDateString('pt-BR')}
@@ -540,7 +545,7 @@ export default function Financeiro() {
               <div key={month} style={{ flex: 1, minWidth: 200, padding: '16px', background: 'var(--gray-50)', borderRadius: 'var(--radius)', border: '1px solid var(--border-light)' }}>
                 <p className="list-row-title" style={{ marginBottom: 4 }}>{month}</p>
                 <p style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 800, color: 'var(--gray-900)' }}>
-                  R$ {mTotal.toLocaleString('pt-BR')}
+                  R$ {formatBRL(mTotal)}
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <div style={{ flex: 1, height: 5, background: 'var(--border)', borderRadius: 3, overflow: 'hidden' }}>

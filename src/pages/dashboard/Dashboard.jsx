@@ -7,13 +7,14 @@ import WeeklyAgenda from '../../components/Dashboard/WeeklyAgenda';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
 import { toast } from '../../lib/toast';
+import { todayLocal, toLocalDateStr } from '../../lib/date';
 // mockData removed
 
-const TODAY         = new Date().toISOString().slice(0, 10);
+const TODAY         = todayLocal();
 const MONTH_START   = `${TODAY.slice(0, 7)}-01`;
-const LAST_MONTH_START = (() => { const d = new Date(TODAY); d.setMonth(d.getMonth()-1); d.setDate(1); return d.toISOString().slice(0,10); })();
-const LAST_MONTH_END   = (() => { const d = new Date(TODAY); d.setDate(0); return d.toISOString().slice(0,10); })();
-const SIX_MONTHS_AGO  = (() => { const d = new Date(TODAY); d.setMonth(d.getMonth()-5); d.setDate(1); return d.toISOString().slice(0,10); })();
+const LAST_MONTH_START = (() => { const d = new Date(); d.setMonth(d.getMonth()-1); d.setDate(1); return toLocalDateStr(d); })();
+const LAST_MONTH_END   = (() => { const d = new Date(); d.setDate(0); return toLocalDateStr(d); })();
+const SIX_MONTHS_AGO  = (() => { const d = new Date(); d.setMonth(d.getMonth()-5); d.setDate(1); return toLocalDateStr(d); })();
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 function greeting() {
@@ -56,7 +57,7 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return;
     if (hasSupabase) {
-      const sevenDaysAgo = new Date(Date.now() - 7*86400000).toISOString().slice(0,10);
+      const sevenDaysAgo = toLocalDateStr(new Date(Date.now() - 7*86400000));
       Promise.all([
         supabase.from('students').select('*').eq('personal_id', user.id),
         supabase.from('appointments').select('*').eq('personal_id', user.id).eq('date', TODAY),

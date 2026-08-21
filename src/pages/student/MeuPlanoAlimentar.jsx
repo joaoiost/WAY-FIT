@@ -3,6 +3,7 @@ import { Utensils, ChevronDown, ChevronUp, Loader, AlertCircle, Droplets, PenLin
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
+import { todayLocal } from '../../lib/date';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -57,13 +58,13 @@ function MealCard({ meal }) {
   const period = mealTimeIcon(meal.time_of_day);
 
   const PERIOD_COLORS = {
-    'Manha':  { bg: 'linear-gradient(135deg,#FEF3C7,#FDE68A)', icon: '#D97706' },
-    'Lanche': { bg: 'linear-gradient(135deg,#ECFDF5,#D1FAE5)', icon: '#059669' },
-    'Almoco': { bg: 'linear-gradient(135deg,#EFF6FF,#DBEAFE)', icon: '#2563EB' },
-    'Tarde':  { bg: 'linear-gradient(135deg,#FDF4FF,#F3E8FF)', icon: '#9333EA' },
-    'Jantar': { bg: 'linear-gradient(135deg,#FFF1F2,#FFE4E6)', icon: '#E11D48' },
-    'Noite':  { bg: 'linear-gradient(135deg,#F0F9FF,#E0F2FE)', icon: '#0284C7' },
-    'Refeição': { bg: 'linear-gradient(135deg,#F8FAFC,#F1F5F9)', icon: '#64748B' },
+    'Manha':  { bg: 'linear-gradient(135deg, rgba(251,191,36,0.16), rgba(251,191,36,0.26))', icon: '#F59E0B' },
+    'Lanche': { bg: 'linear-gradient(135deg, rgba(52,211,153,0.16), rgba(52,211,153,0.26))', icon: '#34D399' },
+    'Almoco': { bg: 'linear-gradient(135deg, rgba(96,165,250,0.16), rgba(96,165,250,0.26))', icon: '#60A5FA' },
+    'Tarde':  { bg: 'linear-gradient(135deg, rgba(167,139,250,0.16), rgba(167,139,250,0.26))', icon: '#A78BFA' },
+    'Jantar': { bg: 'linear-gradient(135deg, rgba(248,113,113,0.16), rgba(248,113,113,0.26))', icon: '#F87171' },
+    'Noite':  { bg: 'linear-gradient(135deg, rgba(56,189,248,0.16), rgba(56,189,248,0.26))', icon: '#38BDF8' },
+    'Refeição': { bg: 'var(--gray-100)', icon: 'var(--gray-500)' },
   };
   const pc = PERIOD_COLORS[period] || PERIOD_COLORS['Refeição'];
 
@@ -172,7 +173,7 @@ export default function MeuPlanoAlimentar() {
       const { data: student } = await supabase.from('students').select('id').eq('user_id', user.id).maybeSingle();
       if (!student) { setLoading(false); return; }
 
-      const today = new Date().toISOString().slice(0, 10);
+      const today = todayLocal();
       const { data: planData } = await supabase.from('meal_plans').select('*').eq('student_id', student.id).eq('is_active', true).order('updated_at', { ascending: false }).limit(1).maybeSingle();
 
       if (!planData) { setLoading(false); return; }
@@ -210,7 +211,7 @@ export default function MeuPlanoAlimentar() {
 
   if (!plan) return (
     <div className="page-padding" style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 40, textAlign: 'center' }}>
-      <div style={{ width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg,#ECFDF5,#D1FAE5)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
+      <div style={{ width: 72, height: 72, borderRadius: 20, background: 'linear-gradient(135deg, rgba(52,211,153,0.16), rgba(52,211,153,0.26))', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16 }}>
         <Utensils size={34} color="#059669" />
       </div>
       <h3 style={{ margin: '0 0 8px', fontSize: 20, fontWeight: 900, color: 'var(--gray-900, #111827)' }}>Nenhum plano alimentar</h3>

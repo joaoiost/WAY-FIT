@@ -8,9 +8,21 @@ serve(async (req) => {
     return new Response('ok', { headers: { 'Access-Control-Allow-Origin': '*' } });
   }
 
+  // Endpoint server-to-server (chamado só pelo cron do GitHub Actions) — o
+  // Supabase aceita qualquer JWT válido, inclusive a anon key pública, então
+  // sem isso qualquer visitante do site podia disparar o envio manualmente.
+  const authHeader = req.headers.get('Authorization') ?? '';
+  const providedToken = authHeader.replace('Bearer ', '');
+  const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+  if (providedToken !== serviceKey) {
+    return new Response(JSON.stringify({ ok: false, error: 'unauthorized' }), {
+      status: 401, headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   const supabase = createClient(
     Deno.env.get('SUPABASE_URL')!,
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    serviceKey
   );
 
   // Current time in BRT (UTC-3)

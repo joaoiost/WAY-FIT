@@ -14,14 +14,42 @@ serve(async (req) => {
   try {
     const { student_ids, title, message, personal_id, url } = await req.json();
 
+    // Identifica quem está chamando de verdade — sem isso, qualquer usuário
+    // autenticado (inclusive um aluno) podia mandar notificação em nome de
+    // qualquer personal, pra qualquer aluno do banco, com texto arbitrário.
+    const authHeader = req.headers.get('Authorization') ?? '';
+    const token = authHeader.replace('Bearer ', '');
+    const anonClient = createClient(
+      Deno.env.get('SUPABASE_URL')!,
+      Deno.env.get('SUPABASE_ANON_KEY')!
+    );
+    const { data: { user }, error: authError } = await anonClient.auth.getUser(token);
+    if (authError || !user || user.id !== personal_id) {
+      return new Response(JSON.stringify({ ok: false, error: 'unauthorized' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     );
 
+    // Só notifica alunos que realmente pertencem a este personal.
+    const { data: owned } = await supabase
+      .from('students').select('id').eq('personal_id', personal_id)
+      .in('id', student_ids);
+    const studentIds = (owned ?? []).map((s: any) => String(s.id));
+
+    if (!studentIds.length) {
+      return new Response(JSON.stringify({ ok: true, sent: 0, reason: 'no_owned_students' }), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     // Persist in-app notifications
     await supabase.from('student_notifications').insert(
-      student_ids.map((sid: string) => ({
+      studentIds.map((sid: string) => ({
         student_id: sid,
         personal_id,
         title,
@@ -34,7 +62,7 @@ serve(async (req) => {
     const { data: subs } = await supabase
       .from('push_subscriptions')
       .select('student_id, subscription')
-      .in('student_id', student_ids);
+      .in('student_id', studentIds);
 
     if (!subs?.length) {
       return new Response(JSON.stringify({ ok: true, sent: 0, reason: 'no_subscriptions' }), {

@@ -95,6 +95,7 @@ export function AuthProvider({ children }) {
         slug: profile.slug,
         bio: profile.bio || '',
         phone: profile.phone || '',
+        onboardedAt: profile.onboarded_at || null,
         studentId,
         personalId,
       });

@@ -51,8 +51,10 @@ export default function Dashboard() {
   const [totalPending, setTotalPending]     = useState(0);
 
   useEffect(() => {
-    if (!localStorage.getItem('pt_onboarded')) navigate('/onboarding', { replace: true });
-  }, []);
+    if (!user) return;
+    const seen = user.onboardedAt || localStorage.getItem('pt_onboarded');
+    if (!seen) navigate('/onboarding', { replace: true });
+  }, [user]);
 
   useEffect(() => {
     if (!user) return;

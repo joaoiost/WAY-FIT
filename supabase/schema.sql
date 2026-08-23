@@ -22,6 +22,9 @@ ALTER TABLE profiles ADD COLUMN IF NOT EXISTS bio TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS slug TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
 ALTER TABLE profiles ADD COLUMN IF NOT EXISTS pix_key TEXT;
+-- Idem para o tour de boas-vindas do personal: só ficava marcado no
+-- localStorage, reaparecia do zero em outro aparelho.
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS onboarded_at TIMESTAMPTZ;
 
 -- Índice único em slug (ignorar se já existir)
 DO $$ BEGIN

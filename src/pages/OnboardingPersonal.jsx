@@ -1,6 +1,8 @@
 ﻿import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Check, ChevronRight, Dumbbell, Calendar, Users, BarChart2, Zap, Rocket } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { supabase, hasSupabase } from '../lib/supabase';
 
 const CSS = `
   @keyframes fadeInUp { from{opacity:0;transform:translateY(18px)} to{opacity:1;transform:translateY(0)} }
@@ -135,15 +137,24 @@ function StepVisual({ stepId, gradient }) {
 
 export default function OnboardingPersonal() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [animKey, setAnimKey] = useState(0);
   const current = STEPS[step];
   const isLast = step === STEPS.length - 1;
   const progress = ((step + 1) / STEPS.length) * 100;
 
+  const markOnboarded = () => {
+    localStorage.setItem('pt_onboarded', '1');
+    if (hasSupabase && user?.id) {
+      supabase.from('profiles').update({ onboarded_at: new Date().toISOString() }).eq('id', user.id)
+        .then(({ error }) => { if (error) console.error(error); });
+    }
+  };
+
   const next = () => {
     if (isLast) {
-      localStorage.setItem('pt_onboarded', '1');
+      markOnboarded();
       navigate('/dashboard');
       return;
     }
@@ -152,7 +163,7 @@ export default function OnboardingPersonal() {
   };
 
   const skip = () => {
-    localStorage.setItem('pt_onboarded', '1');
+    markOnboarded();
     navigate('/dashboard');
   };
 

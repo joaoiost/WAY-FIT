@@ -11,6 +11,9 @@ import StudentLogin from './pages/student/StudentLogin';
 import Landing from './pages/Landing';
 
 // Lazy — carregam sob demanda, reduz bundle inicial
+// v2 — telas da reescrita, preview lado a lado com as antigas
+const LoginV2 = lazy(() => import('./pages/v2/Login'));
+
 const InviteAccept     = lazy(() => import('./pages/InviteAccept'));
 const Register         = lazy(() => import('./pages/Register'));
 const ForgotPassword   = lazy(() => import('./pages/ForgotPassword'));
@@ -140,6 +143,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/v2/login" element={<LoginV2 />} />
               <Route path="/aluno/login" element={<StudentLogin />} />
               <Route path="/convite" element={<InviteAccept />} />
               <Route path="/registro" element={<Register />} />

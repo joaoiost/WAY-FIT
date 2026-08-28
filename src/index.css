@@ -1,5 +1,56 @@
 @import "tailwindcss";
 
+/* ============================================================
+   WAY FIT v2 — tokens claro/profissional (telas novas da
+   reescrita, em src/pages/v2/). Precisa estar no mesmo arquivo
+   que o @import "tailwindcss" acima pra gerar as classes
+   (bg-brand-600 etc.) de verdade — um @theme em outro arquivo
+   CSS separado não é visto por este import.
+   ============================================================ */
+@theme {
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+  --color-brand-50:  #EEF2FF;
+  --color-brand-100: #E0E7FF;
+  --color-brand-200: #C7D2FE;
+  --color-brand-300: #A5B4FC;
+  --color-brand-400: #818CF8;
+  --color-brand-500: #6366F1;
+  --color-brand-600: #4F46E5;
+  --color-brand-700: #4338CA;
+
+  --color-ink-900: #0F172A;
+  --color-ink-700: #334155;
+  --color-ink-500: #64748B;
+  --color-ink-300: #CBD5E1;
+  --color-ink-200: #E2E8F0;
+  --color-ink-100: #F1F5F9;
+  --color-ink-50:  #F8FAFC;
+
+  --color-success-500: #10B981;
+  --color-success-50:  #ECFDF5;
+  --color-danger-500:  #EF4444;
+  --color-danger-50:   #FEF2F2;
+  --color-warning-500: #F59E0B;
+  --color-warning-50:  #FFFBEB;
+}
+
+/* Telas antigas (fora de .v2-scope) usam input/cores do tema escuro
+   abaixo — são regras "soltas" (fora de @layer), que por spec de CSS
+   sempre ganham de qualquer utilitário do Tailwind, mesmo que mais
+   específico. .v2-scope reafirma o visual claro só dentro das telas
+   novas, sem tocar/arriscar quebrar as antigas. */
+.v2-scope, .v2-scope body { color: var(--color-ink-900); background: white; }
+.v2-scope input, .v2-scope select, .v2-scope textarea {
+  background: white;
+  color: var(--color-ink-900);
+  border: 1px solid var(--color-ink-200);
+}
+.v2-scope input::placeholder, .v2-scope textarea::placeholder {
+  color: var(--color-ink-300);
+  -webkit-text-fill-color: var(--color-ink-300);
+}
+
 /* ── Design Tokens — Dark Theme ─────────────────────────────── */
 :root {
   /* Brand */

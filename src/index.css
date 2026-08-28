@@ -40,15 +40,29 @@
    sempre ganham de qualquer utilitário do Tailwind, mesmo que mais
    específico. .v2-scope reafirma o visual claro só dentro das telas
    novas, sem tocar/arriscar quebrar as antigas. */
+.v2-scope { color-scheme: light; }
 .v2-scope, .v2-scope body { color: var(--color-ink-900); background: white; }
 .v2-scope input, .v2-scope select, .v2-scope textarea {
   background: white;
   color: var(--color-ink-900);
   border: 1px solid var(--color-ink-200);
+  -webkit-text-fill-color: var(--color-ink-900);
+  caret-color: var(--color-ink-900);
 }
 .v2-scope input::placeholder, .v2-scope textarea::placeholder {
   color: var(--color-ink-300);
   -webkit-text-fill-color: var(--color-ink-300);
+}
+/* Autofill do navegador (usuário/senha salvos) pinta o campo com as
+   próprias cores por cima do que a página define — só o truque do
+   box-shadow "transparente" consegue forçar de volta o fundo branco. */
+.v2-scope input:-webkit-autofill,
+.v2-scope input:-webkit-autofill:hover,
+.v2-scope input:-webkit-autofill:focus {
+  -webkit-text-fill-color: var(--color-ink-900);
+  box-shadow: 0 0 0 1000px white inset;
+  caret-color: var(--color-ink-900);
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 /* ── Design Tokens — Dark Theme ─────────────────────────────── */

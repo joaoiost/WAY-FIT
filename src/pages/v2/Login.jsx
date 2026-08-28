@@ -163,7 +163,7 @@ export default function LoginV2() {
 
           <p className="text-center text-sm text-ink-500 mt-6">
             Sem conta?{' '}
-            <Link to="/registro" className="text-brand-600 font-semibold hover:text-brand-700">
+            <Link to="/v2/registro" className="text-brand-600 font-semibold hover:text-brand-700">
               Cadastre-se grátis
             </Link>
           </p>

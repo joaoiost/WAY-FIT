@@ -21,11 +21,15 @@ export default function StudentPicker({
   const rootRef = useRef(null);
 
   useEffect(() => {
-    if (!open) return;
+    // No modo múltiplo a lista fica "inline" (empurra o conteúdo abaixo em
+    // vez de flutuar por cima) — fechar sozinho ao clicar fora causaria um
+    // reflow bem na hora do clique seguinte (ex: escolher um dia logo
+    // abaixo), fazendo o clique "errar" o alvo que acabou de se mover.
+    if (!open || multiple) return;
     const onClickOutside = (e) => { if (!rootRef.current?.contains(e.target)) setOpen(false); };
     document.addEventListener('mousedown', onClickOutside);
     return () => document.removeEventListener('mousedown', onClickOutside);
-  }, [open]);
+  }, [open, multiple]);
 
   const selectedIds = useMemo(
     () => new Set(multiple ? (Array.isArray(value) ? value : []) : [value]),
@@ -79,7 +83,7 @@ export default function StudentPicker({
       </button>
 
       {open && (
-        <div className="absolute z-50 mt-1.5 w-full min-w-[260px] bg-white border border-ink-200 rounded-xl shadow-lg overflow-hidden">
+        <div className={`${multiple ? 'relative' : 'absolute z-50'} mt-1.5 w-full min-w-[260px] bg-white border border-ink-200 rounded-xl shadow-lg overflow-hidden`}>
           <div className="flex items-center gap-2 px-3 py-2.5 border-b border-ink-100">
             <Search size={14} className="text-ink-300 shrink-0" />
             <input

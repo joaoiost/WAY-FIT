@@ -14,6 +14,8 @@ import Landing from './pages/Landing';
 // v2 — telas da reescrita, preview lado a lado com as antigas
 const LoginV2 = lazy(() => import('./pages/v2/Login'));
 const RegisterV2 = lazy(() => import('./pages/v2/Register'));
+const PersonalLayoutV2 = lazy(() => import('./pages/v2/layout/PersonalLayoutV2'));
+const DashboardV2 = lazy(() => import('./pages/v2/Dashboard'));
 
 const InviteAccept     = lazy(() => import('./pages/InviteAccept'));
 const Register         = lazy(() => import('./pages/Register'));
@@ -97,6 +99,17 @@ function PersonalRoute() {
   );
 }
 
+function PersonalRouteV2() {
+  const { user, loading } = useAuth();
+  if (loading) return <PageLoader />;
+  if (!user || user.role !== 'personal') return <Navigate to="/v2/login" replace />;
+  return (
+    <NotificationsProvider>
+      <PersonalLayoutV2 />
+    </NotificationsProvider>
+  );
+}
+
 function StudentRoute() {
   const { user, loading } = useAuth();
   if (loading) return <PageLoader />;
@@ -175,6 +188,10 @@ export default function App() {
                 <Route path="/dashboard/cartilhas" element={<Cartilhas />} />
                 <Route path="/dashboard/turmas" element={<Turmas />} />
                 <Route path="/dashboard/configuracoes" element={<Configuracoes />} />
+              </Route>
+
+              <Route element={<PersonalRouteV2 />}>
+                <Route path="/v2/dashboard" element={<DashboardV2 />} />
               </Route>
 
               <Route element={<PersonalRouteClean />}>

@@ -48,6 +48,20 @@
   border: 1px solid var(--color-ink-200);
   -webkit-text-fill-color: var(--color-ink-900);
   caret-color: var(--color-ink-900);
+  /* Sem isso, o tema antigo força width:100%/padding:9px 12px/border-radius
+     por baixo de QUALQUER classe do Tailwind (unlayered sempre ganha de
+     @layer utilities) — quebra layouts com input de largura fixa dentro
+     de flex row (ex: horário ao lado do nome da refeição vira 1 coluna
+     gigante e a outra encolhe a quase nada). Resetando aqui, cada input
+     v2 volta a obedecer w-/p-/rounded- do próprio componente. */
+  width: auto;
+  padding: 0;
+  border-radius: 0;
+  font-size: inherit;
+}
+.v2-scope input:focus, .v2-scope select:focus, .v2-scope textarea:focus {
+  outline: none;
+  box-shadow: none;
 }
 .v2-scope input::placeholder, .v2-scope textarea::placeholder {
   color: var(--color-ink-300);

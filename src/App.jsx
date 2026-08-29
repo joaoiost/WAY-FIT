@@ -17,6 +17,7 @@ const RegisterV2 = lazy(() => import('./pages/v2/Register'));
 const PersonalLayoutV2 = lazy(() => import('./pages/v2/layout/PersonalLayoutV2'));
 const DashboardV2 = lazy(() => import('./pages/v2/Dashboard'));
 const TreinosV2 = lazy(() => import('./pages/v2/Treinos'));
+const NutricaoV2 = lazy(() => import('./pages/v2/Nutricao'));
 
 const InviteAccept     = lazy(() => import('./pages/InviteAccept'));
 const Register         = lazy(() => import('./pages/Register'));
@@ -194,6 +195,7 @@ export default function App() {
               <Route element={<PersonalRouteV2 />}>
                 <Route path="/v2/dashboard" element={<DashboardV2 />} />
                 <Route path="/v2/treinos" element={<TreinosV2 />} />
+                <Route path="/v2/nutricao" element={<NutricaoV2 />} />
               </Route>
 
               <Route element={<PersonalRouteClean />}>

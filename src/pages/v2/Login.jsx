@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Zap, Eye, EyeOff, AlertCircle, Dumbbell, User, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
@@ -17,29 +17,42 @@ export default function LoginV2() {
   const [showPass, setShowPass] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  // Guarda o papel esperado enquanto espera o perfil carregar de verdade —
+  // navegar antes disso (só com base no retorno do login()) faz a troca de
+  // tela acontecer rápido demais e quebra o React (erro de insertBefore).
+  const [pendingRole, setPendingRole] = useState(null);
+  const { login, user } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!pendingRole || !user) return;
+    if (user.role !== pendingRole) {
+      setError(
+        user.role === 'student'
+          ? 'Esse e-mail é de um aluno. Selecione "Aluno" acima.'
+          : 'Esse e-mail é de um personal trainer. Selecione "Personal Trainer" acima.'
+      );
+      setPendingRole(null);
+      setLoading(false);
+      return;
+    }
+    navigate(user.role === 'personal' ? '/dashboard' : '/aluno/dashboard');
+  }, [user, pendingRole]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
     setLoading(true);
     const result = await login(email, password);
-    setLoading(false);
 
     if (!result.success) {
+      setLoading(false);
       setError(result.error || 'E-mail ou senha incorretos.');
       return;
     }
-    if (result.role !== role) {
-      setError(
-        result.role === 'student'
-          ? 'Esse e-mail é de um aluno. Selecione "Aluno" acima.'
-          : 'Esse e-mail é de um personal trainer. Selecione "Personal Trainer" acima.'
-      );
-      return;
-    }
-    navigate(result.role === 'personal' ? '/dashboard' : '/aluno/dashboard');
+    // Login confirmado no Supabase — agora espera o AuthContext terminar de
+    // carregar o perfil (o efeito acima navega quando `user` estiver pronto).
+    setPendingRole(role);
   };
 
   return (

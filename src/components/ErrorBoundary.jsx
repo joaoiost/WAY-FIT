@@ -38,10 +38,9 @@ export default class ErrorBoundary extends Component {
         >
           <RefreshCw size={16} /> Recarregar
         </button>
-        {this.state.error && (
+        {import.meta.env.DEV && this.state.error && (
           <pre style={{ marginTop: 16, fontSize: 11, color: 'var(--gray-400)', background: 'var(--bg-surface)', border: '1px solid var(--border)', padding: '12px 16px', borderRadius: 8, maxWidth: 480, overflow: 'auto', textAlign: 'left' }}>
             {this.state.error.toString()}
-            {this.state.error.stack ? '\n\n' + this.state.error.stack : ''}
           </pre>
         )}
       </div>

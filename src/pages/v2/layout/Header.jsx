@@ -21,7 +21,7 @@ const TITLES = {
 export default function HeaderV2({ onMenuClick }) {
   const { pathname } = useLocation();
   const { unread } = useNotifications();
-  const title = TITLES[pathname] || 'WAY FIT';
+  const title = TITLES[pathname] || (pathname.startsWith('/v2/alunos/') ? 'Ficha do Aluno' : 'WAY FIT');
 
   return (
     <header className="h-16 shrink-0 border-b border-ink-100 bg-white flex items-center justify-between px-4 lg:px-6 sticky top-0 z-10">

@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Plus, Search, Dumbbell, Copy, Users, Pencil, Trash2, X, Sparkles } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -99,7 +100,9 @@ function StarterPicker({ isOpen, onClose, onPick }) {
 
 export default function TreinosV2() {
   const { user } = useAuth();
-  const [tab, setTab] = useState('modelos');
+  const [searchParams] = useSearchParams();
+  const preselectStudent = searchParams.get('aluno');
+  const [tab, setTab] = useState(preselectStudent ? 'atribuir' : 'modelos');
   const [templates, setTemplates] = useState([]);
   const [plans, setPlans] = useState([]);
   const [students, setStudents] = useState([]);
@@ -124,7 +127,8 @@ export default function TreinosV2() {
       setTemplates(t || []);
       setPlans(p || []);
       setStudents(s || []);
-      if (s?.length) setSelStudent(s[0].id);
+      if (preselectStudent && s?.some(st => st.id === preselectStudent)) setSelStudent(preselectStudent);
+      else if (s?.length) setSelStudent(s[0].id);
       setLoading(false);
     });
   }, [user?.id]);

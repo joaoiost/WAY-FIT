@@ -313,7 +313,7 @@ export default function AlunosV2() {
           </div>
         ) : filtered.map(s => (
           <div key={s.id} className="flex items-center gap-3 px-4 py-3 border-b border-ink-50 last:border-0 hover:bg-ink-50/60 transition-colors">
-            <button onClick={() => navigate(`/dashboard/alunos/${s.id}`)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+            <button onClick={() => navigate(`/v2/alunos/${s.id}`)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
               <Avatar student={s} />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">

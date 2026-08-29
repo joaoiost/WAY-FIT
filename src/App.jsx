@@ -19,6 +19,7 @@ const DashboardV2 = lazy(() => import('./pages/v2/Dashboard'));
 const TreinosV2 = lazy(() => import('./pages/v2/Treinos'));
 const NutricaoV2 = lazy(() => import('./pages/v2/Nutricao'));
 const AlunosV2 = lazy(() => import('./pages/v2/Alunos'));
+const FichaAlunoV2 = lazy(() => import('./pages/v2/FichaAluno'));
 
 const InviteAccept     = lazy(() => import('./pages/InviteAccept'));
 const Register         = lazy(() => import('./pages/Register'));
@@ -198,6 +199,7 @@ export default function App() {
                 <Route path="/v2/treinos" element={<TreinosV2 />} />
                 <Route path="/v2/nutricao" element={<NutricaoV2 />} />
                 <Route path="/v2/alunos" element={<AlunosV2 />} />
+                <Route path="/v2/alunos/:id" element={<FichaAlunoV2 />} />
               </Route>
 
               <Route element={<PersonalRouteClean />}>

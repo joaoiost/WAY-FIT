@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Save, Check } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase, hasSupabase } from '../../lib/supabase';
@@ -53,6 +54,8 @@ async function loadStudentNutrition(studentId, personalId) {
 
 export default function NutricaoV2() {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const preselectStudent = searchParams.get('aluno');
   const [students, setStudents] = useState([]);
   const [selStudent, setSelStudent] = useState(null);
   const [tab, setTab] = useState('plano');
@@ -64,7 +67,11 @@ export default function NutricaoV2() {
   useEffect(() => {
     if (!user || !hasSupabase) return;
     supabase.from('students').select('id, name, initials, color').eq('personal_id', user.id).eq('status', 'ativo').order('name')
-      .then(({ data: s }) => { setStudents(s || []); if (s?.length) setSelStudent(s[0].id); });
+      .then(({ data: s }) => {
+        setStudents(s || []);
+        if (preselectStudent && s?.some(st => st.id === preselectStudent)) setSelStudent(preselectStudent);
+        else if (s?.length) setSelStudent(s[0].id);
+      });
   }, [user?.id]);
 
   const patch = (fields) => setData(prev => ({ ...prev, ...fields }));

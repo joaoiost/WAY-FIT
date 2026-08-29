@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Zap, Eye, EyeOff, AlertCircle, Dumbbell, User, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLightScheme } from './useLightScheme';
 
 const ROLES = [
   { key: 'personal', label: 'Personal Trainer', icon: Dumbbell },
@@ -9,6 +10,7 @@ const ROLES = [
 ];
 
 export default function LoginV2() {
+  useLightScheme();
   const [role, setRole] = useState('personal');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');

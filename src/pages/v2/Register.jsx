@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Zap, Eye, EyeOff, AlertCircle, Check, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useLightScheme } from './useLightScheme';
 
 export default function RegisterV2() {
+  useLightScheme();
   const { register } = useAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({ name: '', email: '', phone: '', password: '', confirm: '' });

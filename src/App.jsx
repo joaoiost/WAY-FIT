@@ -66,7 +66,7 @@ import StudentSidebar from './components/Layout/StudentSidebar';
 import StudentBottomNav from './components/Layout/StudentBottomNav';
 import PersonalBottomNav from './components/Layout/PersonalBottomNav';
 import WaterToast from './components/UI/WaterToast';
-import ToastContainer from './components/UI/ToastContainer';
+import ToastContainer from './components/v2/ToastContainer';
 
 function PageLoader() {
   return (

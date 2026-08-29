@@ -1,7 +1,7 @@
 import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
 import { clientsClaim } from 'workbox-core';
 import { registerRoute } from 'workbox-routing';
-import { NetworkFirst, StaleWhileRevalidate, CacheFirst } from 'workbox-strategies';
+import { NetworkFirst, CacheFirst } from 'workbox-strategies';
 import { ExpirationPlugin } from 'workbox-expiration';
 import { CacheableResponsePlugin } from 'workbox-cacheable-response';
 
@@ -36,11 +36,16 @@ registerRoute(
   })
 );
 
-// Navegação (HTML do app shell) — StaleWhileRevalidate
+// Navegação (HTML do app shell) — NetworkFirst, não StaleWhileRevalidate.
+// StaleWhileRevalidate serve o HTML antigo na hora, referenciando bundles
+// JS com hash que o deploy novo já apagou do servidor — o navegador tenta
+// carregar um arquivo que não existe mais e a tela quebra. NetworkFirst
+// busca a versão atual primeiro; só cai pro cache se estiver offline.
 registerRoute(
   ({ request }) => request.mode === 'navigate',
-  new StaleWhileRevalidate({
+  new NetworkFirst({
     cacheName: 'app-shell-v1',
+    networkTimeoutSeconds: 5,
     plugins: [new CacheableResponsePlugin({ statuses: [0, 200] })],
   })
 );

@@ -26,6 +26,7 @@ const ChatV2 = lazy(() => import('./pages/v2/Chat'));
 const TurmasV2 = lazy(() => import('./pages/v2/Turmas'));
 const AvaliacaoFisicaV2 = lazy(() => import('./pages/v2/AvaliacaoFisica'));
 const RelatorioAlunoV2 = lazy(() => import('./pages/v2/RelatorioAluno'));
+const NotificacoesV2 = lazy(() => import('./pages/v2/Notificacoes'));
 
 const InviteAccept     = lazy(() => import('./pages/InviteAccept'));
 const Register         = lazy(() => import('./pages/Register'));
@@ -211,6 +212,7 @@ export default function App() {
                 <Route path="/v2/chat" element={<ChatV2 />} />
                 <Route path="/v2/turmas" element={<TurmasV2 />} />
                 <Route path="/v2/alunos/:id/avaliacao" element={<AvaliacaoFisicaV2 />} />
+                <Route path="/v2/notificacoes" element={<NotificacoesV2 />} />
               </Route>
 
               <Route element={<PersonalRouteClean />}>

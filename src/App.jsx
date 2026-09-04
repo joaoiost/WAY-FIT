@@ -24,6 +24,7 @@ const FrequenciaV2 = lazy(() => import('./pages/v2/Frequencia'));
 const FinanceiroV2 = lazy(() => import('./pages/v2/Financeiro'));
 const ChatV2 = lazy(() => import('./pages/v2/Chat'));
 const TurmasV2 = lazy(() => import('./pages/v2/Turmas'));
+const AvaliacaoFisicaV2 = lazy(() => import('./pages/v2/AvaliacaoFisica'));
 
 const InviteAccept     = lazy(() => import('./pages/InviteAccept'));
 const Register         = lazy(() => import('./pages/Register'));
@@ -208,6 +209,7 @@ export default function App() {
                 <Route path="/v2/financeiro" element={<FinanceiroV2 />} />
                 <Route path="/v2/chat" element={<ChatV2 />} />
                 <Route path="/v2/turmas" element={<TurmasV2 />} />
+                <Route path="/v2/alunos/:id/avaliacao" element={<AvaliacaoFisicaV2 />} />
               </Route>
 
               <Route element={<PersonalRouteClean />}>

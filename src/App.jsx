@@ -25,6 +25,7 @@ const FinanceiroV2 = lazy(() => import('./pages/v2/Financeiro'));
 const ChatV2 = lazy(() => import('./pages/v2/Chat'));
 const TurmasV2 = lazy(() => import('./pages/v2/Turmas'));
 const AvaliacaoFisicaV2 = lazy(() => import('./pages/v2/AvaliacaoFisica'));
+const RelatorioAlunoV2 = lazy(() => import('./pages/v2/RelatorioAluno'));
 
 const InviteAccept     = lazy(() => import('./pages/InviteAccept'));
 const Register         = lazy(() => import('./pages/Register'));
@@ -214,6 +215,7 @@ export default function App() {
 
               <Route element={<PersonalRouteClean />}>
                 <Route path="/dashboard/alunos/:id/relatorio" element={<RelatorioAluno />} />
+                <Route path="/v2/alunos/:id/relatorio" element={<RelatorioAlunoV2 />} />
               </Route>
 
               <Route element={<StudentRoute />}>

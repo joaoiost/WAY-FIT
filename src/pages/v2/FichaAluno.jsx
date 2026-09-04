@@ -195,6 +195,9 @@ export default function FichaAlunoV2() {
           <button onClick={() => navigate(`/v2/alunos/${id}/avaliacao`)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-ink-200 text-[12.5px] font-semibold text-ink-700 hover:bg-ink-50">
             <Activity size={13} /> Avaliação
           </button>
+          <button onClick={() => window.open(`/v2/alunos/${id}/relatorio`, '_blank')} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border border-ink-200 text-[12.5px] font-semibold text-ink-700 hover:bg-ink-50">
+            <FileText size={13} /> Relatório
+          </button>
           <button onClick={() => setScheduleOpen(true)} className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-brand-600 text-white text-[12.5px] font-semibold hover:bg-brand-700">
             <Calendar size={13} /> Agendar
           </button>

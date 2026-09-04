@@ -653,17 +653,39 @@ ALTER TABLE student_measurements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE water_logs ENABLE ROW LEVEL SECURITY;
 
 -- Group classes
+--
+-- group_classes e group_class_attendance se checam mutuamente (a policy de
+-- aluno em group_classes olha pra group_class_attendance, e a de personal em
+-- group_class_attendance olha de volta pra group_classes). Postgres detecta
+-- esse ciclo e recusa a query com "infinite recursion detected in policy"
+-- (42P17) sempre que as duas tabelas são buscadas juntas — quebrando
+-- qualquer tela de Turmas (a lista de aulas embute a presença). As funções
+-- abaixo, por serem SECURITY DEFINER e não terem FORCE ROW LEVEL SECURITY
+-- nas tabelas, rodam como dono da tabela e pulam a RLS internamente,
+-- cortando o ciclo.
+CREATE OR REPLACE FUNCTION public.is_personal_of_class(p_class_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (SELECT 1 FROM group_classes WHERE id = p_class_id AND personal_id = auth.uid());
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
+
+CREATE OR REPLACE FUNCTION public.student_has_class_attendance(p_class_id UUID)
+RETURNS BOOLEAN AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM group_class_attendance gca JOIN students s ON s.id = gca.student_id
+    WHERE gca.class_id = p_class_id AND s.user_id = auth.uid()
+  );
+$$ LANGUAGE sql SECURITY DEFINER SET search_path = public;
+
 DROP POLICY IF EXISTS "Personal gerencia aulas" ON group_classes;
 DROP POLICY IF EXISTS "Aluno vê próprias aulas" ON group_classes;
 CREATE POLICY "Personal gerencia aulas" ON group_classes FOR ALL USING (personal_id = auth.uid());
 CREATE POLICY "Aluno vê próprias aulas" ON group_classes FOR SELECT USING (
-  EXISTS (SELECT 1 FROM group_class_attendance gca JOIN students s ON s.id = gca.student_id
-          WHERE gca.class_id = group_classes.id AND s.user_id = auth.uid())
+  student_has_class_attendance(id)
 );
 DROP POLICY IF EXISTS "Personal gerencia presença em aulas" ON group_class_attendance;
 DROP POLICY IF EXISTS "Aluno vê própria presença" ON group_class_attendance;
 CREATE POLICY "Personal gerencia presença em aulas" ON group_class_attendance FOR ALL USING (
-  EXISTS (SELECT 1 FROM group_classes gc WHERE gc.id = group_class_attendance.class_id AND gc.personal_id = auth.uid())
+  is_personal_of_class(class_id)
 );
 CREATE POLICY "Aluno vê própria presença" ON group_class_attendance FOR SELECT USING (
   EXISTS (SELECT 1 FROM students s WHERE s.id = group_class_attendance.student_id AND s.user_id = auth.uid())

@@ -119,14 +119,6 @@ export default function RelatorioAluno() {
     })();
   }, [user?.id, id]);
 
-  // Auto print
-  useEffect(() => {
-    if (!loading && data) {
-      const t = setTimeout(() => window.print(), 600);
-      return () => clearTimeout(t);
-    }
-  }, [loading, data]);
-
   if (loading) return (
     <div className="bg-white" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', flexDirection: 'column', gap: 12 }}>
       <div style={{ width: 40, height: 40, border: '3px solid #E5E7EB', borderTopColor: '#3B82F6', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
